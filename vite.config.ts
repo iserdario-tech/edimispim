@@ -6,7 +6,6 @@ import { VitePWA } from "vite-plugin-pwa";
 // ⚠️ origin обязан совпасть со старыми приложениями (iserdario-tech.github.io), иначе
 // автоматическая миграция данных из pospat/oheedet через localStorage не сработает.
 export default defineConfig({
-  server: { port: 5174, strictPort: true },   // lab на своём порту, чтобы не спорить с main
   base: "/edimispim/",
   plugins: [
     react(),
