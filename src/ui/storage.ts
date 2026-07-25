@@ -30,10 +30,34 @@ function defaultStore(): StorageLike {
 export function saveState(s: StoredState, store: StorageLike = defaultStore()): void {
   store.setItem(KEY, JSON.stringify(s));
 }
+/**
+ * Проверка формы состояния перед тем, как его использовать.
+ *
+ * Одного `JSON.parse` мало: массив `[]`, объект без профиля или `history` строкой —
+ * всё это валидный JSON, который проходит парсер, а падает уже в интерфейсе на
+ * `state.profile.anchorWakeHM`. Итог — белый экран без возможности выйти,
+ * потому что данные в хранилище остаются битыми и при следующем запуске.
+ * Лучше показать онбординг, чем белый экран.
+ */
+export function isValidState(v: unknown): v is StoredState {
+  if (typeof v !== "object" || v === null || Array.isArray(v)) return false;
+  const s = v as Partial<StoredState>;
+  if (typeof s.profile !== "object" || s.profile === null) return false;
+  if (typeof (s.profile as Profile).anchorWakeHM !== "string") return false;
+  if (!Array.isArray(s.history)) return false;
+  if (s.weights !== undefined && !Array.isArray(s.weights)) return false;
+  return true;
+}
+
 export function loadState(store: StorageLike = defaultStore()): StoredState | null {
   const raw = store.getItem(KEY);
   if (!raw) return null;
-  try { return JSON.parse(raw) as StoredState; } catch { return null; }
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!isValidState(parsed)) return null;
+    // отдельные записи истории тоже могут быть битыми — отсеиваем, а не роняем всё
+    return { ...parsed, history: parsed.history.filter(h => h && typeof h.wokeHM === "string") };
+  } catch { return null; }
 }
 export function saveDayDraft(d: DayDraft, store: StorageLike = defaultStore()): void {
   store.setItem(DAY_KEY, JSON.stringify(d));

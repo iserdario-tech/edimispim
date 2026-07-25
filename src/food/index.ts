@@ -11,3 +11,4 @@ export {
 } from "./adapt";
 export { buildGroceryList } from "./grocery";
 export type * from "./types";
+export { diagnosePool, type PoolDiagnosis } from "./diagnose";

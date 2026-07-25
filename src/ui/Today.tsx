@@ -4,12 +4,13 @@ import { planDay, parseHM, sleepDurationMin } from "../index.js";
 import { toPlanView } from "./viewModel.js";
 import { loadDayDraft, saveDayDraft, type FoodSettings } from "./storage.js";
 import { enableNotifications, syncPushContext } from "./notifications.js";
-import { computeTargets, applySafety, filterRecipes, generateAdaptedDay, expectedBedMin } from "../food/index.js";
+import { computeTargets, applySafety, filterRecipes, generateAdaptedDay, expectedBedMin, diagnosePool } from "../food/index.js";
 import type { Recipe } from "../food/types.js";
 import recipesJson from "../food/data/recipes.json";
 import { mealRows, mergeTimeline } from "./mealRows.js";
 import { explain } from "../explain.js";
 import { toDayRecords } from "./dayRecords.js";
+import { localDateISO, localMinutes } from "../today-date.js";
 
 const RECIPES = recipesJson as Recipe[];
 
@@ -30,8 +31,8 @@ export function Today({ profile, history, screener, onLog, food, weights, onSetu
   onSetupFood?: () => void;
 }) {
   const now = new Date();
-  const today = now.toISOString().slice(0, 10);
-  const nowMin = now.getHours() * 60 + now.getMinutes();
+  const today = localDateISO(now);        // по местному времени: за полночь день уже новый
+  const nowMin = localMinutes(now);
   const [draft] = useState(() => loadDayDraft(today));
   const [mode, setMode] = useState<DayMode>(draft?.mode ?? "normal");
   const [crunchEndHM, setCrunchEndHM] = useState(draft?.crunchEndHM ?? "03:00");
@@ -80,12 +81,13 @@ export function Today({ profile, history, screener, onLog, food, weights, onSetu
     const safe = applySafety(computeTargets(food.profile), food.profile, {});
     const pool = filterRecipes(RECIPES, food.constraints);
     if (!pool.length) return null;
+    const diagnosis = diagnosePool(pool, food.mealCount);
     const day = generateAdaptedDay(
       safe, pool,
       { rhythm: { wakeMin: parseHM(wokeHM), bedMin }, mealCount: food.mealCount, offset: new Date(today).getDay() },
       { sleptMin, targetSleepMin: profile.targetSleepMin, quality },
     );
-    return { day, safe };
+    return { day, safe, diagnosis };
   }, [food, wokeHM, bedMin, today, sleptMin, profile.targetSleepMin, quality]);
 
   const rows = useMemo(() => {
@@ -161,6 +163,9 @@ export function Today({ profile, history, screener, onLog, food, weights, onSetu
           <b>День целиком:</b> {foodDay.day.totals.kcal} ккал · белок {foodDay.day.totals.protein} г ·
           клетчатка {foodDay.day.totals.fiber} г
           {foodDay.day.simplified && <span className="tag"> · упрощён после плохой ночи</span>}
+          {foodDay.diagnosis.messageRU && (
+            <p className="small note-warn" style={{ marginTop: 8 }}>{foodDay.diagnosis.messageRU}</p>
+          )}
         </div>
       ) : (
         <div className="day-totals small">
