@@ -166,10 +166,53 @@ export function generateDay(targets: Targets, pool: Recipe[], opts: DayOptions):
 
   const day: Day = { meals, totals: { kcal: 0, protein: 0, fiber: 0 } };
   recomputeTotals(day);
+  swapForFiber(day, targets, pool, mains);
   addProteinTopUp(day, targets);
   day.meals.sort((a, b) => a.timeMin - b.timeMin);
   if (opts.roughNight) day.simplified = true;
   return day;
+}
+
+/**
+ * Добор клетчатки ЗАМЕНОЙ блюда, а не увеличением порции.
+ *
+ * Планировщик выбирал рецепты по очереди и на клетчатку не смотрел вовсе — типичный день
+ * выходил около 20 г при цели 30, хотя контента хватает с запасом (на текущих рецептах
+ * можно набрать больше 50 г). Увеличивать порцию нельзя: это потащило бы калории вверх
+ * и сломало дефицит. Поэтому меняем одно блюдо на более богатое клетчаткой в том же слоте
+ * и пересчитываем порцию под ту же долю калорий — калораж дня не меняется.
+ *
+ * ponytail: одна замена, самая выгодная. Итеративный перебор — если одной перестанет хватать.
+ */
+function swapForFiber(
+  day: Day, targets: Targets, pool: Recipe[], mains: Partial<Record<MealType, number>>,
+): void {
+  if (day.totals.fiber >= targets.fiberGTarget) return;
+
+  let best: { index: number; recipe: Recipe; servings: number; gain: number } | null = null;
+
+  day.meals.forEach((meal, index) => {
+    const share = mains[meal.recipe.meal_type as MealType];
+    if (share === undefined) return;                       // лакомства не трогаем
+    const kcalShare = meal.recipe.kcal * meal.servings;    // столько калорий занимает этот приём
+    for (const candidate of pool) {
+      if (candidate.meal_type !== meal.recipe.meal_type) continue;
+      if (candidate.id === meal.recipe.id) continue;
+      const servings = Math.max(0.5, +(kcalShare / candidate.kcal).toFixed(1));
+      const gain = candidate.fiber_g * servings - meal.recipe.fiber_g * meal.servings;
+      // белок не должен просесть ради клетчатки — это два разных рычага сытости
+      const proteinDrop = meal.recipe.protein_g * meal.servings - candidate.protein_g * servings;
+      if (gain > (best?.gain ?? 0) && proteinDrop <= 5) {
+        best = { index, recipe: candidate, servings, gain };
+      }
+    }
+  });
+
+  if (!best) return;
+  const chosen: { index: number; recipe: Recipe; servings: number } = best;
+  const target = day.meals[chosen.index]!;
+  day.meals[chosen.index] = { ...target, recipe: chosen.recipe, servings: chosen.servings };
+  recomputeTotals(day);
 }
 
 /**

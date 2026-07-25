@@ -5,6 +5,11 @@ import type { FoodSettings } from "./storage.js";
 import { computeTargets, applySafety, generateWeek, buildGroceryList, expectedBedMin } from "../food/index.js";
 import type { Recipe } from "../food/types.js";
 import recipesJson from "../food/data/recipes.json";
+import { anchor, anchorSummaryRU } from "../anchor.js";
+import { toDayRecords } from "./dayRecords.js";
+import { localDateISO } from "../today-date.js";
+import { nextStep } from "../next-step.js";
+import { plateau } from "../plateau.js";
 
 const RECIPES = recipesJson as Recipe[];
 const DOW = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
@@ -27,7 +32,7 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
   const [openDay, setOpenDay] = useState<number | null>(0);
   const [showGrocery, setShowGrocery] = useState(false);
   const [kg, setKg] = useState("");
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDateISO();
 
   const plan = useMemo(() => {
     if (!food) return null;
@@ -46,6 +51,11 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
     [history, today, profile.targetSleepMin],
   );
 
+  const records = useMemo(() => toDayRecords(history, weights ?? []), [history, weights]);
+  const anchorInfo = useMemo(() => anchor(records, profile.targetSleepMin), [records, profile.targetSleepMin]);
+  const step = useMemo(() => nextStep(records, !!food), [records, food]);
+  const plateauInfo = useMemo(() => plateau(records, profile.targetSleepMin), [records, profile.targetSleepMin]);
+
   const weightSeries = weights ?? [];
   const delta = weightSeries.length >= 2
     ? weightSeries[0]!.kg - weightSeries[weightSeries.length - 1]!.kg
@@ -54,6 +64,23 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
   return (
     <main className="wrap">
       <h2>Неделя целиком</h2>
+
+      <section className="card accent">
+        <h3 className="card-h">Что дальше</h3>
+        <p style={{ margin: "0 0 4px" }}>{step.titleRU}</p>
+        <p className="small muted" style={{ margin: 0 }}>{step.whyRU}</p>
+        {step.need > 1 && step.done < step.need && (
+          <p className="small muted" style={{ marginTop: 6 }}>Уже есть: {step.done} из {step.need}.</p>
+        )}
+      </section>
+
+      {plateauInfo.messageRU && (
+        <section className="card">
+          <h3 className="card-h">Почему вес стоит</h3>
+          <p className="small">{plateauInfo.messageRU}</p>
+          <p className="small muted">Это не расчёт, а взгляд на два ряда сразу — куда посмотреть в первую очередь.</p>
+        </section>
+      )}
 
       <section className="card">
         <h3 className="card-h">Как прошла неделя</h3>
@@ -82,6 +109,22 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
           </button>
         </div>
         <p className="small muted">Взвешивайся раз в неделю в одно время: одна цифра прыгает, линия за недели показывает правду.</p>
+      </section>
+
+      <section className="card">
+        <h3 className="card-h">Якорь режима</h3>
+        <div className="anchor-row">
+          <div className="anchor-num">{anchorInfo.score}<span className="small">/100</span></div>
+          <div className="small muted">
+            {anchorInfo.socialJetlagMin == null
+              ? "ровность подъёма"
+              : <>ровность подъёма и разъезд будни/выходные (<b>{anchorInfo.socialJetlagMin} мин</b>)</>}
+          </div>
+        </div>
+        <p className="small">{anchorInfo.verdictRU}</p>
+        {anchorInfo.socialJetlagMin != null && (
+          <p className="small muted">{anchorSummaryRU(anchorInfo)}</p>
+        )}
       </section>
 
       {!plan ? (
