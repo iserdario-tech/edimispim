@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
-  filterRecipes, generateDay, generateWeek, swapDish, mealTimes, DINNER_BEFORE_BED_MIN,
+  filterRecipes, generateDay, generateWeek, swapDish, mealTimes, DINNER_BEFORE_BED_MIN, expectedBedMin,
 } from "../src/food/planner";
 import { parseHM } from "../src/time";
 import type { MealCount, Recipe, Targets } from "../src/food/types";
@@ -39,6 +39,29 @@ describe("filterRecipes", () => {
       ({ id, name: id, meal_type: "breakfast", kcal: 300, protein_g: 22, fiber_g: 4, cost_rub: 80, cookware: ["stove"], allergens: [], cuisine, ingredients: [] });
     const f = filterRecipes([mk("bu", "universal"), mk("ba", "asian"), mk("bm", "mediterranean")], { cuisines: ["asian"], cookware: ["stove"] });
     expect(f.map(r => r.id).sort()).toEqual(["ba", "bu"]);
+  });
+});
+
+// Регресс: отбой считали как «подъём + длительность сна», из-за чего на экране недели
+// ужин вставал в 12:00. Отсчитывать надо НАЗАД от подъёма.
+describe("expectedBedMin", () => {
+  it("подъём 07:00 при цели 7:45 → лечь в 23:15 накануне", () => {
+    expect(expectedBedMin(parseHM("07:00"), 465)).toBe(parseHM("23:15"));
+  });
+
+  it("отбой всегда раньше подъёма следующего дня и позже полудня", () => {
+    for (const wake of ["05:00", "07:00", "09:30", "11:00"]) {
+      const bed = expectedBedMin(parseHM(wake), 465);
+      expect(bed).toBeGreaterThan(parseHM("12:00"));
+      expect(bed).toBeLessThan(parseHM("07:00") + 1440);
+    }
+  });
+
+  it("ужин от такого отбоя попадает в вечер, а не в середину дня", () => {
+    const bed = expectedBedMin(parseHM("07:00"), 465);
+    const dinner = mealTimes({ wakeMin: parseHM("07:00"), bedMin: bed }, 4).dinner!;
+    expect(dinner).toBeGreaterThanOrEqual(parseHM("18:00"));
+    expect(dinner).toBeLessThanOrEqual(parseHM("22:00"));
   });
 });
 
