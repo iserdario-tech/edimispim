@@ -1,0 +1,67 @@
+:root { color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: -apple-system, system-ui, Arial, sans-serif; background: #0e1116; color: #e6e9ef; }
+.wrap { max-width: 560px; margin: 0 auto; padding: 20px 16px 60px; }
+h1 { font-size: 22px; margin: 8px 0; }
+h2 { font-size: 16px; margin: 20px 0 8px; }
+button { font: inherit; }
+.muted { color: #8b93a7; }
+.small { font-size: 12px; }
+.disclaimer { color: #8b93a7; font-size: 12px; margin-top: 24px; }
+
+.fld { display: block; margin: 12px 0; font-size: 14px; }
+.fld input, .fld select { display: block; width: 100%; margin-top: 6px; padding: 10px; border-radius: 8px;
+  border: 1px solid #2a2f3a; background: #161b22; color: #e6e9ef; }
+.chk { display: flex; gap: 8px; align-items: center; margin: 8px 0; font-size: 14px; }
+button.primary { width: 100%; margin-top: 18px; padding: 14px; border: 0; border-radius: 10px;
+  background: #2f81f7; color: #fff; font-weight: 600; }
+
+.rd { display: flex; gap: 12px; align-items: center; border: 1px solid; border-radius: 12px; padding: 12px; margin-bottom: 14px; }
+.rd-dot { width: 14px; height: 14px; border-radius: 50%; flex: 0 0 auto; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.chip { padding: 8px 12px; border-radius: 999px; border: 1px solid #2a2f3a; background: #161b22; color: #e6e9ef; }
+.chip.on { background: #2f81f7; border-color: #2f81f7; color: #fff; }
+
+.nextup { display: flex; flex-direction: column; gap: 2px; margin: 16px 0 4px; padding: 12px 14px;
+  border: 1px solid #2f81f7; border-radius: 12px; background: #10233f; }
+.nextup-label { font-size: 12px; color: #7aa9f0; text-transform: uppercase; letter-spacing: .04em; }
+.nextup-body { font-size: 16px; font-weight: 600; }
+
+.timeline { list-style: none; padding: 0; margin: 12px 0 16px; }
+.row { display: flex; gap: 12px; padding: 12px 0; border-top: 1px solid #1c2230; }
+.row-time { width: 90px; flex: 0 0 auto; color: #8b93a7; font-variant-numeric: tabular-nums; }
+.row-title { font-weight: 600; }
+.row-detail { margin: 2px 0; }
+.row.off { opacity: .55; }
+.row.past { opacity: .4; }
+.row.now { border-left: 3px solid #2f81f7; margin-left: -12px; padding-left: 9px; border-top-color: #2f81f7; }
+.row.now .row-time { color: #7aa9f0; }
+.row-note { color: #d29922; }
+.notes { color: #8b93a7; padding-left: 18px; }
+
+.flagbox { border: 1px solid #f85149; background: #2a1517; border-radius: 12px; padding: 12px; margin-bottom: 12px; font-size: 14px; }
+.flagbox ul { margin: 8px 0 0; padding-left: 18px; }
+.linkbtn { background: none; border: 0; color: #2f81f7; padding: 6px 0; cursor: pointer; font-size: 14px; }
+.morning { margin: 8px 0; padding: 10px 0; border-top: 1px solid #1c2230; border-bottom: 1px solid #1c2230; }
+.week { margin: 14px 0; padding: 12px; border: 1px solid #2a2f3a; border-radius: 12px; background: #12161d; }
+.week-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.streak { color: #d29922; font-size: 13px; }
+.spark-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.spark { color: #2f81f7; flex: none; }
+.week-stats { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; color: #c9d1e0; }
+.week-stats span { font-variant-numeric: tabular-nums; }
+.coach { margin: 12px 0 4px; border-top: 1px solid #1c2230; padding-top: 12px; }
+.coach summary { cursor: pointer; font-weight: 600; }
+.coach-body { margin-top: 8px; }
+.bubble { padding: 10px 12px; border-radius: 12px; margin: 8px 0; font-size: 14px; line-height: 1.45; white-space: pre-wrap; }
+.bubble.me { background: #2f81f7; color: #fff; margin-left: 24px; }
+.bubble.coachmsg { background: #161b22; border: 1px solid #2a2f3a; margin-right: 24px; }
+.coach-ask { display: flex; gap: 8px; margin-top: 10px; }
+.coach-ask input { flex: 1; min-width: 0; padding: 10px; border-radius: 8px; border: 1px solid #2a2f3a;
+  background: #161b22; color: #e6e9ef; font: inherit; }
+.coach-ask button:disabled { opacity: .5; }
+
+.tips { margin: 12px 0 4px; border-top: 1px solid #1c2230; padding-top: 12px; }
+.tips summary { cursor: pointer; font-weight: 600; }
+.tips-body p { font-size: 14px; color: #c9d1e0; margin: 10px 0; line-height: 1.45; }
+.tips-body b { color: #e6e9ef; }
