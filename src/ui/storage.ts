@@ -5,8 +5,8 @@ export interface StoredState { profile: Profile; history: DayLog[]; screener: Sc
 // выбранный на сегодня контекст (режим + переключатели), чтобы не терялся при перезапуске PWA
 export interface DayDraft { date: string; mode: DayMode; crunchEndHM: string; toggles: DayToggles }
 
-const KEY = "pospat.state.v1";
-const DAY_KEY = "pospat.day.v1";
+const KEY = "edimispim.state.v1";
+const DAY_KEY = "edimispim.day.v1";
 function defaultStore(): StorageLike {
   return typeof localStorage !== "undefined"
     ? localStorage
@@ -32,7 +32,7 @@ export function loadDayDraft(date: string, store: StorageLike = defaultStore()):
 
 // Бэкап: всё хранится в localStorage, при очистке браузера пропадёт. Экспорт/импорт — страховка.
 export function exportAll(store: StorageLike = defaultStore()): string {
-  return JSON.stringify({ app: "pospat", v: 1, state: store.getItem(KEY) }, null, 2);
+  return JSON.stringify({ app: "edimispim", v: 1, state: store.getItem(KEY) }, null, 2);
 }
 // Импорт: принимает файл экспорта. Возвращает восстановленное состояние или null (кривой файл).
 export function importAll(text: string, store: StorageLike = defaultStore()): StoredState | null {
