@@ -8,6 +8,8 @@ import recipesJson from "../food/data/recipes.json";
 import { anchor, anchorSummaryRU } from "../anchor.js";
 import { toDayRecords } from "./dayRecords.js";
 import { localDateISO } from "../today-date.js";
+import { nextStep } from "../next-step.js";
+import { plateau } from "../plateau.js";
 
 const RECIPES = recipesJson as Recipe[];
 const DOW = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
@@ -49,10 +51,10 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
     [history, today, profile.targetSleepMin],
   );
 
-  const anchorInfo = useMemo(
-    () => anchor(toDayRecords(history, weights ?? []), profile.targetSleepMin),
-    [history, weights, profile.targetSleepMin],
-  );
+  const records = useMemo(() => toDayRecords(history, weights ?? []), [history, weights]);
+  const anchorInfo = useMemo(() => anchor(records, profile.targetSleepMin), [records, profile.targetSleepMin]);
+  const step = useMemo(() => nextStep(records, !!food), [records, food]);
+  const plateauInfo = useMemo(() => plateau(records, profile.targetSleepMin), [records, profile.targetSleepMin]);
 
   const weightSeries = weights ?? [];
   const delta = weightSeries.length >= 2
@@ -62,6 +64,23 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
   return (
     <main className="wrap">
       <h2>Неделя целиком</h2>
+
+      <section className="card accent">
+        <h3 className="card-h">Что дальше</h3>
+        <p style={{ margin: "0 0 4px" }}>{step.titleRU}</p>
+        <p className="small muted" style={{ margin: 0 }}>{step.whyRU}</p>
+        {step.need > 1 && step.done < step.need && (
+          <p className="small muted" style={{ marginTop: 6 }}>Уже есть: {step.done} из {step.need}.</p>
+        )}
+      </section>
+
+      {plateauInfo.messageRU && (
+        <section className="card">
+          <h3 className="card-h">Почему вес стоит</h3>
+          <p className="small">{plateauInfo.messageRU}</p>
+          <p className="small muted">Это не расчёт, а взгляд на два ряда сразу — куда посмотреть в первую очередь.</p>
+        </section>
+      )}
 
       <section className="card">
         <h3 className="card-h">Как прошла неделя</h3>
