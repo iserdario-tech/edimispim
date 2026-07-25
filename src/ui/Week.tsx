@@ -7,6 +7,7 @@ import type { Recipe } from "../food/types.js";
 import recipesJson from "../food/data/recipes.json";
 import { anchor, anchorSummaryRU } from "../anchor.js";
 import { toDayRecords } from "./dayRecords.js";
+import { localDateISO } from "../today-date.js";
 
 const RECIPES = recipesJson as Recipe[];
 const DOW = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
@@ -29,7 +30,7 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
   const [openDay, setOpenDay] = useState<number | null>(0);
   const [showGrocery, setShowGrocery] = useState(false);
   const [kg, setKg] = useState("");
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDateISO();
 
   const plan = useMemo(() => {
     if (!food) return null;
