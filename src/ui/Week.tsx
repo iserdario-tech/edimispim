@@ -114,12 +114,11 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
       <section className="card">
         <h3 className="card-h">Якорь режима</h3>
         <div className="anchor-row">
-          <div className="anchor-num">{anchorInfo.regularity}<span className="small">/100</span></div>
+          <div className="anchor-num">{anchorInfo.score}<span className="small">/100</span></div>
           <div className="small muted">
-            ровность подъёма
-            {anchorInfo.socialJetlagMin != null && (
-              <> · разъезд будни/выходные <b>{anchorInfo.socialJetlagMin} мин</b></>
-            )}
+            {anchorInfo.socialJetlagMin == null
+              ? "ровность подъёма"
+              : <>ровность подъёма и разъезд будни/выходные (<b>{anchorInfo.socialJetlagMin} мин</b>)</>}
           </div>
         </div>
         <p className="small">{anchorInfo.verdictRU}</p>

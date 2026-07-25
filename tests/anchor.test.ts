@@ -81,3 +81,35 @@ describe("anchor", () => {
     expect(anchor(days, TARGET).socialJetlagMin).toBe(120);
   });
 });
+
+/**
+ * Регресс: `regularityScore` считает МЕДИАННОЕ отклонение и устойчив к выбросам —
+ * два выходных из семи не сдвигают медиану. Подъём на три часа позже по субботам
+ * давал «100 из 100» прямо рядом с надписью «разъезд 2 часа»: две цифры на одном
+ * экране противоречили друг другу.
+ */
+describe("единый показатель не противоречит сам себе", () => {
+  const weekdays = ["2026-07-20", "2026-07-21", "2026-07-22", "2026-07-23", "2026-07-24"];
+  const weekend = ["2026-07-25", "2026-07-26"];
+
+  it("большой разъезд роняет общий балл, даже когда медиана подъёма ровная", () => {
+    const days = [
+      ...weekdays.map(d => night(d, "23:00", "07:00")),
+      ...weekend.map(d => night(d, "02:30", "10:00")),
+    ];
+    const a = anchor(days, TARGET);
+    expect(a.regularity).toBe(100);          // медиана устойчива — это не баг метрики
+    expect(a.socialJetlagMin).toBeGreaterThanOrEqual(120);
+    expect(a.score).toBeLessThan(50);        // но общий балл честно низкий
+  });
+
+  it("ровный режим даёт высокий балл", () => {
+    const days = [...weekdays, ...weekend].map(d => night(d, "23:00", "07:00"));
+    expect(anchor(days, TARGET).score).toBe(100);
+  });
+
+  it("без выходных балл равен ровности подъёма, а не выдумывается", () => {
+    const a = anchor(weekdays.map(d => night(d, "23:00", "07:00")), TARGET);
+    expect(a.score).toBe(a.regularity);
+  });
+});
