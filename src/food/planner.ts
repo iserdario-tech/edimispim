@@ -37,6 +37,14 @@ export interface DayRhythm {
 export const DINNER_BEFORE_BED_MIN = 180;
 
 /**
+ * Ожидаемый отбой по профилю: отсчёт НАЗАД от подъёма, а не вперёд.
+ * Подъём 07:00 при цели сна 7:45 → лечь надо в 23:15 накануне, то есть в 1395-ю минуту суток.
+ */
+export function expectedBedMin(wakeMin: number, targetSleepMin: number): number {
+  return wakeMin + 1440 - targetSleepMin;
+}
+
+/**
  * Времена приёмов пищи от ритма суток, а не из справочника.
  * Ужин привязан к отбою, завтрак к подъёму, остальное раскладывается между ними.
  */

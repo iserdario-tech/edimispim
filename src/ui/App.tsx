@@ -2,7 +2,11 @@ import React, { useEffect, useRef, useState } from "react";
 import type { Profile, ScreenerResult, DayLog } from "../index.js";
 import { Onboarding } from "./Onboarding.js";
 import { Today } from "./Today.js";
+import { Week } from "./Week.js";
+import { Profile as ProfileScreen } from "./Profile.js";
 import { FoodSetup } from "./FoodSetup.js";
+import { Coach } from "./Coach.js";
+import { Nav, type Tab } from "./Nav.js";
 import { loadState, saveState, exportAll, importAll, type FoodSettings, type StoredState } from "./storage.js";
 import { syncPushContext } from "./notifications.js";
 import { migrateAll } from "../migrate.js";
@@ -21,12 +25,12 @@ function pickUpOldApps(): { food?: FoodSettings; weights: { date: string; kg: nu
 
 export function App() {
   const [state, setState] = useState<StoredState | null>(() => loadState());
+  const [tab, setTab] = useState<Tab>("today");
   const [editing, setEditing] = useState(false);
   const [editingFood, setEditingFood] = useState(false);
   const [migrationNote, setMigrationNote] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // При первом запуске забираем историю сна, вес и профиль питания из старых приложений.
   useEffect(() => {
     if (state) return;
     const picked = pickUpOldApps();
@@ -40,6 +44,18 @@ export function App() {
       if (!prev) return prev;
       const history = [...prev.history.filter((h) => h.date !== log.date), log].slice(-180);
       const next = { ...prev, history };
+      saveState(next);
+      return next;
+    });
+  };
+
+  const addWeight = (kg: number) => {
+    setState((prev) => {
+      if (!prev) return prev;
+      const date = new Date().toISOString().slice(0, 10);
+      const weights = [...(prev.weights ?? []).filter(w => w.date !== date), { date, kg }]
+        .sort((a, b) => a.date.localeCompare(b.date));
+      const next = { ...prev, weights };
       saveState(next);
       return next;
     });
@@ -72,7 +88,7 @@ export function App() {
         ...(weights.length ? { weights } : {}),
       });
       setEditing(false);
-      void syncPushContext(profile); // иначе пуши остались бы по старым настройкам
+      void syncPushContext(profile);
     }} />;
   }
 
@@ -83,36 +99,65 @@ export function App() {
 
   return (
     <>
-      {state.screener?.flagged && (
-        <div className="wrap" style={{ paddingBottom: 0 }}>
-          <div className="flagbox">
-            <strong>Важно</strong>
-            <ul>{state.screener.messagesRU.map((m, i) => <li key={i}>{m}</li>)}</ul>
-          </div>
-        </div>
-      )}
-      {migrationNote && (
+      {migrationNote && tab === "today" && (
         <div className="wrap" style={{ paddingBottom: 0 }}>
           <p className="muted small">📦 {migrationNote}</p>
         </div>
       )}
-      <div className="wrap" style={{ paddingBottom: 0, display: "flex", gap: 16, flexWrap: "wrap" }}>
-        <button className="linkbtn" onClick={() => setEditing(true)}>⚙︎ Сон</button>
-        <button className="linkbtn" onClick={() => setEditingFood(true)}>🍽️ Еда</button>
-        <button className="linkbtn" onClick={backup}>💾 Сохранить копию</button>
-        <button className="linkbtn" onClick={() => fileRef.current?.click()}>📂 Загрузить копию</button>
-        <input ref={fileRef} type="file" accept="application/json,.json" hidden
-          onChange={(e) => { const f = e.target.files?.[0]; if (f) restore(f); e.target.value = ""; }} />
-      </div>
-      <Today
-        profile={state.profile}
-        history={state.history}
-        screener={state.screener}
-        onLog={saveLog}
-        food={state.food}
-        weights={state.weights}
-        onSetupFood={() => setEditingFood(true)}
-      />
+
+      {tab === "today" && (
+        <Today
+          profile={state.profile} history={state.history} screener={state.screener}
+          onLog={saveLog} food={state.food} weights={state.weights}
+          onSetupFood={() => setEditingFood(true)}
+        />
+      )}
+      {tab === "week" && (
+        <Week
+          profile={state.profile} history={state.history} food={state.food}
+          weights={state.weights} onAddWeight={addWeight}
+          onSetupFood={() => setEditingFood(true)}
+        />
+      )}
+      {tab === "coach" && (
+        <main className="wrap">
+          <h2>Спроси что угодно</h2>
+          <p className="small muted">
+            Отвечает по научной базе о сне и питании и видит, как у тебя дела сейчас.
+            Не заменяет врача.
+          </p>
+          <Coach contextRU={coachContext(state)} />
+        </main>
+      )}
+      {tab === "profile" && (
+        <ProfileScreen
+          food={state.food} screener={state.screener}
+          onEditSleep={() => setEditing(true)}
+          onEditFood={() => setEditingFood(true)}
+          onBackup={backup} onRestore={restore}
+        />
+      )}
+
+      <input ref={fileRef} type="file" accept="application/json,.json" hidden
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) restore(f); e.target.value = ""; }} />
+      <Nav tab={tab} onChange={setTab} />
     </>
   );
+}
+
+/** Короткая сводка «как дела сейчас» — чтобы коуч отвечал про этого человека, а не вообще. */
+function coachContext(state: StoredState): string {
+  const last = state.history[state.history.length - 1];
+  const weights = state.weights ?? [];
+  return [
+    `Обычный подъём: ${state.profile.anchorWakeHM}. Цель сна: ${(state.profile.targetSleepMin / 60).toFixed(1)} ч.`,
+    last ? `Последняя отмеченная ночь ${last.date}: подъём ${last.wokeHM}, качество ${last.quality}/5${last.hadAlcohol ? ", был алкоголь" : ""}.` : "Ночи пока не отмечались.",
+    state.food ? `Питание настроено: ${state.food.mealCount} приёма в день.` : "Питание пока не настроено.",
+    weights.length >= 2
+      ? `Вес: с ${weights[0]!.kg} до ${weights[weights.length - 1]!.kg} кг за ${weights.length} замеров.`
+      : "",
+    state.screener?.flagged
+      ? `ВАЖНО, анкета показала признаки, требующие врача: ${state.screener.messagesRU.join(" ")}`
+      : "",
+  ].filter(Boolean).join("\n");
 }
