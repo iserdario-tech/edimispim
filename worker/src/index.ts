@@ -122,7 +122,7 @@ export default {
       const outgoing: { kind: string; title: string; body: string; data?: { url: string } }[] =
         dueWindows(plan.windows, minOfDay, 5).map((w) => ({ kind: w.kind, title: w.title, body: w.detail }));
       if (checkinDue(minOfDay, parseHM(s.profile.anchorWakeHM)))
-        outgoing.push({ kind: "checkin", title: "Как спалось?", body: "Отметь подъём — план на день подстроится под тебя.", data: { url: "/pospat/#mark" } });
+        outgoing.push({ kind: "checkin", title: "Как спалось?", body: "Отметь подъём — план на день подстроится под тебя.", data: { url: "/edimispim/#mark" } });
 
       // «что уже отправлено сегодня» держим отдельным ключом: эту запись пишет только крон,
       // а профиль/контекст дня — только /subscribe. Иначе два писателя затирали бы друг друга

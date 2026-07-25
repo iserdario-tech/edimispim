@@ -4,7 +4,7 @@ import { BACKEND_URL } from "./notifications.js";
 interface Turn { role: "user" | "assistant"; content: string }
 
 const HINTS = ["Почему я разбитый?", "Как продержаться сегодня?", "Спал 5 часов — что делать?"];
-const KEY = "pospat.coach.v1";
+const KEY = "edimispim.coach.v1";
 const loadTurns = (): Turn[] => {
   try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch { return []; }
 };
