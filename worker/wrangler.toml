@@ -1,0 +1,16 @@
+name = "pospat-push"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+
+# После `wrangler kv namespace create SUBS` вставь сюда выданный id:
+[[kv_namespaces]]
+binding = "SUBS"
+id = "f3a653d6771b48e0993782a5b0a68db3"
+
+# Рассылка раз в 5 минут (проверяет, чьё окно наступило)
+[triggers]
+crons = ["*/5 * * * *"]
+
+# Бесплатная ИИ Cloudflare для коуча (без ключа; лимит квоты — не деньги)
+[ai]
+binding = "AI"

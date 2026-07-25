@@ -1,0 +1,5 @@
+node_modules
+dist
+.vapid.json
+dist-dry
+.DS_Store
