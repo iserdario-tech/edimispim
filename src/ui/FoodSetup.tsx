@@ -1,0 +1,123 @@
+import React, { useState } from "react";
+import type { FoodSettings } from "./storage.js";
+import type { Activity, Budget, MealCount, Sex } from "../food/types.js";
+
+const COOKWARE = [
+  ["stove", "плита"], ["oven", "духовка"], ["microwave", "микроволновка"],
+  ["blender", "блендер"], ["multicooker", "мультиварка"], ["airfryer", "аэрогриль"],
+] as const;
+
+const ALLERGENS = [
+  ["milk", "молоко"], ["egg", "яйца"], ["fish", "рыба"],
+  ["gluten", "глютен"], ["nuts", "орехи"], ["soy", "соя"],
+] as const;
+
+/**
+ * Короткая форма про еду. Отдельно от онбординга сна: приложение полезно и без неё
+ * (ведёт сон), а меню появляется, когда человек готов её заполнить.
+ */
+export function FoodSetup({ initial, onDone, onCancel }: {
+  initial?: FoodSettings;
+  onDone: (f: FoodSettings) => void;
+  onCancel?: () => void;
+}) {
+  const p = initial?.profile;
+  const [sex, setSex] = useState<Sex>(p?.sex ?? "m");
+  const [age, setAge] = useState(p?.age ?? 30);
+  const [heightCm, setHeightCm] = useState(p?.heightCm ?? 175);
+  const [weightKg, setWeightKg] = useState(p?.weightKg ?? 80);
+  const [goalWeightKg, setGoalWeightKg] = useState(p?.goalWeightKg ?? 75);
+  const [activity, setActivity] = useState<Activity>(p?.activity ?? "low");
+  const [budget, setBudget] = useState<Budget>(initial?.constraints.budget ?? "medium");
+  const [mealCount, setMealCount] = useState<MealCount>(initial?.mealCount ?? 4);
+  const [cookware, setCookware] = useState<string[]>(initial?.constraints.cookware ?? ["stove", "oven", "microwave"]);
+  const [allergens, setAllergens] = useState<string[]>(initial?.constraints.allergens ?? []);
+  const [dislikes, setDislikes] = useState((initial?.constraints.dislikes ?? []).join(", "));
+
+  const toggle = (list: string[], set: (v: string[]) => void, key: string) =>
+    set(list.includes(key) ? list.filter(x => x !== key) : [...list, key]);
+
+  return (
+    <main className="wrap">
+      <h2>Еда — вторая половина суток</h2>
+      <p className="muted small">
+        Меню собирается под твой сон: ужин встаёт за три часа до отбоя, а после плохой ночи
+        день становится проще. Заполнить нужно один раз.
+      </p>
+
+      <div className="chips">
+        <button className={sex === "m" ? "chip on" : "chip"} onClick={() => setSex("m")}>Мужчина</button>
+        <button className={sex === "f" ? "chip on" : "chip"} onClick={() => setSex("f")}>Женщина</button>
+      </div>
+
+      <label className="fld small">Возраст
+        <input type="number" min={18} max={90} value={age} onChange={e => setAge(+e.target.value)} />
+      </label>
+      <label className="fld small">Рост, см
+        <input type="number" min={130} max={220} value={heightCm} onChange={e => setHeightCm(+e.target.value)} />
+      </label>
+      <label className="fld small">Вес сейчас, кг
+        <input type="number" min={35} max={250} step="0.1" value={weightKg} onChange={e => setWeightKg(+e.target.value)} />
+      </label>
+      <label className="fld small">Цель по весу, кг
+        <input type="number" min={35} max={250} step="0.1" value={goalWeightKg} onChange={e => setGoalWeightKg(+e.target.value)} />
+      </label>
+
+      <div className="small muted" style={{ marginTop: 10 }}>Насколько подвижный день — про быт, не про спортзал</div>
+      <div className="chips">
+        <button className={activity === "low" ? "chip on" : "chip"} onClick={() => setActivity("low")}>Сидячий</button>
+        <button className={activity === "medium" ? "chip on" : "chip"} onClick={() => setActivity("medium")}>Средний</button>
+        <button className={activity === "high" ? "chip on" : "chip"} onClick={() => setActivity("high")}>На ногах</button>
+      </div>
+
+      <div className="small muted" style={{ marginTop: 10 }}>
+        Сколько раз в день есть. На вес это почти не влияет — выбирай как удобно жить.
+        Важнее, чтобы приёмы были примерно в одно время.
+      </div>
+      <div className="chips">
+        {([2, 3, 4, 5] as MealCount[]).map(n => (
+          <button key={n} className={mealCount === n ? "chip on" : "chip"} onClick={() => setMealCount(n)}>{n} раза</button>
+        ))}
+      </div>
+
+      <div className="small muted" style={{ marginTop: 10 }}>Что есть на кухне</div>
+      <div className="chips">
+        {COOKWARE.map(([key, ru]) => (
+          <button key={key} className={cookware.includes(key) ? "chip on" : "chip"}
+            onClick={() => toggle(cookware, setCookware, key)}>{ru}</button>
+        ))}
+      </div>
+
+      <div className="small muted" style={{ marginTop: 10 }}>Аллергии — исключим жёстко</div>
+      <div className="chips">
+        {ALLERGENS.map(([key, ru]) => (
+          <button key={key} className={allergens.includes(key) ? "chip on" : "chip"}
+            onClick={() => toggle(allergens, setAllergens, key)}>{ru}</button>
+        ))}
+      </div>
+
+      <label className="fld small">Что не любишь (через запятую)
+        <input type="text" value={dislikes} placeholder="капуста, нут" onChange={e => setDislikes(e.target.value)} />
+      </label>
+
+      <div className="small muted" style={{ marginTop: 10 }}>Бюджет</div>
+      <div className="chips">
+        <button className={budget === "small" ? "chip on" : "chip"} onClick={() => setBudget("small")}>Небольшой</button>
+        <button className={budget === "medium" ? "chip on" : "chip"} onClick={() => setBudget("medium")}>Средний</button>
+        <button className={budget === "large" ? "chip on" : "chip"} onClick={() => setBudget("large")}>Свободный</button>
+      </div>
+
+      <div style={{ display: "flex", gap: 12, marginTop: 18, flexWrap: "wrap" }}>
+        <button className="chip on" onClick={() => onDone({
+          profile: { sex, age, heightCm, weightKg, goalWeightKg, activity },
+          constraints: {
+            allergens: allergens as never, cookware, budget, cuisines: [],
+            dislikes: dislikes.split(",").map(s => s.trim()).filter(Boolean),
+          },
+          mealCount,
+        })}>Собрать меню</button>
+        {onCancel && <button className="linkbtn" onClick={onCancel}>Не сейчас</button>}
+      </div>
+    </main>
+  );
+}

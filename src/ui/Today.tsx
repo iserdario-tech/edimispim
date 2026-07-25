@@ -1,10 +1,18 @@
 import React, { useEffect, useMemo, useState } from "react";
 import type { Profile, DayLog, DayMode, DayToggles, ScreenerResult } from "../index.js";
-import { planDay, weeklyInsight, streakDays } from "../index.js";
+import { planDay, weeklyInsight, streakDays, parseHM, sleepDurationMin } from "../index.js";
 import { toPlanView } from "./viewModel.js";
-import { loadDayDraft, saveDayDraft } from "./storage.js";
+import { loadDayDraft, saveDayDraft, type FoodSettings } from "./storage.js";
 import { enableNotifications, syncPushContext } from "./notifications.js";
 import { Coach } from "./Coach.js";
+import { computeTargets, applySafety, filterRecipes, generateAdaptedDay } from "../food/index.js";
+import type { Recipe } from "../food/types.js";
+import recipesJson from "../food/data/recipes.json";
+import { mealRows, mergeTimeline } from "./mealRows.js";
+import { explain } from "../explain.js";
+import { toDayRecords } from "./dayRecords.js";
+
+const RECIPES = recipesJson as Recipe[];
 
 // "03:00" после полуночи -> "27:00" (движок считает минуты от полуночи дня)
 function crunchStr(hm: string): string {
@@ -37,7 +45,15 @@ function plural(n: number, one: string, few: string, many: string): string {
   return many;
 }
 
-export function Today({ profile, history, screener, onLog }: { profile: Profile; history: DayLog[]; screener?: ScreenerResult | null; onLog: (log: DayLog) => void }) {
+export function Today({ profile, history, screener, onLog, food, weights, onSetupFood }: {
+  profile: Profile;
+  history: DayLog[];
+  screener?: ScreenerResult | null;
+  onLog: (log: DayLog) => void;
+  food?: FoodSettings;
+  weights?: { date: string; kg: number }[];
+  onSetupFood?: () => void;
+}) {
   const now = new Date();
   const today = now.toISOString().slice(0, 10);
   const nowMin = now.getHours() * 60 + now.getMinutes();
@@ -73,6 +89,51 @@ export function Today({ profile, history, screener, onLog }: { profile: Profile;
     });
     return toPlanView(plan, nowMin);
   }, [profile, history, mode, crunchEndHM, toggles, wokeHM, bedHM, quality, today, nowMin]);
+
+  // ——— вторая половина суток: еда ———
+  // Ужин привязан к отбою из плана сна, а не к «18:00» из справочника. После плохой ночи
+  // день собирается проще, но с тем же калоражем.
+  const bedMin = useMemo(() => {
+    const bed = view.rows.find(r => r.kind === "sleep" && r.icon === "🛌");
+    return bed?.startMin ?? parseHM(profile.anchorWakeHM) + profile.targetSleepMin;
+  }, [view.rows, profile]);
+
+  const sleptMin = useMemo(
+    () => (bedHM ? sleepDurationMin({ wokeHM, bedHM, quality }, profile.targetSleepMin) : undefined),
+    [wokeHM, bedHM, quality, profile.targetSleepMin],
+  );
+
+  const foodDay = useMemo(() => {
+    if (!food) return null;
+    const safe = applySafety(computeTargets(food.profile), food.profile, {});
+    const pool = filterRecipes(RECIPES, food.constraints);
+    if (!pool.length) return null;
+    const day = generateAdaptedDay(
+      safe, pool,
+      { rhythm: { wakeMin: parseHM(wokeHM), bedMin }, mealCount: food.mealCount, offset: new Date(today).getDay() },
+      { sleptMin, targetSleepMin: profile.targetSleepMin, quality },
+    );
+    return { day, safe };
+  }, [food, wokeHM, bedMin, today, sleptMin, profile.targetSleepMin, quality]);
+
+  const rows = useMemo(() => {
+    if (!foodDay) return view.rows;
+    return mergeTimeline(view.rows, mealRows(foodDay.day, bedMin, nowMin));
+  }, [view.rows, foodDay, bedMin, nowMin]);
+
+  // «Почему сегодня так» — одно сообщение, которое видит связь сна, еды и веса сразу.
+  const explanation = useMemo(() => {
+    const days = toDayRecords(history, weights ?? []);
+    const todayRec = days.find(d => d.date === today)
+      ?? { date: today, sleep: { wokeHM, bedHM: bedHM || undefined, quality } };
+    return explain({
+      today: todayRec,
+      days: days.some(d => d.date === today) ? days : [...days, todayRec],
+      targetSleepMin: profile.targetSleepMin,
+      screenerFlagged: screener?.flagged,
+      caffeineCutoffHM: view.rows.find(r => r.icon === "☕")?.time,
+    });
+  }, [history, weights, today, wokeHM, bedHM, quality, profile.targetSleepMin, screener, view.rows]);
 
   const insight = useMemo(() => weeklyInsight(history, today, profile.targetSleepMin), [history, today, profile.targetSleepMin]);
   const streak = useMemo(() => streakDays(history, today), [history, today]);
@@ -112,6 +173,12 @@ export function Today({ profile, history, screener, onLog }: { profile: Profile;
           <div className="small">{view.readiness.priorityRU}</div>
         </div>
       </header>
+
+      {/* Почему сегодня так — то, чего не может сказать ни приложение о сне, ни о еде */}
+      <section className="why-today">
+        <div className="why-today-label">Почему сегодня так</div>
+        <p>{explanation.textRU}</p>
+      </section>
 
       <button className={notifOn ? "chip on" : "chip"} onClick={async () => setNotifMsg(await enableNotifications(profile))}>
         {notifOn ? "🔔 Напоминания включены" : "🔔 Включить напоминания"}
@@ -184,9 +251,23 @@ export function Today({ profile, history, screener, onLog }: { profile: Profile;
         <div className="nextup"><span className="nextup-body">На сегодня всё — пора отдыхать 🌙</span></div>
       )}
 
+      {foodDay ? (
+        <div className="day-totals small">
+          <b>День целиком:</b> {foodDay.day.totals.kcal} ккал · белок {foodDay.day.totals.protein} г ·
+          клетчатка {foodDay.day.totals.fiber} г
+          {foodDay.day.simplified && <span className="tag"> · упрощён после плохой ночи</span>}
+        </div>
+      ) : (
+        <div className="day-totals small">
+          <b>Еда пока не подключена.</b> Сейчас приложение ведёт только сон.{" "}
+          {onSetupFood && <button className="linkbtn" onClick={onSetupFood}>Добавить меню под свой сон →</button>}
+        </div>
+      )}
+
+      {/* Одна лента суток: сон и еда на общей оси времени, а не два раздела */}
       <ol className="timeline">
-        {view.rows.map((r, i) => (
-          <li key={i} className={"row" + (r.past ? " past" : "") + (i === view.nextIdx ? " now" : "")}>
+        {rows.map((r, i) => (
+          <li key={i} className={"row" + (r.past ? " past" : "") + (r.kind === "food" ? " food" : "")}>
             <div className="row-time">{r.time}{r.endTime ? `–${r.endTime}` : ""}</div>
             <div className="row-body">
               <div className="row-title">{r.icon} {r.title}</div>

@@ -4,6 +4,8 @@ import { fmtHM } from "../index.js";
 export interface PlanRow {
   time: string; endTime?: string; icon: string; title: string; detail: string; why: string;
   past?: boolean;             // шаг уже прошёл (по текущему времени)
+  startMin: number;           // нужен, чтобы слить ленту сна с приёмами пищи в одну ось
+  kind: "sleep" | "food";
 }
 export interface PlanView {
   readiness: { level: Readiness; label: string; color: string; whyRU: string; priorityRU: string };
@@ -29,6 +31,8 @@ export function toPlanView(plan: DayPlan, nowMin?: number): PlanView {
     icon: ICONS[w.kind],
     title: w.title, detail: w.detail, why: w.why,
     past: nowMin != null ? (w.endMin ?? w.startMin) <= nowMin : undefined,
+    startMin: w.startMin,
+    kind: "sleep" as const,
   }));
   // ближайший не-прошедший шаг. ponytail: наивное сравнение в пределах суток —
   // окна аврала после полуночи (startMin>1440) не корректируем, это редкий кейс.

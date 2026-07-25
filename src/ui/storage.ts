@@ -1,7 +1,22 @@
 import type { Profile, DayLog, DayMode, DayToggles, ScreenerResult } from "../index.js";
+import type { Constraints, FoodProfile, MealCount } from "../food/types.js";
 
 export type StorageLike = { getItem(k: string): string | null; setItem(k: string, v: string): void };
-export interface StoredState { profile: Profile; history: DayLog[]; screener: ScreenerResult | null }
+
+/** Питание — вторая половина суток. Появляется после короткой формы, до неё приложение ведёт только сон. */
+export interface FoodSettings {
+  profile: FoodProfile;
+  constraints: Constraints;
+  mealCount: MealCount;
+}
+
+export interface StoredState {
+  profile: Profile;
+  history: DayLog[];
+  screener: ScreenerResult | null;
+  food?: FoodSettings;
+  weights?: { date: string; kg: number }[];
+}
 // выбранный на сегодня контекст (режим + переключатели), чтобы не терялся при перезапуске PWA
 export interface DayDraft { date: string; mode: DayMode; crunchEndHM: string; toggles: DayToggles }
 
