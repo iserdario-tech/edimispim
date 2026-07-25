@@ -3,3 +3,4 @@ dist
 .vapid.json
 dist-dry
 .DS_Store
+.worktrees
