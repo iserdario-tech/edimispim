@@ -71,33 +71,44 @@ export function explain(input: ExplainInput): Explanation {
     };
   }
 
-  // 2. Плохая ночь: аппетит выше, самоконтроль ниже (S-032, X24). План уже перестроен.
   const night = today.sleep;
   const sleptMin = night?.bedHM
     ? sleepDurationMin({ wokeHM: night.wokeHM, bedHM: night.bedHM, quality: night.quality }, targetSleepMin)
     : undefined;
   const roughByLength = sleptMin !== undefined && sleptMin < targetSleepMin - 60;
   const roughByQuality = night !== undefined && night.quality <= 2;
-  if (roughByLength || roughByQuality) {
+  const roughToday = roughByLength || roughByQuality;
+
+  const planTail = roughToday
+    ? " План на сегодня уже проще: готовки меньше, основная еда раньше, лакомство передвинуто на вечер."
+    : "";
+
+  // 2. Правда про весы (A1) — главное, чего не может сказать ни одно приложение по отдельности.
+  //
+  // Стоит ВЫШЕ правила про плохую ночь намеренно. При хроническом недосыпе — а это и есть
+  // тот случай, когда предупреждение нужнее всего — каждый день срабатывало бы правило 3,
+  // и человек никогда бы не услышал главного. Само правило редкое: нужны два замера веса,
+  // четыре ночи с отбоем, падение веса и недосыпная неделя.
+  const scale = scaleTruth(last7, targetSleepMin);
+  if (scale) return { ...scale, textRU: scale.textRU + planTail };
+
+  // 3. Плохая ночь: аппетит выше, самоконтроль ниже (S-032, X24). План уже перестроен.
+  if (roughToday) {
     const howMuch = sleptMin !== undefined ? `Сон ${hhmm(sleptMin)}` : "Ночь вышла тяжёлой";
     const coffee = input.caffeineCutoffHM ? ` Кофе — до ${input.caffeineCutoffHM}.` : "";
     return {
       kind: "rough_night",
-      textRU: `${howMuch}, качество ${night?.quality ?? "?"} из 5. Сегодня будет сильнее тянуть на сладкое и жирное — это физиология недосыпа, а не слабость характера. План на день уже проще: готовки меньше, основная еда раньше, лакомство передвинуто на вечер.${coffee}`,
+      textRU: `${howMuch}, качество ${night?.quality ?? "?"} из 5. Сегодня будет сильнее тянуть на сладкое и жирное — это физиология недосыпа, а не слабость характера.${planTail}${coffee}`,
     };
   }
 
-  // 3. Алкоголь прошлой ночью: двойная цена (X12, F2). Не запрет, а прайслист.
+  // 4. Алкоголь прошлой ночью: двойная цена (X12, F2). Не запрет, а прайслист.
   if (night?.alcohol) {
     return {
       kind: "alcohol",
       textRU: "Вчера был алкоголь. Цена двойная: калории, которые не компенсируются меньшей едой, и подавленный REM-сон — уже с двух порций. Сегодня аппетит будет выше обычного, так что план сделан сытнее в первой половине дня.",
     };
   }
-
-  // 4. Правда про весы (A1) — самое ценное, чего не может сказать ни одно приложение по отдельности.
-  const scale = scaleTruth(last7, targetSleepMin);
-  if (scale) return scale;
 
   // 5. Якорь: регулярность связана с результатом (D1, D2).
   if (logs.length >= 4 && regularityScore(logs) < 60) {
