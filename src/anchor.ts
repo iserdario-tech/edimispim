@@ -37,12 +37,22 @@ const isWeekend = (iso: string): boolean => {
 };
 
 export interface AnchorResult {
-  regularity: number;              // 0..100 по времени подъёма
+  score: number;                   // 0..100 — единый показатель, который и показываем
+  regularity: number;              // 0..100 по времени подъёма (устойчив к выбросам)
   socialJetlagMin: number | null;  // null — не хватает будних или выходных ночей
   weekdayMidsleep: number | null;
   weekendMidsleep: number | null;
   verdictRU: string;
 }
+
+/**
+ * Джетлаг в баллы: 0 минут → 100, три часа и больше → 0.
+ * Три часа взяты как потолок, потому что дальше разница уже сопоставима со сменой
+ * часового пояса, и различать 4 часа и 5 практического смысла не имеет.
+ */
+const JETLAG_ZERO_AT_MIN = 180;
+const jetlagScore = (min: number): number =>
+  Math.max(0, Math.round(100 - (min / JETLAG_ZERO_AT_MIN) * 100));
 
 const mean = (xs: number[]): number => xs.reduce((a, b) => a + b, 0) / xs.length;
 const hm = (min: number): string =>
@@ -63,6 +73,7 @@ export function anchor(days: DayRecord[], targetSleepMin: number): AnchorResult 
 
   if (weekdays.length < MIN_NIGHTS || weekends.length < MIN_NIGHTS) {
     return {
+      score: regularity,           // пока сравнивать не с чем — показываем ровность подъёма
       regularity,
       socialJetlagMin: null,
       weekdayMidsleep: weekdays.length ? mean(weekdays) : null,
@@ -76,6 +87,12 @@ export function anchor(days: DayRecord[], targetSleepMin: number): AnchorResult 
   const jetlag = Math.round(circularDiffMin(wd, we));
 
   return {
+    // Берём ХУДШЕЕ из двух, а не среднее и не одну лишь регулярность.
+    // Причина: `regularityScore` считает медианное отклонение, а оно устойчиво к выбросам —
+    // два выходных из семи не сдвигают медиану, и подъём на три часа позже по субботам
+    // давал честные «100 из 100» прямо рядом с надписью «разъезд 2 часа».
+    // Одна цифра не должна противоречить другой на том же экране.
+    score: Math.min(regularity, jetlagScore(jetlag)),
     regularity,
     socialJetlagMin: jetlag,
     weekdayMidsleep: wd,
