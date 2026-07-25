@@ -10,6 +10,7 @@ import { Nav, type Tab } from "./Nav.js";
 import { loadState, saveState, exportAll, importAll, type FoodSettings, type StoredState } from "./storage.js";
 import { syncPushContext } from "./notifications.js";
 import { migrateAll } from "../migrate.js";
+import { localDateISO } from "../today-date.js";
 
 /** Данные из pospat и oheedet лежат на том же origin — подхватываем их, а не просим вводить заново. */
 function pickUpOldApps(): { food?: FoodSettings; weights: { date: string; kg: number }[]; notesRU: string[] } {
@@ -52,7 +53,7 @@ export function App() {
   const addWeight = (kg: number) => {
     setState((prev) => {
       if (!prev) return prev;
-      const date = new Date().toISOString().slice(0, 10);
+      const date = localDateISO();
       const weights = [...(prev.weights ?? []).filter(w => w.date !== date), { date, kg }]
         .sort((a, b) => a.date.localeCompare(b.date));
       const next = { ...prev, weights };
@@ -64,7 +65,7 @@ export function App() {
   const backup = () => {
     const url = URL.createObjectURL(new Blob([exportAll()], { type: "application/json" }));
     const a = document.createElement("a");
-    a.href = url; a.download = `едим-и-спим-копия-${new Date().toISOString().slice(0, 10)}.json`;
+    a.href = url; a.download = `едим-и-спим-копия-${localDateISO()}.json`;
     a.click(); URL.revokeObjectURL(url);
   };
   const restore = async (file: File) => {
