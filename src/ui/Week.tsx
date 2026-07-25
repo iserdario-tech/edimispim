@@ -5,6 +5,8 @@ import type { FoodSettings } from "./storage.js";
 import { computeTargets, applySafety, generateWeek, buildGroceryList, expectedBedMin } from "../food/index.js";
 import type { Recipe } from "../food/types.js";
 import recipesJson from "../food/data/recipes.json";
+import { anchor, anchorSummaryRU } from "../anchor.js";
+import { toDayRecords } from "./dayRecords.js";
 
 const RECIPES = recipesJson as Recipe[];
 const DOW = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
@@ -46,6 +48,11 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
     [history, today, profile.targetSleepMin],
   );
 
+  const anchorInfo = useMemo(
+    () => anchor(toDayRecords(history, weights ?? []), profile.targetSleepMin),
+    [history, weights, profile.targetSleepMin],
+  );
+
   const weightSeries = weights ?? [];
   const delta = weightSeries.length >= 2
     ? weightSeries[0]!.kg - weightSeries[weightSeries.length - 1]!.kg
@@ -82,6 +89,23 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
           </button>
         </div>
         <p className="small muted">Взвешивайся раз в неделю в одно время: одна цифра прыгает, линия за недели показывает правду.</p>
+      </section>
+
+      <section className="card">
+        <h3 className="card-h">Якорь режима</h3>
+        <div className="anchor-row">
+          <div className="anchor-num">{anchorInfo.regularity}<span className="small">/100</span></div>
+          <div className="small muted">
+            ровность подъёма
+            {anchorInfo.socialJetlagMin != null && (
+              <> · разъезд будни/выходные <b>{anchorInfo.socialJetlagMin} мин</b></>
+            )}
+          </div>
+        </div>
+        <p className="small">{anchorInfo.verdictRU}</p>
+        {anchorInfo.socialJetlagMin != null && (
+          <p className="small muted">{anchorSummaryRU(anchorInfo)}</p>
+        )}
       </section>
 
       {!plan ? (
