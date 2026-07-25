@@ -65,3 +65,23 @@ button.primary { width: 100%; margin-top: 18px; padding: 14px; border: 0; border
 .tips summary { cursor: pointer; font-weight: 600; }
 .tips-body p { font-size: 14px; color: #c9d1e0; margin: 10px 0; line-height: 1.45; }
 .tips-body b { color: #e6e9ef; }
+
+/* «Почему сегодня так» — главное сообщение дня, видно первым */
+.why-today {
+  margin: 14px 0;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent, #5E6AD2) 12%, transparent);
+  border-left: 3px solid var(--accent, #5E6AD2);
+}
+.why-today-label {
+  font-size: 12px; text-transform: uppercase; letter-spacing: .06em;
+  opacity: .65; margin-bottom: 6px;
+}
+.why-today p { margin: 0; line-height: 1.5; }
+
+/* Еда в общей ленте суток — отличается заливкой, но стоит в том же ряду, что и сон */
+.timeline .row.food .row-body { background: color-mix(in srgb, var(--accent, #5E6AD2) 7%, transparent); border-radius: 10px; padding: 8px 10px; }
+
+.day-totals { margin: 12px 0; padding: 10px 12px; border-radius: 10px; background: rgba(127,127,127,.10); }
+.day-totals .tag { opacity: .7; }
