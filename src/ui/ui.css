@@ -237,3 +237,69 @@ input[type="range"] { min-height: 44px; }
 .buy-line.have { opacity: .55; }
 .left-note { opacity: .75; }
 .have-block { margin-top: 10px; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   Широкий экран.
+   Приложение подстраивается под ШИРИНУ ОКНА, а не под «тип устройства»:
+   так оно правильно ведёт себя и в половине экрана на ноутбуке,
+   и на планшете в альбомной ориентации, и при изменении размера окна.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Планшет и узкий десктоп: просто шире и посвободнее */
+@media (min-width: 700px) {
+  .wrap { max-width: 680px; padding: 24px 24px calc(84px + env(safe-area-inset-bottom)); }
+  .why-today p { font-size: 17px; }
+}
+
+/* Десктоп: навигация уезжает вбок, контент — в две колонки */
+@media (min-width: 1024px) {
+  .tabbar {
+    top: 0; bottom: 0; right: auto; width: 232px;
+    grid-template-columns: 1fr;
+    align-content: start;
+    gap: 4px;
+    padding: 24px 12px;
+    border-top: 0;
+    border-right: 1px solid rgba(127,127,127,.22);
+  }
+  .tab {
+    flex-direction: row; justify-content: flex-start; gap: 12px;
+    padding: 12px 14px; font-size: 15px; border-radius: 10px;
+  }
+  .tab.on { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+
+  body { padding-left: 232px; }
+  .wrap { max-width: 1080px; padding: 32px 40px 48px; }
+  .screen-head { max-width: 1080px; padding: 24px 40px 0; }
+
+  /* «Сегодня»: лента суток слева, объяснение и отметка — справа */
+  .wrap.two-col {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(320px, .85fr);
+    gap: 32px;
+    align-items: start;
+  }
+  /* обе колонки — в ОДНОЙ строке: без grid-row первая по DOM (боковая) занимала
+     верхнюю строку, а лента уезжала под неё и начиналась с 683-го пикселя */
+  .two-col .col-main { grid-column: 1; grid-row: 1; }
+  .two-col .col-side { grid-column: 2; grid-row: 1; position: sticky; top: 32px; }
+
+  /* «Неделя» и «Я»: карточки плиткой, а не одной колонкой во всю ширину —
+     строка в 1100 пикселей читается плохо (комфортно 60–75 символов) */
+  .wrap:not(.two-col):not(.chat-screen) {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 20px;
+    align-content: start;
+  }
+  .wrap:not(.two-col):not(.chat-screen) > h2,
+  .wrap:not(.two-col):not(.chat-screen) > .card.accent { grid-column: 1 / -1; }
+  .wrap:not(.two-col):not(.chat-screen) > .card { margin: 0; }
+  .chat-screen { max-width: 820px; }
+}
+
+/* Очень широкий экран: не растягиваем текст на всю ширину — читать тяжело */
+@media (min-width: 1440px) {
+  .wrap { max-width: 1180px; }
+  .chat-screen { max-width: 820px; }   /* иначе реплики растягиваются через весь экран */
+}
