@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from "react";
 import type { Grocery, Meal } from "../food/types.js";
-import { SHOPS, DEFAULT_SHOP_ID, shopById, searchUrl, opensInNewTab } from "../food/shops.js";
+import { SHOPS, DEFAULT_SHOP_ID, shopById, searchUrl } from "../food/shops.js";
 import { planPurchase, type BuyLine, type Pantry } from "../food/packaging.js";
-import { loadFavorites, saveFavorite, removeFavorite, favKey, extractProductUrl, type Favorites } from "../food/favorites.js";
+import { PRICES_SOURCE, PRICES_DATE } from "../food/prices.js";
 import { hintFor } from "../food/ingredients.js";
 
 const SHOP_KEY = "edimispim.shop";
@@ -18,11 +18,8 @@ const writeLS = (key: string, v: unknown): void => {
 
 const pantryKey = (name: string, unit: string): string => `${name.toLowerCase().trim()}|${unit}`;
 
-/** На телефоне — в том же окне, иначе установленное приложение магазина не перехватит ссылку. */
-const linkTarget = (): { target?: string; rel?: string } =>
-  typeof window !== "undefined" && opensInNewTab(window.innerWidth)
-    ? { target: "_blank", rel: "noopener noreferrer" }
-    : {};
+/** Всегда новой вкладкой: список покупок не должен исчезать из-под рук. */
+const linkTarget = { target: "_blank", rel: "noopener noreferrer" } as const;
 
 /**
  * Показывать ли остаток.
@@ -36,11 +33,8 @@ const showsLeftover = (line: BuyLine): boolean =>
   line.perishDays !== undefined && line.perishDays <= 14 &&
   line.leftover >= line.need * 0.25;
 
-/** Ссылка: сохранённая карточка товара, если есть, иначе поиск по названию. */
-function itemLink(name: string, shopId: string, favs: Favorites): { href: string; exact: boolean } {
-  const fav = favs[favKey(name, shopId)];
-  return fav ? { href: fav.url, exact: true } : { href: searchUrl(shopById(shopId), name), exact: false };
-}
+/** Ссылка на поиск товара в выбранном сервисе. */
+const itemLink = (name: string, shopId: string): string => searchUrl(shopById(shopId), name);
 
 /**
  * Покупки — список с галочками.
@@ -56,7 +50,6 @@ function itemLink(name: string, shopId: string, favs: Favorites): { href: string
 export function GroceryBlock({ grocery }: { grocery: Grocery }) {
   const [shopId, setShopId] = useState(() => readLS(SHOP_KEY, DEFAULT_SHOP_ID));
   const [pantry, setPantry] = useState<Pantry>(() => readLS<Pantry>(PANTRY_KEY, {}));
-  const [favs, setFavs] = useState<Favorites>(loadFavorites);
   const [scope, setScope] = useState<"week" | number>("week");
 
   const shop = shopById(shopId);
@@ -87,22 +80,8 @@ export function GroceryBlock({ grocery }: { grocery: Grocery }) {
     setPantry(next); writeLS(PANTRY_KEY, next);
   };
 
-  /** Запомнить конкретную карточку товара — чтобы не выбирать из двадцати видов заново. */
-  const remember = (name: string) => {
-    const current = favs[favKey(name, shopId)];
-    const pasted = prompt(
-      `«${name}» в «${shop.name}»\n\nОткрой нужный товар в приложении магазина, нажми «Поделиться» и вставь ссылку сюда.\nДальше приложение будет открывать сразу его.\n\nПустое поле — забыть товар.`,
-      current?.url ?? "",
-    );
-    if (pasted === null) return;
-    if (!pasted.trim()) { setFavs(removeFavorite(favs, name, shopId)); return; }
-    const url = extractProductUrl(pasted);
-    if (!url) { alert("Не нашёл ссылку в тексте"); return; }
-    setFavs(saveFavorite(favs, name, shopId, { url }));
-  };
-
   const row = (line: BuyLine, checked: boolean) => {
-    const { href, exact } = itemLink(line.name, shopId, favs);
+    const href = itemLink(line.name, shopId);
     const hint = hintFor(line.name);   // «творог мягкий» без пояснения у прилавка бесполезен
     const amount = line.packs > 0 ? `${line.packs} × ${line.packSize} ${line.unit}` : `${line.toBuy} ${line.unit}`;
     return (
@@ -113,24 +92,15 @@ export function GroceryBlock({ grocery }: { grocery: Grocery }) {
         </label>
 
         <span className="buy-title">
-          <a className="buy-name" href={href} {...linkTarget()}>{line.name}</a>
+          <a className="buy-name" href={href} {...linkTarget}>{line.name}</a>
           {hint && <span className="buy-hint small muted">{hint.what}</span>}
         </span>
 
-        {/* количество и «выбрать» — одной колонкой справа, иначе при длинном названии
-            они разъезжаются по разным строкам и висят над продуктом */}
-        <span className="buy-right">
-          <span className="small muted buy-qty">
-            {checked ? "есть" : amount}
-            {!checked && showsLeftover(line) && (
-              <span className="left-note"> · останется {line.leftover} {line.unit}</span>
-            )}
-          </span>
-          <button className={exact ? "pick on" : "pick"} onClick={() => remember(line.name)}
-            title={exact ? "Открывается твой товар — нажми, чтобы сменить или забыть"
-                         : "Привязать конкретный товар из магазина, чтобы не выбирать заново"}>
-            {exact ? "мой ✓" : "выбрать"}
-          </button>
+        <span className="small muted buy-qty">
+          {checked ? "есть" : amount}
+          {!checked && showsLeftover(line) && (
+            <span className="left-note"> · останется {line.leftover} {line.unit}</span>
+          )}
         </span>
       </li>
     );
@@ -176,9 +146,8 @@ export function GroceryBlock({ grocery }: { grocery: Grocery }) {
         творога, а пачка 200 — в следующий раз приложение не попросит покупать творог снова.
       </p>
       <p className="small muted">
-        «Выбрать» — привязать конкретный товар из магазина: скопируй ссылку на него, и дальше
-        приложение будет открывать сразу его, а не список из двадцати видов помидоров.
-        У привязанных стоит «мой&nbsp;✓».
+        Цены — медиана по выдаче «{PRICES_SOURCE}» на {PRICES_DATE.split("-").reverse().join(".")}.
+        В другом городе и магазине будут другие, и со временем они устаревают.
       </p>
     </section>
   );
@@ -194,7 +163,6 @@ export function GroceryBlock({ grocery }: { grocery: Grocery }) {
 export function MealIngredients({ meal }: { meal: Meal }) {
   const shopId = readLS(SHOP_KEY, DEFAULT_SHOP_ID);
   const shop = shopById(shopId);
-  const favs = loadFavorites();
   const ings = (meal.recipe.ingredients ?? []).map(i => ({
     name: i.name, qty: +(i.qty * meal.servings).toFixed(1), unit: i.unit,
   }));
@@ -209,11 +177,11 @@ export function MealIngredients({ meal }: { meal: Meal }) {
           <div className="small muted">Продукты на эту порцию · «{shop.name}»</div>
           <ul>
             {ings.map((i, k) => {
-              const { href, exact } = itemLink(i.name, shopId, favs);
+              const href = itemLink(i.name, shopId);
               return (
                 <li key={k}>
                   <a className="shop-link" href={href} target="_blank" rel="noopener noreferrer">
-                    {i.name}<span className="shop-go" aria-hidden="true">{exact ? "✓" : "→"}</span>
+                    {i.name}<span className="shop-go" aria-hidden="true">→</span>
                   </a>
                   <span className="small muted">{i.qty} {i.unit}</span>
                 </li>
