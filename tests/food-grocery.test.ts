@@ -26,10 +26,12 @@ describe("buildGroceryList", () => {
     expect(g.items.find(i => i.name === "куриное филе")!.qty).toBe(250);  // 100*1.5 + 100*1
   });
 
-  it("список по дням + бюджет в ₽", () => {
+  it("список по дням + бюджет по РЕАЛЬНЫМ ценам продуктов", () => {
     const g = buildGroceryList(week);
     expect(g.byDay).toHaveLength(2);
-    expect(g.byDay[0].estCostRub).toBe(Math.round(90 * 1.5 + 20));        // 155
+    // считается по ингредиентам и их ценам за 100 г, а не по выдуманному cost_rub рецепта:
+    // куриное филе 146.4 ₽/100 г × 150 г + рис 30.2 ₽/100 г × 50 г
+    expect(g.byDay[0].estCostRub).toBe(Math.round(146.4 * 1.5) + Math.round(30.2 * 0.5));
     expect(g.estCostRub).toBe(g.byDay[0].estCostRub + g.byDay[1].estCostRub);
   });
 
