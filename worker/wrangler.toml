@@ -1,12 +1,11 @@
-# ⚠️ Worker в v1 НЕ используется (пуши и коуч — v2). Лежит здесь как готовая заготовка.
+# Сервер уведомлений и ИИ-коуча. Живой: edimispim-push.pospat.workers.dev
 #
-# Имя и KV namespace намеренно изменены относительно pospat: раньше здесь стояли
-# name = "pospat-push" и id живого хранилища подписок. С ними `wrangler deploy` из этого
-# репозитория перезаписал бы работающий Worker pospat, который прямо сейчас рассылает пуши
-# реальным подписчикам.
+# Имя и KV — СВОИ, отдельные от pospat. Это не косметика: с прежними name = "pospat-push"
+# и id чужого хранилища `wrangler deploy` отсюда перезаписал бы работающий Worker pospat,
+# который рассылает пуши реальным людям.
 #
-# KV создан 2026-08-05 под аккаунтом iserdario@icloud.com — своё хранилище подписок,
-# отдельное от pospat.
+# Приватный VAPID-ключ лежит в секретах Worker (`wrangler secret put VAPID_PRIVATE`),
+# а не в репозитории. Публичный — в src/ui/notifications.ts.
 name = "edimispim-push"
 main = "src/index.ts"
 compatibility_date = "2024-11-01"
