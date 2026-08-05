@@ -5,14 +5,15 @@
 # репозитория перезаписал бы работающий Worker pospat, который прямо сейчас рассылает пуши
 # реальным подписчикам.
 #
-# Перед первым деплоем: `wrangler kv namespace create SUBS` и вставить выданный id ниже.
+# KV создан 2026-08-05 под аккаунтом iserdario@icloud.com — своё хранилище подписок,
+# отдельное от pospat.
 name = "edimispim-push"
 main = "src/index.ts"
 compatibility_date = "2024-11-01"
 
 [[kv_namespaces]]
 binding = "SUBS"
-id = "ЗАПОЛНИТЬ_ПЕРЕД_ДЕПЛОЕМ"
+id = "029865a7c24b424fb0c5462359ea77e2"
 
 # Рассылка раз в 5 минут (проверяет, чьё окно наступило)
 [triggers]
