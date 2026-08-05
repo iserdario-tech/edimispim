@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { saveState, loadState, exportAll, importAll, type StorageLike, type StoredState } from "../src/ui/storage";
-import { PUSH_READY } from "../src/ui/notifications";
+import { PUSH_READY, BACKEND_URL } from "../src/ui/notifications";
 
 /** Хранилище в памяти — ведёт себя как localStorage, включая переполнение квоты. */
 function memStore(limitBytes = Infinity): StorageLike & { data: Record<string, string> } {
@@ -108,9 +108,14 @@ describe("ничего не теряется при переезде", () => {
 });
 
 describe("уведомления", () => {
-  it("пуши выключены, пока приложение не имеет своего сервера", () => {
-    // Иначе подписка ушла бы в базу подписок pospat: напоминания приходили бы с его
-    // текстами и уводили в старое приложение.
-    expect(PUSH_READY).toBe(false);
+  it("пуши включены — у приложения есть свой сервер", () => {
+    expect(PUSH_READY).toBe(true);
+  });
+
+  it("КРИТИЧНО: подписки идут в СВОЙ Worker, а не в pospat", () => {
+    // Если сюда вернётся адрес pospat, подписки лягут в чужую базу: напоминания
+    // будут приходить с его текстами и уводить в старое приложение.
+    expect(BACKEND_URL).toContain("edimispim-push");
+    expect(BACKEND_URL).not.toContain("pospat-push");
   });
 });

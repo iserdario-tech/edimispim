@@ -3,24 +3,20 @@ import type { Profile, DayMode, DayToggles } from "../index.js";
 export interface PushDay { date: string; mode: DayMode; toggles: DayToggles; crunchUntilHM?: string }
 
 // Публичный VAPID-ключ (пара к приватному JWK на Worker — см. app/.vapid.json)
-const VAPID_PUBLIC = "BPedDaxa5IPF3-WSZ-EyAats5dXnGuJMaLapSRCmElsllWNGFk7NcMyS-z-MEzM5iNtJMtEIxhTEUFqJL81fgo4";
+const VAPID_PUBLIC = "BL2WzWdDc3_XRNF9Q7M9lJP-SHQA6WSKaMYb32kKb7gZMqf9WX1R8ZkmhTbMdApqEu7xYQEFXxa-DXuDMQBx894";
 /**
- * URL Worker'а на Cloudflare. Сейчас это Worker, задеплоенный для pospat.
- *
- * ⚠️ Для КОУЧА это безопасно: он просто отвечает на вопросы и ничего не хранит.
- * Для ПУШЕЙ — нет: подписка легла бы в базу подписок pospat, напоминания приходили бы
- * с его текстами и вели бы по ссылке в старое приложение, а контекст питания
- * игнорировался бы вовсе. Поэтому пуши выключены до деплоя собственного Worker'а
- * (`worker/wrangler.toml`: имя уже своё, осталось создать KV и задеплоить).
+ * Собственный Worker приложения (Cloudflare, бесплатный тариф).
+ * Задеплоен 2026-08-05, своё хранилище подписок — отдельное от pospat,
+ * чтобы напоминания приходили с нашими текстами и вели в это приложение.
  */
-export const BACKEND_URL = "https://pospat-push.pospat.workers.dev";
+export const BACKEND_URL = "https://edimispim-push.pospat.workers.dev";
 
-/** Пуши включатся, когда у приложения появится собственный Worker. */
-export const PUSH_READY = false;
+/** Свой сервер уведомлений есть — пуши работают. */
+export const PUSH_READY = true;
 
 export const PUSH_UNAVAILABLE_RU =
-  "Напоминания пока не включены: для них нужен собственный сервер уведомлений. " +
-  "Всё остальное работает и без них — приложение считает план прямо на телефоне.";
+  "Напоминания сейчас недоступны. Всё остальное работает и без них — " +
+  "приложение считает план прямо на телефоне.";
 
 export function urlBase64ToUint8Array(b64: string): Uint8Array {
   const pad = "=".repeat((4 - (b64.length % 4)) % 4);
