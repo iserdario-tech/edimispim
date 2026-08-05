@@ -10,6 +10,7 @@ import { toDayRecords } from "./dayRecords.js";
 import { localDateISO } from "../today-date.js";
 import { nextStep } from "../next-step.js";
 import { plateau } from "../plateau.js";
+import { GroceryBlock, MealIngredients } from "./Grocery.js";
 
 const RECIPES = recipesJson as Recipe[];
 const DOW = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
@@ -30,7 +31,7 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
   onSetupFood: () => void;
 }) {
   const [openDay, setOpenDay] = useState<number | null>(0);
-  const [showGrocery, setShowGrocery] = useState(false);
+  const [openMeal, setOpenMeal] = useState<string | null>(null);
   const [kg, setKg] = useState("");
   const today = localDateISO();
 
@@ -151,46 +152,31 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
                 </button>
                 {openDay === i && (
                   <ul className="day-meals">
-                    {day.meals.map((m, k) => (
-                      <li key={k}>
-                        <span className="meal-time">{fmtHM(m.timeMin)}</span>
-                        <span>{m.recipe.name}</span>
-                        <span className="small muted">
-                          {Math.round(m.recipe.kcal * m.servings)} ккал
-                          {m.recipe.time_min ? ` · ${m.recipe.time_min} мин` : ""}
-                        </span>
-                      </li>
-                    ))}
+                    {day.meals.map((m, k) => {
+                      const key = `${i}-${k}`;
+                      return (
+                        <li key={k} className="meal-row">
+                          <span className="meal-time">{fmtHM(m.timeMin)}</span>
+                          <button className="meal-name" aria-expanded={openMeal === key}
+                            onClick={() => setOpenMeal(openMeal === key ? null : key)}>
+                            {m.recipe.name}
+                            <span className="chev">{openMeal === key ? " ▾" : " ▸"}</span>
+                          </button>
+                          <span className="small muted">
+                            {Math.round(m.recipe.kcal * m.servings)} ккал
+                            {m.recipe.time_min ? ` · ${m.recipe.time_min} мин` : ""}
+                          </span>
+                          {openMeal === key && <MealIngredients meal={m} />}
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
               </div>
             ))}
           </section>
 
-          <section className="card">
-            <button className="card-h card-h-btn" aria-expanded={showGrocery}
-              onClick={() => setShowGrocery(!showGrocery)}>
-              Покупки на неделю · ≈{plan.grocery.estCostRub} ₽ <span className="chev">{showGrocery ? "▾" : "▸"}</span>
-            </button>
-            {showGrocery && (
-              <>
-                <p className="small muted">
-                  Скоропорт отмечен — его лучше брать ближе к дню или замораживать.
-                  Цены прикидочные, под конкретный магазин не калибровались.
-                </p>
-                <ul className="grocery">
-                  {plan.grocery.items.map((it, i) => (
-                    <li key={i}>
-                      <span>{it.name}</span>
-                      <span className="small muted">
-                        {it.qty} {it.unit}{it.perishable ? " · скоропорт" : ""}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
-          </section>
+          <GroceryBlock grocery={plan.grocery} />
         </>
       )}
     </main>
