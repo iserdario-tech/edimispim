@@ -123,7 +123,7 @@ describe("сценарий переезда и первого дня", () => {
     expect(cook(rough)).toBeLessThan(cook(normal));
     expect(rough.totals.kcal).toBeLessThanOrEqual(safe.kcalTarget * 1.08);
     expect(rough.simplified).toBe(true);
-    // лакомство перенесено на вечер — как замена срыву, а не добавка
+    // сладкое перенесено на вечер — как замена срыву, а не добавка
     const treat = rough.meals.find(m => m.slot === "dessert")!;
     const dinner = rough.meals.find(m => m.slot === "dinner")!;
     expect(treat.timeMin).toBeGreaterThan(dinner.timeMin);

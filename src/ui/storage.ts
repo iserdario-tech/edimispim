@@ -27,8 +27,26 @@ function defaultStore(): StorageLike {
     ? localStorage
     : { getItem: () => null, setItem: () => {} };
 }
-export function saveState(s: StoredState, store: StorageLike = defaultStore()): void {
-  store.setItem(KEY, JSON.stringify(s));
+/**
+ * Сохранение с защитой от переполнения хранилища.
+ *
+ * localStorage даёт около 5 МБ на весь сайт, и полугодовая история занимает жалкие
+ * десятки килобайт — но квоту может выесть что-то другое, а в приватном режиме Safari
+ * запись падает всегда. Раньше это валило приложение прямо в момент отметки сна:
+ * человек нажимал «Записать ночь» и получал белый экран вместо сохранения.
+ *
+ * Теперь при нехватке места история подрезается (свежее важнее старого), а если не помогло —
+ * возвращается `false`, и интерфейс честно говорит, что сохранить не вышло.
+ */
+export function saveState(s: StoredState, store: StorageLike = defaultStore()): boolean {
+  const attempts = [s, { ...s, history: s.history.slice(-90) }, { ...s, history: s.history.slice(-30) }];
+  for (const attempt of attempts) {
+    try {
+      store.setItem(KEY, JSON.stringify(attempt));
+      return true;
+    } catch { /* пробуем вариант поменьше */ }
+  }
+  return false;
 }
 /**
  * Проверка формы состояния перед тем, как его использовать.
@@ -70,18 +88,49 @@ export function loadDayDraft(date: string, store: StorageLike = defaultStore()):
 }
 
 // Бэкап: всё хранится в localStorage, при очистке браузера пропадёт. Экспорт/импорт — страховка.
+/**
+ * Ключи, которые тоже надо переносить вместе с профилем.
+ *
+ * Раньше копия содержала только основное состояние — и при переезде на другое устройство
+ * человек терял всё, что копил руками: запомненные товары в магазинах, кладовку с остатками,
+ * выбранный сервис доставки и переписку с коучем. Формально «данные перенеслись»,
+ * а на деле половина работы пропадала.
+ */
+const EXTRA_KEYS = [
+  "edimispim.favorites",   // мои товары в магазинах
+  "edimispim.pantry",      // что осталось дома
+  "edimispim.shop",        // выбранный сервис доставки
+  "edimispim.coach.v1",    // переписка с коучем
+] as const;
+
 export function exportAll(store: StorageLike = defaultStore()): string {
-  return JSON.stringify({ app: "edimispim", v: 1, state: store.getItem(KEY) }, null, 2);
+  const extras: Record<string, string> = {};
+  for (const k of EXTRA_KEYS) {
+    const v = store.getItem(k);
+    if (v !== null) extras[k] = v;
+  }
+  return JSON.stringify({ app: "edimispim", v: 2, state: store.getItem(KEY), extras }, null, 2);
 }
-// Импорт: принимает файл экспорта. Возвращает восстановленное состояние или null (кривой файл).
+/**
+ * Импорт копии. Понимает и старый формат (v1, только состояние), и новый (v2, с довесками) —
+ * копия, сделанная до этой правки, должна открываться, а не отвергаться.
+ */
 export function importAll(text: string, store: StorageLike = defaultStore()): StoredState | null {
   try {
     const parsed = JSON.parse(text);
     const stateStr: string | null = parsed?.state ?? null;
     if (!stateStr) return null;
-    const state = JSON.parse(stateStr) as StoredState;
-    if (!state?.profile?.anchorWakeHM) return null; // минимальная валидация: это точно наш профиль
+    const state: unknown = JSON.parse(stateStr);
+    if (!isValidState(state)) return null;      // та же проверка формы, что и при чтении
+
     store.setItem(KEY, stateStr);
+    const extras = parsed?.extras;
+    if (extras && typeof extras === "object" && !Array.isArray(extras)) {
+      for (const k of EXTRA_KEYS) {
+        const v = (extras as Record<string, unknown>)[k];
+        if (typeof v === "string") store.setItem(k, v);
+      }
+    }
     return state;
   } catch { return null; }
 }

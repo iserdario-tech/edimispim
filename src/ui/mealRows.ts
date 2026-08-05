@@ -24,7 +24,7 @@ const ICON: Record<string, string> = {
 };
 
 const SLOT_RU: Record<string, string> = {
-  breakfast: "Завтрак", lunch: "Обед", dinner: "Ужин", dessert: "Лакомство", snack: "Перекус",
+  breakfast: "Завтрак", lunch: "Обед", dinner: "Ужин", dessert: "Сладкое", snack: "Перекус",
 };
 
 /** Почему приём стоит именно здесь — коротко и без внутренних кодов. */

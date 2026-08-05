@@ -11,8 +11,8 @@ const BUDGET_MEAL_CAP: Record<string, number> = { small: 205, medium: 270, large
  * Наука: число приёмов само по себе на вес почти не влияет — влияет регулярность времени
  * и ранний калораж. Поэтому это свободный выбор пользователя, а не предписание.
  *
- * `mains` — доли от калоража за вычетом лакомств (в сумме 1).
- * `treatShare` — общая доля на лакомства, `treatCount` — на сколько приёмов она делится.
+ * `mains` — доли от калоража за вычетом сладкого и перекусов (в сумме 1).
+ * `treatShare` — общая доля на сладкое и перекусы, `treatCount` — на сколько приёмов она делится.
  */
 const SCHEMES: Record<MealCount, {
   mains: Partial<Record<MealType, number>>;
@@ -63,7 +63,7 @@ export function mealTimes(
   const lunch = hasBreakfast ? (first + dinner) / 2 : first + (dinner - first) / 3;
   times.lunch = Math.round(lunch);
 
-  // После плохой ночи лакомство переносится на вечер: оно уже вписано в норму и работает
+  // После плохой ночи сладкое переносится на вечер: оно уже вписано в норму и работает
   // как запланированная замена срыву, а не как добавка (B1).
   if (treatCount >= 1) {
     times.dessert = Math.round(lateTreat ? (dinner + rhythm.bedMin) / 2 : (lunch + dinner) / 2);
@@ -124,12 +124,12 @@ export interface DayOptions {
   rhythm: DayRhythm;
   mealCount?: MealCount;
   offset?: number;              // двигает выбор рецептов: разнообразие по дням
-  roughNight?: boolean;         // после плохой ночи: сдвиг калоража вперёд + позднее лакомство
+  roughNight?: boolean;         // после плохой ночи: сдвиг калоража вперёд + позднее сладкое
 }
 
 /**
  * Один день: доли по выбранной схеме, времена — от ритма суток.
- * Лакомство вписано в норму, поэтому сладкое не ломает дефицит.
+ * Сладкое вписано в дневную норму, поэтому не ломает дефицит.
  */
 export function generateDay(targets: Targets, pool: Recipe[], opts: DayOptions): Day {
   const count = opts.mealCount ?? DEFAULT_MEAL_COUNT;
@@ -193,7 +193,7 @@ function swapForFiber(
 
   day.meals.forEach((meal, index) => {
     const share = mains[meal.recipe.meal_type as MealType];
-    if (share === undefined) return;                       // лакомства не трогаем
+    if (share === undefined) return;                       // сладкое и перекусы не трогаем
     const kcalShare = meal.recipe.kcal * meal.servings;    // столько калорий занимает этот приём
     for (const candidate of pool) {
       if (candidate.meal_type !== meal.recipe.meal_type) continue;

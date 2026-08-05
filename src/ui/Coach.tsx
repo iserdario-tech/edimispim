@@ -61,11 +61,9 @@ export function Coach({ contextRU }: { contextRU: string }) {
   };
 
   return (
-    <details className="coach">
-      <summary>💬 Спросить совета</summary>
+    // Раздел «Вопрос» — сразу чат, без спойлера: он и открывается ради разговора.
+    <div className="coach">
       <div className="coach-body">
-        <p className="small muted">Спроси про сон и бодрость своими словами. Отвечает по научной базе приложения. Это не врач.</p>
-
         {turns.map((t, i) => (
           <div key={i} className={t.role === "user" ? "bubble me" : "bubble coachmsg"}>{t.content.replace(/\*\*/g, "")}</div>
         ))}
@@ -90,6 +88,6 @@ export function Coach({ contextRU }: { contextRU: string }) {
           <button className="linkbtn small" onClick={() => { setTurns([]); setErr(""); }}>Очистить переписку</button>
         )}
       </div>
-    </details>
+    </div>
   );
 }
