@@ -153,8 +153,13 @@ summary.card-h { list-style: none; }
 }
 .day-head .chev, .card-h .chev { opacity: .6; }
 .day-meals { list-style: none; padding: 0 0 10px; margin: 0; display: grid; gap: 8px; }
-.day-meals li { display: grid; grid-template-columns: 52px 1fr auto; gap: 8px; align-items: baseline; }
-.meal-time { font-variant-numeric: tabular-nums; opacity: .7; font-size: 13px; }
+/* время | (название + цифры) | кнопка замены. Раньше колонок было три, а ячеек четыре —
+   от этого строка разваливалась и «432 ккал · 10 мин» переносилось по словам */
+.day-meals li { display: grid; grid-template-columns: 46px minmax(0,1fr) auto; gap: 4px 8px; align-items: start; }
+.meal-main { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.meal-meta { white-space: nowrap; }
+.day-summary { padding: 6px 0 8px; border-bottom: 1px solid rgba(127,127,127,.14); margin-bottom: 8px; }
+.meal-time { font-variant-numeric: tabular-nums; opacity: .7; font-size: 13px; padding-top: 2px; white-space: nowrap; }
 .grocery { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 6px; }
 .grocery li { display: flex; justify-content: space-between; gap: 12px; }
 .note-warn {
@@ -306,20 +311,24 @@ input[type="range"] { min-height: 44px; }
 
 /* ─── Покупки: список с галочками ────────────────────────────────── */
 .buy-list { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 2px; }
+/* галочка | название с подсказкой | количество и «выбрать» одной колонкой справа */
 .buy-row {
-  display: grid; grid-template-columns: 30px minmax(0,1fr) auto auto;
-  align-items: center; gap: 8px; min-height: 44px;
+  display: grid; grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: start; gap: 2px 10px; min-height: 44px;
+  padding: 4px 0; border-bottom: 1px solid rgba(127,127,127,.10);
 }
+.buy-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0; }
+.buy-right .buy-qty { white-space: nowrap; padding-top: 11px; }
 .buy-row.done .buy-name { text-decoration: line-through; opacity: .5; }
 .buy-row.done .buy-qty { opacity: .5; }
-.buy-check { display: flex; align-items: center; justify-content: center; min-height: 44px; cursor: pointer; }
+.buy-check { display: flex; align-items: flex-start; justify-content: center; padding-top: 10px; min-height: 32px; cursor: pointer; }
 .buy-check input { width: 20px; height: 20px; cursor: pointer; }
-.buy-name { color: inherit; text-decoration: none; min-height: 44px; display: flex; align-items: center; }
+.buy-name { color: inherit; text-decoration: none; min-height: 32px; display: flex; align-items: center; line-height: 1.3; }
 .buy-name:hover, .buy-name:focus-visible { color: var(--accent); }
 .buy-qty { text-align: right; font-variant-numeric: tabular-nums; }
 .pick {
   background: none; border: 0; cursor: pointer; font-size: 12px; line-height: 1.2;
-  padding: 0 2px; min-height: 44px; color: var(--muted); white-space: nowrap;
+  padding: 4px 2px; min-height: 32px; color: var(--muted); white-space: nowrap;
 }
 .pick.on { color: var(--accent); }
 .pick:hover, .pick:focus-visible { color: var(--accent); text-decoration: underline; }
@@ -355,6 +364,4 @@ input[type="range"] { min-height: 44px; }
 /* Подсказка «что именно брать» под названием продукта */
 .buy-title, .ing-title { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .buy-hint { line-height: 1.3; opacity: .75; }
-.buy-row { align-items: start; }
-.buy-row .buy-check, .buy-row .star { align-self: center; }
-.day-nums { white-space: normal; }
+.day-nums { white-space: nowrap; }
