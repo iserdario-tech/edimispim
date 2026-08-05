@@ -55,8 +55,8 @@ export function Profile({ food, screener, onEditSleep, onEditFood, onBackup, onR
         </section>
       )}
 
-      <details className="card">
-        <summary className="card-h">Как лучше спать</summary>
+      <section className="card">
+        <h3 className="card-h">Как лучше спать</h3>
         <div className="tips-body small">
           <p><b>Спальня:</b> темно, прохладно ~18–19&nbsp;°C, тихо, проветри перед сном.</p>
           <p><b>Вечер:</b> приглуши свет за 1–2 часа до сна, тёплый душ, телефон вне кровати.</p>
@@ -64,10 +64,10 @@ export function Profile({ food, screener, onEditSleep, onEditFood, onBackup, onR
           <p><b>Плохая ночь:</b> относись как к долгу сна — вода, утренний свет, короткий сон днём. Без позднего кофе, иначе испортишь и следующую ночь.</p>
           <p><b>Не спится больше 20 минут:</b> встань, побудь в тусклом свете, вернись, когда потянет в сон. Если так неделями — к врачу.</p>
         </div>
-      </details>
+      </section>
 
-      <details className="card">
-        <summary className="card-h">Честно о том, что это приложение может</summary>
+      <section className="card">
+        <h3 className="card-h">Честно о том, что это приложение может</h3>
         <div className="tips-body small">
           <p>Вес снижает только дефицит энергии. Сон, режим и состав еды — рычаги, которые
             делают этот дефицит переносимым, а не отдельная магия.</p>
@@ -77,7 +77,7 @@ export function Profile({ food, screener, onEditSleep, onEditFood, onBackup, onR
           <p>Оценка готовности — по твоим отметкам, а не измерение. Это не медицинское
             приложение: при тревожных признаках нужен врач, а не приложение.</p>
         </div>
-      </details>
+      </section>
     </main>
   );
 }
