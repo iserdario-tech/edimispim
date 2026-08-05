@@ -130,7 +130,8 @@ export function Today({ profile, history, screener, onLog, food, weights, onSetu
   );
 
   return (
-    <main className="wrap">
+    <main className="wrap two-col">
+      <div className="col-side">
       {/* Главное сообщение дня — первое, что видно */}
       <section className="why-today">
         <div className="why-today-label">Почему сегодня так</div>
@@ -174,6 +175,9 @@ export function Today({ profile, history, screener, onLog, food, weights, onSetu
         </div>
       )}
 
+      </div>
+
+      <div className="col-main">
       {/* Одна лента суток: сон и еда на общей оси времени, а не два раздела */}
       <ol className="timeline">
         {rows.map((r, i) => (
@@ -218,6 +222,7 @@ export function Today({ profile, history, screener, onLog, food, weights, onSetu
       {view.notes.length > 0 && (
         <ul className="notes small">{view.notes.map((n, i) => <li key={i}>{n}</li>)}</ul>
       )}
+      </div>
     </main>
   );
 }
