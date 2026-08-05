@@ -199,7 +199,9 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
                   <button className="day-head" aria-expanded={openDays.has(i)}
                     onClick={() => toggleDay(i)}>
                     <b>{DOW[i]}</b>
-                    <span className="small muted">{day.totals.kcal} ккал · белок {day.totals.protein} г</span>
+                    <span className="small muted day-nums">
+                      {day.totals.kcal} ккал · Б {day.totals.protein} г · клетчатка {day.totals.fiber} г
+                    </span>
                     <span className="chev">{openDays.has(i) ? "▾" : "▸"}</span>
                   </button>
                   <button className="swap-btn" title="Заменить все блюда дня"

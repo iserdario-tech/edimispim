@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from "react";
 import type { Grocery, Meal } from "../food/types.js";
-import { SHOPS, DEFAULT_SHOP_ID, shopById, searchUrl } from "../food/shops.js";
+import { SHOPS, DEFAULT_SHOP_ID, shopById, searchUrl, opensInNewTab } from "../food/shops.js";
 import { planPurchase, type BuyLine, type Pantry } from "../food/packaging.js";
 import { loadFavorites, saveFavorite, removeFavorite, favKey, extractProductUrl, type Favorites } from "../food/favorites.js";
+import { hintFor } from "../food/ingredients.js";
 
 const SHOP_KEY = "edimispim.shop";
 const PANTRY_KEY = "edimispim.pantry";
@@ -16,6 +17,24 @@ const writeLS = (key: string, v: unknown): void => {
 };
 
 const pantryKey = (name: string, unit: string): string => `${name.toLowerCase().trim()}|${unit}`;
+
+/** На телефоне — в том же окне, иначе установленное приложение магазина не перехватит ссылку. */
+const linkTarget = (): { target?: string; rel?: string } =>
+  typeof window !== "undefined" && opensInNewTab(window.innerWidth)
+    ? { target: "_blank", rel: "noopener noreferrer" }
+    : {};
+
+/**
+ * Показывать ли остаток.
+ *
+ * «Мёд · останется 201.8 г» — правда, но бесполезная: мёд стоит в шкафу месяцами,
+ * и напоминание о нём только зашумляет список. Остаток важен для скоропорта —
+ * там это предупреждение «успей съесть» — и когда его заметно много.
+ */
+const showsLeftover = (line: BuyLine): boolean =>
+  line.leftover > 0 &&
+  line.perishDays !== undefined && line.perishDays <= 14 &&
+  line.leftover >= line.need * 0.25;
 
 /** Ссылка: сохранённая карточка товара, если есть, иначе поиск по названию. */
 function itemLink(name: string, shopId: string, favs: Favorites): { href: string; exact: boolean } {
@@ -84,6 +103,7 @@ export function GroceryBlock({ grocery }: { grocery: Grocery }) {
 
   const row = (line: BuyLine, checked: boolean) => {
     const { href, exact } = itemLink(line.name, shopId, favs);
+    const hint = hintFor(line.name);   // «творог мягкий» без пояснения у прилавка бесполезен
     const amount = line.packs > 0 ? `${line.packs} × ${line.packSize} ${line.unit}` : `${line.toBuy} ${line.unit}`;
     return (
       <li key={line.name + line.unit} className={checked ? "buy-row done" : "buy-row"}>
@@ -92,16 +112,23 @@ export function GroceryBlock({ grocery }: { grocery: Grocery }) {
           <span className="sr-only">Взял {line.name}</span>
         </label>
 
-        <a className="buy-name" href={href} target="_blank" rel="noopener noreferrer">{line.name}</a>
+        <span className="buy-title">
+          <a className="buy-name" href={href} {...linkTarget()}>{line.name}</a>
+          {hint && <span className="buy-hint small muted">{hint.what}</span>}
+        </span>
 
         <span className="small muted buy-qty">
           {checked ? "есть" : amount}
-          {!checked && line.leftover > 0 && <span className="left-note"> · останется {line.leftover} {line.unit}</span>}
+          {!checked && showsLeftover(line) && (
+            <span className="left-note"> · останется {line.leftover} {line.unit}</span>
+          )}
         </span>
 
-        <button className={exact ? "star on" : "star"} onClick={() => remember(line.name)}
-          title={exact ? "Запомнен конкретный товар — нажми, чтобы сменить" : "Запомнить конкретный товар в магазине"}
-          aria-label="Запомнить товар">{exact ? "★" : "☆"}</button>
+        <button className={exact ? "pick on" : "pick"} onClick={() => remember(line.name)}
+          title={exact ? "Открывается твой товар — нажми, чтобы сменить или забыть"
+                       : "Привязать конкретный товар из магазина, чтобы не выбирать заново"}>
+          {exact ? "мой ✓" : "выбрать"}
+        </button>
       </li>
     );
   };
@@ -144,8 +171,11 @@ export function GroceryBlock({ grocery }: { grocery: Grocery }) {
       <p className="small muted">
         Количества приведены к реальным упаковкам, а остаток запоминается: если нужно 100 г
         творога, а пачка 200 — в следующий раз приложение не попросит покупать творог снова.
-        Звёздочка привязывает конкретный товар, чтобы не выбирать из двадцати видов помидоров
-        каждую неделю.
+      </p>
+      <p className="small muted">
+        «Выбрать» — привязать конкретный товар из магазина: скопируй ссылку на него, и дальше
+        приложение будет открывать сразу его, а не список из двадцати видов помидоров.
+        У привязанных стоит «мой&nbsp;✓».
       </p>
     </section>
   );
@@ -180,7 +210,7 @@ export function MealIngredients({ meal }: { meal: Meal }) {
               return (
                 <li key={k}>
                   <a className="shop-link" href={href} target="_blank" rel="noopener noreferrer">
-                    {i.name}<span className="shop-go" aria-hidden="true">{exact ? "★" : "→"}</span>
+                    {i.name}<span className="shop-go" aria-hidden="true">{exact ? "✓" : "→"}</span>
                   </a>
                   <span className="small muted">{i.qty} {i.unit}</span>
                 </li>

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { SHOPS, shopById, searchTerm, searchUrl, listAsText, DEFAULT_SHOP_ID } from "../src/food/shops";
+import { SHOPS, shopById, searchTerm, searchUrl, listAsText, DEFAULT_SHOP_ID, opensInNewTab } from "../src/food/shops";
 
 describe("справочник сервисов доставки", () => {
   it("у каждого сервиса есть подстановка запроса", () => {
@@ -62,5 +62,17 @@ describe("список для буфера обмена", () => {
 
   it("пустой список не падает", () => {
     expect(() => listAsText([])).not.toThrow();
+  });
+});
+
+describe("как открывать ссылку", () => {
+  it("на телефоне — в том же окне: иначе приложение магазина не перехватит ссылку", () => {
+    expect(opensInNewTab(375)).toBe(false);
+    expect(opensInNewTab(768)).toBe(false);
+  });
+
+  it("на широком экране — новой вкладкой, чтобы не терять список", () => {
+    expect(opensInNewTab(1024)).toBe(true);
+    expect(opensInNewTab(1440)).toBe(true);
   });
 });
