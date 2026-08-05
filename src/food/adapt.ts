@@ -58,7 +58,7 @@ export function simplifyPool(pool: Recipe[]): Recipe[] {
 
 /**
  * День с учётом прошедшей ночи. После плохой ночи:
- * калораж тот же, блюда проще, калораж сдвинут вперёд, лакомство перенесено на вечер.
+ * калораж тот же, блюда проще, калораж сдвинут вперёд, сладкое перенесено на вечер.
  */
 export function generateAdaptedDay(
   targets: Targets, pool: Recipe[], opts: DayOptions, night?: NightSummary,
