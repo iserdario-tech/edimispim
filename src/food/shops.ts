@@ -54,6 +54,20 @@ export function searchUrl(shop: Shop, itemName: string): string {
   return shop.searchUrl.replace("%s", encodeURIComponent(searchTerm(itemName)));
 }
 
+/**
+ * Как открывать ссылку на товар.
+ *
+ * На телефоне обычная https-ссылка магазина перехватывается его установленным приложением —
+ * это universal links в iOS и app links в Android, отдельная схема вида `lavka://` не нужна
+ * и нигде не задокументирована.
+ *
+ * НО перехват ломается, если открывать в новой вкладке: система видит запрос нового окна
+ * от браузера и отдаёт ссылку браузеру, а не приложению. Поэтому на узких экранах
+ * открываем в том же окне — тогда с установленным приложением откроется приложение,
+ * а без него просто сайт. На широком экране новая вкладка удобнее: не теряется список.
+ */
+export const opensInNewTab = (viewportWidth: number): boolean => viewportWidth >= 1024;
+
 export interface ListItem {
   name: string;
   qty: number;
