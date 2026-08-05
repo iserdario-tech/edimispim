@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import type { Profile, DayLog, DayMode, DayToggles, ScreenerResult } from "../index.js";
-import { planDay, parseHM, sleepDurationMin } from "../index.js";
+import { planDay, parseHM, sleepDurationMin, streakDays } from "../index.js";
 import { toPlanView } from "./viewModel.js";
 import { loadDayDraft, saveDayDraft, type FoodSettings } from "./storage.js";
 import { enableNotifications, syncPushContext } from "./notifications.js";
@@ -108,6 +108,9 @@ export function Today({ profile, history, screener, onLog, food, weights, onSetu
     });
   }, [history, weights, today, wokeHM, bedHM, quality, profile.targetSleepMin, screener, view.rows]);
 
+  // Стрик и подсветка ближайшего шага были в pospat и потерялись при переносе:
+  // первое — единственная награда за регулярность, второе — ответ на «что сейчас».
+  const streak = useMemo(() => streakDays(history, today), [history, today]);
   const t = (k: keyof DayToggles) => setToggles({ ...toggles, [k]: !toggles[k] });
   const markBlock = (
     <>
@@ -142,6 +145,7 @@ export function Today({ profile, history, screener, onLog, food, weights, onSetu
         <span className="dot" style={{ background: view.readiness.color }} />
         <b>{view.readiness.label}</b>
         <span className="small muted">{view.readiness.whyRU}</span>
+        {streak > 0 && <span className="streak">🔥 {streak} подряд</span>}
       </div>
 
       {/* Пока ночь не отмечена — это единственное действие дня, поэтому оно наверху.
@@ -178,10 +182,19 @@ export function Today({ profile, history, screener, onLog, food, weights, onSetu
       </div>
 
       <div className="col-main">
+      {view.nextIdx != null && rows[view.nextIdx] && (
+        <div className="nextup">
+          <span className="nextup-label">Сейчас / дальше</span>
+          <span className="nextup-body">
+            {rows[view.nextIdx]!.icon} {rows[view.nextIdx]!.title} · {rows[view.nextIdx]!.time}
+          </span>
+        </div>
+      )}
+
       {/* Одна лента суток: сон и еда на общей оси времени, а не два раздела */}
       <ol className="timeline">
         {rows.map((r, i) => (
-          <li key={i} className={"row" + (r.past ? " past" : "") + (r.kind === "food" ? " food" : "")}>
+          <li key={i} className={"row" + (r.past ? " past" : "") + (r.kind === "food" ? " food" : "") + (i === view.nextIdx ? " now" : "")}>
             <div className="row-time">{r.time}{r.endTime ? `–${r.endTime}` : ""}</div>
             <div className="row-body">
               <div className="row-title">{r.icon} {r.title}</div>

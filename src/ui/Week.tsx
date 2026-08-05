@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import type { Profile, DayLog } from "../index.js";
 import { parseHM, fmtHM, weeklyInsight } from "../index.js";
 import type { FoodSettings } from "./storage.js";
-import { computeTargets, applySafety, generateWeek, buildGroceryList, expectedBedMin } from "../food/index.js";
+import { computeTargets, applySafety, generateWeek, buildGroceryList, expectedBedMin, filterRecipes, swapDish, type Day } from "../food/index.js";
 import type { Recipe } from "../food/types.js";
 import recipesJson from "../food/data/recipes.json";
 import { anchor, anchorSummaryRU } from "../anchor.js";
@@ -11,6 +11,7 @@ import { localDateISO } from "../today-date.js";
 import { nextStep } from "../next-step.js";
 import { plateau } from "../plateau.js";
 import { GroceryBlock, MealIngredients } from "./Grocery.js";
+import { SleepSparkline, WeightChart } from "./Charts.js";
 
 const RECIPES = recipesJson as Recipe[];
 const DOW = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
@@ -30,8 +31,9 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
   onAddWeight: (kg: number) => void;
   onSetupFood: () => void;
 }) {
-  const [openDay, setOpenDay] = useState<number | null>(0);
+  const [openDays, setOpenDays] = useState<Set<number>>(() => new Set([0]));
   const [openMeal, setOpenMeal] = useState<string | null>(null);
+  const [rev, setRev] = useState(0);          // счётчик замен — заставляет перерисовать план
   const [kg, setKg] = useState("");
   const today = localDateISO();
 
@@ -44,8 +46,31 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
       mealCount: food.mealCount,
       constraints: food.constraints,
     });
-    return { week, grocery: buildGroceryList(week), safe };
+    return { week, grocery: buildGroceryList(week), safe, pool: filterRecipes(RECIPES, food.constraints) };
   }, [food, profile]);
+
+  const toggleDay = (i: number) => setOpenDays(prev => {
+    const next = new Set(prev);
+    next.has(i) ? next.delete(i) : next.add(i);
+    return next;
+  });
+  const allOpen = !!plan && openDays.size === plan.week.length;
+  const toggleAll = () => setOpenDays(allOpen ? new Set() : new Set(plan!.week.map((_, i) => i)));
+
+  /** Заменить одно блюдо: следующий рецепт того же типа, порция под ту же долю калорий. */
+  const swapOne = (day: Day, index: number) => {
+    if (!plan || !food) return;
+    if (swapDish(day, index, plan.safe, plan.pool, food.mealCount)) setRev(r => r + 1);
+  };
+  /** Заменить все блюда дня разом — когда день целиком не нравится. */
+  const swapWholeDay = (day: Day) => {
+    if (!plan || !food) return;
+    let changed = false;
+    for (let i = 0; i < day.meals.length; i++) {
+      if (swapDish(day, i, plan.safe, plan.pool, food.mealCount)) changed = true;
+    }
+    if (changed) setRev(r => r + 1);
+  };
 
   const insight = useMemo(
     () => weeklyInsight(history, today, profile.targetSleepMin),
@@ -56,6 +81,15 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
   const anchorInfo = useMemo(() => anchor(records, profile.targetSleepMin), [records, profile.targetSleepMin]);
   const step = useMemo(() => nextStep(records, !!food), [records, food]);
   const plateauInfo = useMemo(() => plateau(records, profile.targetSleepMin), [records, profile.targetSleepMin]);
+
+  // качество сна по дням за последнюю неделю — для спарклайна
+  const qualitySeries = useMemo(() => {
+    const base = Date.parse(today + "T00:00:00Z");
+    return [...Array(7)].map((_, i) => {
+      const d = new Date(base - (6 - i) * 86_400_000).toISOString().slice(0, 10);
+      return history.find(h => h.date === d)?.quality ?? null;
+    });
+  }, [history, today]);
 
   const weightSeries = weights ?? [];
   const delta = weightSeries.length >= 2
@@ -91,11 +125,18 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
           {insight.avgSleepMin != null && <span>Средний сон: {(insight.avgSleepMin / 60).toFixed(1)} ч</span>}
           {insight.avgQuality != null && <span>Качество: {insight.avgQuality}/5</span>}
         </div>
+        {insight.daysLogged >= 2 && (
+          <div className="spark-row">
+            <SleepSparkline series={qualitySeries} />
+            <span className="small muted">качество сна, 7 дней</span>
+          </div>
+        )}
         {delta != null && (
           <p className="small" style={{ marginTop: 8 }}>
             Вес с первого замера: <b>{delta > 0 ? "−" : "+"}{Math.abs(delta).toFixed(1)} кг</b>
           </p>
         )}
+        <WeightChart weights={weightSeries} goal={food?.profile.goalWeightKg} />
         {insight.avgSleepMin != null && delta != null && delta > 0 && insight.avgSleepMin < profile.targetSleepMin - 45 && (
           <p className="small note-warn">
             Вес снижается, но сон за неделю короче цели. Это стоит держать в голове: при таком
@@ -141,21 +182,31 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
         </section>
       ) : (
         <>
-          <section className="card">
-            <h3 className="card-h">Меню на 7 дней</h3>
+          <section className="card" key={rev}>
+            <div className="menu-head">
+              <h3 className="card-h" style={{ margin: 0 }}>Меню на 7 дней</h3>
+              <button className="linkbtn small" onClick={toggleAll}>
+                {allOpen ? "свернуть все" : "развернуть все"}
+              </button>
+            </div>
             <p className="small muted">
               Цель: {plan.safe.kcalTarget} ккал и {plan.safe.proteinGTarget} г белка в день.
-              Ужин каждый день привязан к твоему отбою.
+              Ужин каждый день привязан к твоему отбою. Кнопка ↻ меняет блюдо, сохраняя баланс дня.
             </p>
             {plan.week.map((day, i) => (
               <div key={i} className="day-block">
-                <button className="day-head" aria-expanded={openDay === i}
-                  onClick={() => setOpenDay(openDay === i ? null : i)}>
-                  <b>{DOW[i]}</b>
-                  <span className="small muted">{day.totals.kcal} ккал · белок {day.totals.protein} г</span>
-                  <span className="chev">{openDay === i ? "▾" : "▸"}</span>
-                </button>
-                {openDay === i && (
+                <div className="day-head-row">
+                  <button className="day-head" aria-expanded={openDays.has(i)}
+                    onClick={() => toggleDay(i)}>
+                    <b>{DOW[i]}</b>
+                    <span className="small muted">{day.totals.kcal} ккал · белок {day.totals.protein} г</span>
+                    <span className="chev">{openDays.has(i) ? "▾" : "▸"}</span>
+                  </button>
+                  <button className="swap-btn" title="Заменить все блюда дня"
+                    aria-label={`Заменить все блюда дня ${i + 1}`}
+                    onClick={() => swapWholeDay(day)}>↻ день</button>
+                </div>
+                {openDays.has(i) && (
                   <ul className="day-meals">
                     {day.meals.map((m, k) => {
                       const key = `${i}-${k}`;
@@ -167,6 +218,9 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
                             {m.recipe.name}
                             <span className="chev">{openMeal === key ? " ▾" : " ▸"}</span>
                           </button>
+                          <button className="swap-btn" title="Заменить блюдо"
+                            aria-label={`Заменить блюдо: ${m.recipe.name}`}
+                            onClick={() => swapOne(day, k)}>↻</button>
                           <span className="small muted">
                             {Math.round(m.recipe.kcal * m.servings)} ккал
                             {m.recipe.time_min ? ` · ${m.recipe.time_min} мин` : ""}
