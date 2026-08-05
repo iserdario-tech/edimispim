@@ -200,7 +200,7 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
                     onClick={() => toggleDay(i)}>
                     <b>{DOW[i]}</b>
                     <span className="small muted day-nums">
-                      {day.totals.kcal} ккал · Б {day.totals.protein} г · клетчатка {day.totals.fiber} г
+                      {day.totals.kcal} ккал · белок {day.totals.protein} г
                     </span>
                     <span className="chev">{openDays.has(i) ? "▾" : "▸"}</span>
                   </button>
@@ -209,29 +209,37 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
                     onClick={() => swapWholeDay(day)}>↻ день</button>
                 </div>
                 {openDays.has(i) && (
+                  <>
+                  <div className="day-summary small muted">
+                    За день: {day.totals.kcal} ккал · белок {day.totals.protein} г ·
+                    клетчатка {day.totals.fiber} г из 30
+                  </div>
                   <ul className="day-meals">
                     {day.meals.map((m, k) => {
                       const key = `${i}-${k}`;
                       return (
                         <li key={k} className="meal-row">
                           <span className="meal-time">{fmtHM(m.timeMin)}</span>
-                          <button className="meal-name" aria-expanded={openMeal === key}
-                            onClick={() => setOpenMeal(openMeal === key ? null : key)}>
-                            {m.recipe.name}
-                            <span className="chev">{openMeal === key ? " ▾" : " ▸"}</span>
-                          </button>
+                          <span className="meal-main">
+                            <button className="meal-name" aria-expanded={openMeal === key}
+                              onClick={() => setOpenMeal(openMeal === key ? null : key)}>
+                              {m.recipe.name}
+                              <span className="chev">{openMeal === key ? " ▾" : " ▸"}</span>
+                            </button>
+                            <span className="small muted meal-meta">
+                              {Math.round(m.recipe.kcal * m.servings)} ккал
+                              {m.recipe.time_min ? ` · ${m.recipe.time_min} мин` : ""}
+                            </span>
+                          </span>
                           <button className="swap-btn" title="Заменить блюдо"
                             aria-label={`Заменить блюдо: ${m.recipe.name}`}
                             onClick={() => swapOne(day, k)}>↻</button>
-                          <span className="small muted">
-                            {Math.round(m.recipe.kcal * m.servings)} ккал
-                            {m.recipe.time_min ? ` · ${m.recipe.time_min} мин` : ""}
-                          </span>
                           {openMeal === key && <MealIngredients meal={m} />}
                         </li>
                       );
                     })}
                   </ul>
+                  </>
                 )}
               </div>
             ))}

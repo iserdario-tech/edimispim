@@ -117,18 +117,21 @@ export function GroceryBlock({ grocery }: { grocery: Grocery }) {
           {hint && <span className="buy-hint small muted">{hint.what}</span>}
         </span>
 
-        <span className="small muted buy-qty">
-          {checked ? "есть" : amount}
-          {!checked && showsLeftover(line) && (
-            <span className="left-note"> · останется {line.leftover} {line.unit}</span>
-          )}
+        {/* количество и «выбрать» — одной колонкой справа, иначе при длинном названии
+            они разъезжаются по разным строкам и висят над продуктом */}
+        <span className="buy-right">
+          <span className="small muted buy-qty">
+            {checked ? "есть" : amount}
+            {!checked && showsLeftover(line) && (
+              <span className="left-note"> · останется {line.leftover} {line.unit}</span>
+            )}
+          </span>
+          <button className={exact ? "pick on" : "pick"} onClick={() => remember(line.name)}
+            title={exact ? "Открывается твой товар — нажми, чтобы сменить или забыть"
+                         : "Привязать конкретный товар из магазина, чтобы не выбирать заново"}>
+            {exact ? "мой ✓" : "выбрать"}
+          </button>
         </span>
-
-        <button className={exact ? "pick on" : "pick"} onClick={() => remember(line.name)}
-          title={exact ? "Открывается твой товар — нажми, чтобы сменить или забыть"
-                       : "Привязать конкретный товар из магазина, чтобы не выбирать заново"}>
-          {exact ? "мой ✓" : "выбрать"}
-        </button>
       </li>
     );
   };
