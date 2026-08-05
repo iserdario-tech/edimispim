@@ -39,12 +39,14 @@ export function FoodSetup({ initial, onDone, onCancel }: {
 
   return (
     <main className="wrap">
-      <h2>Еда — вторая половина суток</h2>
       <p className="muted small">
         Меню собирается под твой сон: ужин встаёт за три часа до отбоя, а после плохой ночи
         день становится проще. Заполнить нужно один раз.
       </p>
 
+      <section className="card">
+        <h3 className="card-h">1 · Про тебя</h3>
+        <p className="small muted">Отсюда считается норма калорий и белка.</p>
       <div className="chips">
         <button className={sex === "m" ? "chip on" : "chip"} onClick={() => setSex("m")}>Мужчина</button>
         <button className={sex === "f" ? "chip on" : "chip"} onClick={() => setSex("f")}>Женщина</button>
@@ -63,49 +65,64 @@ export function FoodSetup({ initial, onDone, onCancel }: {
         <input type="number" min={35} max={250} step="0.1" value={goalWeightKg} onChange={e => setGoalWeightKg(+e.target.value)} />
       </label>
 
-      <div className="small muted" style={{ marginTop: 10 }}>Насколько подвижный день — про быт, не про спортзал</div>
-      <div className="chips">
-        <button className={activity === "low" ? "chip on" : "chip"} onClick={() => setActivity("low")}>Сидячий</button>
-        <button className={activity === "medium" ? "chip on" : "chip"} onClick={() => setActivity("medium")}>Средний</button>
-        <button className={activity === "high" ? "chip on" : "chip"} onClick={() => setActivity("high")}>На ногах</button>
-      </div>
+      </section>
 
-      <div className="small muted" style={{ marginTop: 10 }}>
-        Сколько раз в день есть. На вес это почти не влияет — выбирай как удобно жить.
-        Важнее, чтобы приёмы были примерно в одно время.
-      </div>
-      <div className="chips">
-        {([2, 3, 4, 5] as MealCount[]).map(n => (
-          <button key={n} className={mealCount === n ? "chip on" : "chip"} onClick={() => setMealCount(n)}>{n} раза</button>
-        ))}
-      </div>
+      <section className="card">
+        <h3 className="card-h">2 · Образ жизни</h3>
+        <p className="small muted">Насколько подвижный день — про быт, а не про спортзал.</p>
+        <div className="chips">
+          <button className={activity === "low" ? "chip on" : "chip"} onClick={() => setActivity("low")}>Сидячий</button>
+          <button className={activity === "medium" ? "chip on" : "chip"} onClick={() => setActivity("medium")}>Средний</button>
+          <button className={activity === "high" ? "chip on" : "chip"} onClick={() => setActivity("high")}>На ногах</button>
+        </div>
 
-      <div className="small muted" style={{ marginTop: 10 }}>Что есть на кухне</div>
-      <div className="chips">
-        {COOKWARE.map(([key, ru]) => (
-          <button key={key} className={cookware.includes(key) ? "chip on" : "chip"}
-            onClick={() => toggle(cookware, setCookware, key)}>{ru}</button>
-        ))}
-      </div>
+        <p className="small muted" style={{ marginTop: 14 }}>
+          Сколько раз в день есть. На вес это почти не влияет — выбирай как удобно жить.
+          Важнее, чтобы приёмы были примерно в одно время.
+        </p>
+        <div className="chips">
+          {([2, 3, 4, 5] as MealCount[]).map(n => (
+            <button key={n} className={mealCount === n ? "chip on" : "chip"} onClick={() => setMealCount(n)}>
+              {n} раза
+            </button>
+          ))}
+        </div>
+      </section>
 
-      <div className="small muted" style={{ marginTop: 10 }}>Аллергии — исключим жёстко</div>
-      <div className="chips">
-        {ALLERGENS.map(([key, ru]) => (
-          <button key={key} className={allergens.includes(key) ? "chip on" : "chip"}
-            onClick={() => toggle(allergens, setAllergens, key)}>{ru}</button>
-        ))}
-      </div>
+      <section className="card">
+        <h3 className="card-h">3 · Что есть на кухне</h3>
+        <p className="small muted">Рецепты подберутся под твою технику — не придётся искать замену на ходу.</p>
+        <div className="chips">
+          {COOKWARE.map(([key, ru]) => (
+            <button key={key} className={cookware.includes(key) ? "chip on" : "chip"}
+              onClick={() => toggle(cookware, setCookware, key)}>{ru}</button>
+          ))}
+        </div>
+      </section>
 
-      <label className="fld small">Что не любишь (через запятую)
-        <input type="text" value={dislikes} placeholder="капуста, нут" onChange={e => setDislikes(e.target.value)} />
-      </label>
+      <section className="card">
+        <h3 className="card-h">4 · Чего не будет в меню</h3>
+        <p className="small muted">Аллергии исключаются жёстко, нелюбимое — тоже.</p>
+        <div className="chips">
+          {ALLERGENS.map(([key, ru]) => (
+            <button key={key} className={allergens.includes(key) ? "chip on" : "chip"}
+              onClick={() => toggle(allergens, setAllergens, key)}>{ru}</button>
+          ))}
+        </div>
+        <label className="fld small">Что не любишь (через запятую)
+          <input type="text" value={dislikes} placeholder="капуста, нут" onChange={e => setDislikes(e.target.value)} />
+        </label>
+      </section>
 
-      <div className="small muted" style={{ marginTop: 10 }}>Бюджет</div>
-      <div className="chips">
-        <button className={budget === "small" ? "chip on" : "chip"} onClick={() => setBudget("small")}>Небольшой</button>
-        <button className={budget === "medium" ? "chip on" : "chip"} onClick={() => setBudget("medium")}>Средний</button>
-        <button className={budget === "large" ? "chip on" : "chip"} onClick={() => setBudget("large")}>Свободный</button>
-      </div>
+      <section className="card">
+        <h3 className="card-h">5 · Бюджет</h3>
+        <p className="small muted">Меняет набор блюд, а не цену дня: объём продуктов задаёт цель по белку.</p>
+        <div className="chips">
+          <button className={budget === "small" ? "chip on" : "chip"} onClick={() => setBudget("small")}>Небольшой</button>
+          <button className={budget === "medium" ? "chip on" : "chip"} onClick={() => setBudget("medium")}>Средний</button>
+          <button className={budget === "large" ? "chip on" : "chip"} onClick={() => setBudget("large")}>Свободный</button>
+        </div>
+      </section>
 
       <div style={{ display: "flex", gap: 12, marginTop: 18, flexWrap: "wrap" }}>
         <button className="chip on" onClick={() => onDone({

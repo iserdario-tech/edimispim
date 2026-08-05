@@ -4,8 +4,23 @@ export interface PushDay { date: string; mode: DayMode; toggles: DayToggles; cru
 
 // Публичный VAPID-ключ (пара к приватному JWK на Worker — см. app/.vapid.json)
 const VAPID_PUBLIC = "BPedDaxa5IPF3-WSZ-EyAats5dXnGuJMaLapSRCmElsllWNGFk7NcMyS-z-MEzM5iNtJMtEIxhTEUFqJL81fgo4";
-// URL задеплоенного Worker (Cloudflare). Используется и пушами, и коучем.
+/**
+ * URL Worker'а на Cloudflare. Сейчас это Worker, задеплоенный для pospat.
+ *
+ * ⚠️ Для КОУЧА это безопасно: он просто отвечает на вопросы и ничего не хранит.
+ * Для ПУШЕЙ — нет: подписка легла бы в базу подписок pospat, напоминания приходили бы
+ * с его текстами и вели бы по ссылке в старое приложение, а контекст питания
+ * игнорировался бы вовсе. Поэтому пуши выключены до деплоя собственного Worker'а
+ * (`worker/wrangler.toml`: имя уже своё, осталось создать KV и задеплоить).
+ */
 export const BACKEND_URL = "https://pospat-push.pospat.workers.dev";
+
+/** Пуши включатся, когда у приложения появится собственный Worker. */
+export const PUSH_READY = false;
+
+export const PUSH_UNAVAILABLE_RU =
+  "Напоминания пока не включены: для них нужен собственный сервер уведомлений. " +
+  "Всё остальное работает и без них — приложение считает план прямо на телефоне.";
 
 export function urlBase64ToUint8Array(b64: string): Uint8Array {
   const pad = "=".repeat((4 - (b64.length % 4)) % 4);
@@ -28,6 +43,7 @@ function iosNeedsInstall(): boolean {
 // Тихо обновляет то, что Worker знает о человеке (профиль + контекст дня), если подписка уже есть.
 // Без неё пуши продолжали бы идти по расписанию на момент подписки. Разрешений не просит.
 export async function syncPushContext(profile: Profile, day?: PushDay): Promise<void> {
+  if (!PUSH_READY) return;   // не отправляем контекст в чужой Worker
   try {
     if (!("serviceWorker" in navigator)) return;
     // getRegistration, а не ready: ready висит вечно, если service worker не зарегистрирован
@@ -43,8 +59,11 @@ export async function syncPushContext(profile: Profile, day?: PushDay): Promise<
 }
 
 export async function enableNotifications(profile: Profile, day?: PushDay): Promise<string> {
+  // Пока своего Worker'а нет, подписка ушла бы в базу pospat — лучше честно сказать,
+  // чем просить разрешение на уведомления, которые придут не те и уведут не туда.
+  if (!PUSH_READY) return PUSH_UNAVAILABLE_RU;
   if (iosNeedsInstall())
-    return "На айфоне напоминания включаются только из приложения на экране «Домой». В Safari нажми «Поделиться» (квадрат со стрелкой) → «На экран „Домой“», потом открой pospat с иконки и снова нажми эту кнопку.";
+    return "На айфоне напоминания включаются только из приложения на экране «Домой». В Safari нажми «Поделиться» (квадрат со стрелкой) → «На экран „Домой“», потом открой «едим и спим» с иконки и снова нажми эту кнопку.";
   if (!("serviceWorker" in navigator) || !("PushManager" in window))
     return "Уведомления не поддерживаются этим браузером.";
   try {

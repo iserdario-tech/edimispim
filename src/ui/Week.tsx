@@ -113,19 +113,24 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
       </section>
 
       <section className="card">
-        <h3 className="card-h">Якорь режима</h3>
+        <h3 className="card-h">Ровность режима</h3>
         <div className="anchor-row">
           <div className="anchor-num">{anchorInfo.score}<span className="small">/100</span></div>
           <div className="small muted">
             {anchorInfo.socialJetlagMin == null
-              ? "ровность подъёма"
-              : <>ровность подъёма и разъезд будни/выходные (<b>{anchorInfo.socialJetlagMin} мин</b>)</>}
+              ? "насколько одинаково ты встаёшь изо дня в день"
+              : <>встаёшь ли в одно время и насколько выходные уезжают от будней
+                (<b>на {anchorInfo.socialJetlagMin} мин</b>)</>}
           </div>
         </div>
         <p className="small">{anchorInfo.verdictRU}</p>
         {anchorInfo.socialJetlagMin != null && (
           <p className="small muted">{anchorSummaryRU(anchorInfo)}</p>
         )}
+        <p className="small muted">
+          Зачем это: по наблюдениям на 231 тысяче человек ровный режим связан с меньшим весом
+          и объёмом талии — сам по себе, отдельно от еды и количества сна.
+        </p>
       </section>
 
       {!plan ? (

@@ -90,7 +90,7 @@ describe("mealTimes — времена от ритма суток, а не из 
     expect(t.lunch!).toBeGreaterThan(rhythm.wakeMin + 30);
   });
 
-  it("после плохой ночи лакомство переносится на вечер, после ужина", () => {
+  it("после плохой ночи сладкое переносится на вечер, после ужина", () => {
     const normal = mealTimes(rhythm, 4);
     const rough = mealTimes(rhythm, 4, true);
     expect(normal.dessert!).toBeLessThan(normal.dinner!);

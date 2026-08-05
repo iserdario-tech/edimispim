@@ -7,6 +7,7 @@ import { Profile as ProfileScreen } from "./Profile.js";
 import { FoodSetup } from "./FoodSetup.js";
 import { Coach } from "./Coach.js";
 import { Nav, type Tab } from "./Nav.js";
+import { ScreenHeader } from "./ScreenHeader.js";
 import { loadState, saveState, exportAll, importAll, type FoodSettings, type StoredState } from "./storage.js";
 import { syncPushContext } from "./notifications.js";
 import { migrateAll } from "../migrate.js";
@@ -29,6 +30,8 @@ export function App() {
   const [tab, setTab] = useState<Tab>("today");
   const [editing, setEditing] = useState(false);
   const [editingFood, setEditingFood] = useState(false);
+  // откуда пришли на вложенный экран — туда и вернём, а не на первый раздел
+  const [returnTab, setReturnTab] = useState<Tab>("today");
   const [migrationNote, setMigrationNote] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -37,6 +40,29 @@ export function App() {
     const picked = pickUpOldApps();
     if (picked.weights.length || picked.food) setMigrationNote(picked.notesRU.join(" "));
   }, [state]);
+
+  const overlay = editing || editingFood;
+  const closeOverlay = () => { setEditing(false); setEditingFood(false); };
+
+  const openOverlay = (which: "sleep" | "food") => {
+    setReturnTab(tab);
+    if (which === "sleep") setEditing(true); else setEditingFood(true);
+    // отдельная запись в истории: системная «назад» и свайп закроют экран,
+    // а не выбросят человека из приложения
+    history.pushState({ overlay: which }, "");
+  };
+
+  useEffect(() => {
+    const onPop = () => closeOverlay();
+    addEventListener("popstate", onPop);
+    return () => removeEventListener("popstate", onPop);
+  }, []);
+
+  const back = () => {
+    closeOverlay();
+    setTab(returnTab);
+    if (history.state?.overlay) history.back();
+  };
 
   const update = (next: StoredState) => { saveState(next); setState(next); };
 
@@ -77,7 +103,9 @@ export function App() {
   };
 
   if (!state || editing) {
-    return <Onboarding initial={state?.profile} onDone={(profile: Profile, screener: ScreenerResult) => {
+    return <>
+      {state && <ScreenHeader title="Сон" onBack={back} />}
+      <Onboarding initial={state?.profile} onDone={(profile: Profile, screener: ScreenerResult) => {
       const picked = state ? { food: state.food, weights: state.weights ?? [] } : pickUpOldApps();
       const food = state?.food ?? picked.food;
       const weights = state?.weights ?? picked.weights;
@@ -89,13 +117,18 @@ export function App() {
         ...(weights.length ? { weights } : {}),
       });
       setEditing(false);
+      setTab(returnTab);
       void syncPushContext(profile);
-    }} />;
+    }} />
+    </>;
   }
 
   if (editingFood) {
-    return <FoodSetup initial={state.food} onCancel={() => setEditingFood(false)}
-      onDone={(food) => { update({ ...state, food }); setEditingFood(false); }} />;
+    return <>
+      <ScreenHeader title="Еда" onBack={back} />
+      <FoodSetup initial={state.food} onCancel={back}
+        onDone={(food) => { update({ ...state, food }); closeOverlay(); setTab(returnTab); }} />
+    </>;
   }
 
   return (
@@ -110,19 +143,18 @@ export function App() {
         <Today
           profile={state.profile} history={state.history} screener={state.screener}
           onLog={saveLog} food={state.food} weights={state.weights}
-          onSetupFood={() => setEditingFood(true)}
+          onSetupFood={() => openOverlay("food")}
         />
       )}
       {tab === "week" && (
         <Week
           profile={state.profile} history={state.history} food={state.food}
           weights={state.weights} onAddWeight={addWeight}
-          onSetupFood={() => setEditingFood(true)}
+          onSetupFood={() => openOverlay("food")}
         />
       )}
       {tab === "coach" && (
-        <main className="wrap">
-          <h2>Спроси что угодно</h2>
+        <main className="wrap chat-screen">
           <p className="small muted">
             Отвечает по научной базе о сне и питании и видит, как у тебя дела сейчас.
             Не заменяет врача.
@@ -133,8 +165,8 @@ export function App() {
       {tab === "profile" && (
         <ProfileScreen
           food={state.food} screener={state.screener}
-          onEditSleep={() => setEditing(true)}
-          onEditFood={() => setEditingFood(true)}
+          onEditSleep={() => openOverlay("sleep")}
+          onEditFood={() => openOverlay("food")}
           onBackup={backup} onRestore={restore}
         />
       )}
@@ -151,6 +183,10 @@ function coachContext(state: StoredState): string {
   const last = state.history[state.history.length - 1];
   const weights = state.weights ?? [];
   return [
+    // Просьба про стиль идёт в контексте, потому что сам промпт живёт на Worker'е,
+    // а он пока задеплоен старой версии — так подробные ответы работают уже сейчас.
+    "СТИЛЬ ОТВЕТА: отвечай развёрнуто — 4–8 предложений. Сначала объясни причину простыми словами, потом дай 2–4 конкретных шага. Не ограничивайся одной фразой.",
+    "Приложение объединяет сон и питание: можешь отвечать и про еду, и про режим дня.",
     `Обычный подъём: ${state.profile.anchorWakeHM}. Цель сна: ${(state.profile.targetSleepMin / 60).toFixed(1)} ч.`,
     last ? `Последняя отмеченная ночь ${last.date}: подъём ${last.wokeHM}, качество ${last.quality}/5${last.hadAlcohol ? ", был алкоголь" : ""}.` : "Ночи пока не отмечались.",
     state.food ? `Питание настроено: ${state.food.mealCount} приёма в день.` : "Питание пока не настроено.",
