@@ -93,6 +93,7 @@ export interface BuyLine {
   leftover: number;      // что останется после готовки
   loose: boolean;
   staple: boolean;
+  perishDays?: number;   // через сколько дней остаток обычно портится
 }
 
 export type Pantry = Record<string, number>;   // «имя|единица» → остаток
@@ -126,6 +127,7 @@ export function planPurchase(
       packSize: pack.size, packs, buyAmount,
       leftover: Math.max(0, leftover),
       loose: !!pack.loose, staple,
+      ...(pack.perishDays !== undefined ? { perishDays: pack.perishDays } : {}),
     };
   });
 }
