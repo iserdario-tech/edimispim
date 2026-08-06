@@ -191,6 +191,13 @@ export function MealIngredients({ meal }: { meal: Meal }) {
         </>
       )}
 
+      {meal.recipe.source && (
+        <p className="small muted" style={{ marginTop: 10 }}>
+          Рецепт с <a href={meal.recipe.source} target="_blank" rel="noopener noreferrer">источника</a> —
+          состав оттуда, калории пересчитаны приложением по справочнику продуктов.
+        </p>
+      )}
+
       {steps.length > 0 && (
         <>
           <div className="small muted" style={{ marginTop: 12 }}>
