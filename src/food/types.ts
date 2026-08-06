@@ -69,6 +69,8 @@ export interface Recipe {
   time_min?: number;
   ingredients?: Ingredient[];
   steps?: string[];
+  /** Откуда рецепт: ссылка на источник. Пусто — рецепт написан для приложения. */
+  source?: string;
 }
 
 export type Slot = "breakfast" | "lunch" | "dinner" | "dessert" | "snack";
