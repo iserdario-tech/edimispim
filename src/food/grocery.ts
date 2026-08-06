@@ -1,4 +1,5 @@
 import type { Day, Grocery, GroceryItem, Ingredient, Meal } from "./types";
+import { costOf } from "./prices";
 
 // свежие категории — скоропорт; консервы/заморозка/сушёное хранятся долго
 const FRESH = new Set(["мясо/рыба", "молочное", "яйца", "овощи/фрукты"]);
@@ -31,8 +32,20 @@ function aggregate(meals: Meal[]): GroceryItem[] {
     .sort((a, b) => String(a.category).localeCompare(String(b.category)));
 }
 
-const costRub = (meals: Meal[]): number =>
-  Math.round(meals.reduce((s, m) => s + (m.recipe.cost_rub ?? 0) * (m.servings ?? 1), 0));
+/**
+ * Стоимость по РЕАЛЬНЫМ ценам магазина, а не по полю `cost_rub` из рецепта:
+ * то было «прикидкой на глаз», никогда не сверявшейся с прилавком.
+ * Продукты без известной цены просто не считаются — лучше занизить, чем соврать.
+ */
+const costRub = (meals: Meal[]): number => {
+  let sum = 0;
+  for (const m of meals) {
+    for (const ing of m.recipe.ingredients ?? []) {
+      sum += costOf(ing.name, ing.qty * (m.servings ?? 1), ing.unit) ?? 0;
+    }
+  }
+  return Math.round(sum);
+};
 
 export function buildGroceryList(week: Pick<Day, "meals">[]): Grocery {
   const items = aggregate(week.flatMap(d => d.meals));
