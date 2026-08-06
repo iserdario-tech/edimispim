@@ -67,7 +67,7 @@ export function Onboarding({ initial, onDone }: { initial?: Profile; onDone: (p:
       <button className="primary" onClick={() => onDone(buildProfile(form), runScreener(scr))}>
         Построить план
       </button>
-      <p className="disclaimer">pospat — не медицинское приложение. При нарушениях сна обратись к врачу.</p>
+      <p className="disclaimer">«Едим и спим» — не медицинское приложение. При нарушениях сна или питания обратись к врачу.</p>
     </main>
   );
 }
