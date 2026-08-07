@@ -2,14 +2,20 @@ import { readTheme, applyTheme, type ThemeChoice } from "./theme.js";
 import React, { useRef } from "react";
 import type { ScreenerResult } from "../index.js";
 import type { FoodSettings } from "./storage.js";
+import type { Recipe } from "../food/types.js";
+import recipesJson from "../food/data/recipes.json";
+
+const RECIPES = recipesJson as Recipe[];
 
 /**
  * «Я» — всё, что настраивается один раз и потом не мешает: профили, копии, справка.
  * Вынесено с главного экрана, чтобы каждый день человек видел только сегодняшний день.
  */
-export function Profile({ food, screener, onEditSleep, onEditFood, onBackup, onRestore }: {
+export function Profile({ food, screener, ratings, onRate, onEditSleep, onEditFood, onBackup, onRestore }: {
   food?: FoodSettings;
   screener?: ScreenerResult | null;
+  ratings?: Record<string, 1 | -1>;
+  onRate?: (id: string, value: 1 | -1) => void;
   onEditSleep: () => void;
   onEditFood: () => void;
   onBackup: () => void;
@@ -17,6 +23,16 @@ export function Profile({ food, screener, onEditSleep, onEditFood, onBackup, onR
 }) {
   const [theme, setTheme] = React.useState<ThemeChoice>(() => readTheme());
   const fileRef = useRef<HTMLInputElement>(null);
+
+  /**
+   * Скрытые блюда. Без этого списка «палец вниз» был ловушкой: блюдо исчезало из меню,
+   * а вместе с ним исчезала и кнопка, которой оценку можно было снять. Промахнулся —
+   * потерял рецепт навсегда. Отменять свои решения человек должен иметь право всегда.
+   */
+  const hidden = Object.entries(ratings ?? {})
+    .filter(([, v]) => v === -1)
+    .map(([id]) => ({ id, name: RECIPES.find(r => r.id === id)?.name ?? id }))
+    .sort((a, b) => a.name.localeCompare(b.name, "ru"));
 
   return (
     <main className="wrap">
@@ -40,6 +56,24 @@ export function Profile({ food, screener, onEditSleep, onEditFood, onBackup, onR
           </span>
         </button>
       </section>
+
+      {hidden.length > 0 && onRate && (
+        <section className="card">
+          <h3 className="card-h">Скрытые блюда</h3>
+          <p className="small muted" style={{ marginTop: 0 }}>
+            Эти блюда больше не появляются в меню. Промахнулся или передумал — верни обратно.
+          </p>
+          <ul className="fridge-list">
+            {hidden.map(h => (
+              <li key={h.id}>
+                <span className="fridge-name">{h.name}</span>
+                <span />
+                <button className="linkbtn small" onClick={() => onRate(h.id, -1)}>вернуть</button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="card">
         <h3 className="card-h">Оформление</h3>
