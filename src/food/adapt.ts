@@ -1,4 +1,4 @@
-import { generateDay, type DayOptions } from "./planner";
+import { generateDay, effortOf, type DayOptions } from "./planner";
 import type { Day, Recipe, Targets } from "./types";
 
 /**
@@ -31,14 +31,13 @@ export function isRoughNight(n: NightSummary | undefined): boolean {
 }
 
 /**
- * Цена приготовления: сложность и время в одной шкале.
+ * Цена приготовления берётся из планировщика — там же ею пользуется выбор блюда дня.
  *
  * Раньше сложность стояла множителем 1000 и время не значило ничего: жаркое на полтора часа
  * с difficulty 1 считалось «простым» и опережало 10-минутное блюдо посложнее. Пока рецептов
  * было мало, это не всплывало; на 81 рецепте упрощённый день стал ДЛИННЕЕ обычного.
- * Шаг сложности приравнен к получасу готовки — тогда обе величины сравнимы.
  */
-const effort = (r: Recipe): number => (r.difficulty ?? 1) * 30 + (r.time_min ?? 0);
+const effort = effortOf;
 
 /** Доля самых простых блюд каждого типа, которая остаётся в упрощённом дне. */
 const EASY_FRACTION = 1 / 3;

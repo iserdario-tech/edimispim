@@ -162,6 +162,21 @@ export const NUTRIENTS: Record<string, Nutrients> = {
   "масло сливочное": [748, 0.5, 0],
   "хлеб белый": [242, 7.9, 2.7],
   "чечевица зелёная": [297, 24, 11],    // сухая, как и красная выше
+  // добор под большую волну рецептов
+  "манная крупа": [333, 10.3, 3.6],
+  "изюм": [299, 3.1, 3.7],
+  "желатин": [355, 87.2, 0],
+  "черника": [57, 0.7, 2.4],
+  "редис": [20, 1.2, 1.6],
+  "имбирь": [80, 1.8, 2],
+  "кокосовая стружка": [592, 6.9, 16.3],
+  "лосось слабосолёный": [202, 21, 0],
+  "хлебцы": [370, 8.5, 3],
+  "курага": [241, 3.4, 7.3],
+  "киви": [61, 1.1, 3],
+  "кедровые орехи": [673, 13.7, 3.7],
+  "скумбрия": [191, 18, 0],
+  "мука ржаная": [298, 8.9, 12.4],
 };
 
 /** Средний вес штуки, г — для продуктов, которые в рецептах считают поштучно. */
@@ -177,4 +192,32 @@ export const nutrientsFor = (name: string): Nutrients | undefined =>
 export function gramsOf(name: string, qty: number, unit: string): number {
   if (unit !== "шт") return qty;
   return qty * (PIECE_GRAMS[name.toLowerCase().trim()] ?? 60);
+}
+
+/**
+ * Макросы блюда из его состава — единственный способ, которым они попадают в базу.
+ *
+ * Считается ИМЕННО по тому составу, который увидит человек в карточке: состав порции
+ * округляется до 0,1, и если считать из неокруглённых величин, карточка не сходится
+ * со своими же цифрами.
+ */
+export function macrosOf(ings: { name: string; qty: number; unit: string }[]): {
+  kcal: number; protein_g: number; fiber_g: number; energy_density: number;
+} {
+  let kcal = 0, protein = 0, fiber = 0, weight = 0;
+  for (const { name, qty, unit } of ings) {
+    const n = nutrientsFor(name);
+    if (!n) throw new Error(`нет нутриентов: ${name}`);
+    const g = gramsOf(name, qty, unit);
+    kcal += (n[0] * g) / 100;
+    protein += (n[1] * g) / 100;
+    fiber += (n[2] * g) / 100;
+    weight += g;
+  }
+  return {
+    kcal: Math.round(kcal),
+    protein_g: Math.round(protein * 10) / 10,
+    fiber_g: Math.round(fiber * 10) / 10,
+    energy_density: Math.round((kcal / weight) * 100) / 100,
+  };
 }

@@ -17,7 +17,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { NUTRIENTS, gramsOf } from "../src/food/nutrients";
+import { NUTRIENTS, macrosOf } from "../src/food/nutrients";
 import { PRICES, UNKNOWN_PRICE } from "../src/food/prices";
 import { hasHint } from "../src/food/ingredients";
 import type { Recipe, MealType, Cuisine } from "../src/food/types";
@@ -72,32 +72,6 @@ function checkMeta(drafts: Draft[], existing: Recipe[]): string[] {
   return problems;
 }
 
-/**
- * Макросы считаются ИЗ ТОГО СОСТАВА, который увидит человек в карточке.
- *
- * Иначе получается мелкая, но настоящая ложь: состав в карточке округляется до 0,1
- * («яйцо 1 шт на 4 порции» → 0,3 шт), а калории считались из неокруглённых величин —
- * и блюдо на карточке не сходилось со своими же цифрами процента на два.
- * Теперь порядок обратный: сначала состав порции, потом счёт по нему.
- */
-export function macrosOf(ings: { name: string; qty: number; unit: string }[]) {
-  let kcal = 0, protein = 0, fiber = 0, weight = 0;
-  for (const { name, qty, unit } of ings) {
-    const g = gramsOf(name, qty, unit);
-    const [k, p, f] = NUTRIENTS[name.toLowerCase().trim()];
-    kcal += (k * g) / 100;
-    protein += (p * g) / 100;
-    fiber += (f * g) / 100;
-    weight += g;
-  }
-  return {
-    kcal: Math.round(kcal),
-    protein_g: Math.round(protein * 10) / 10,
-    fiber_g: Math.round(fiber * 10) / 10,
-    energy_density: Math.round((kcal / weight) * 100) / 100,
-  };
-}
-
 function build(d: Draft): Recipe {
   const ingredients = d.ings.map(([name, qty, unit, category]) => ({
     name,
@@ -122,15 +96,9 @@ function build(d: Draft): Recipe {
   };
 }
 
-// дальше — командная часть; при импорте (например, ради macrosOf) она не запускается
-const runAsCli = process.argv[1] !== undefined
-  && pathToFileURL(resolve(process.argv[1])).href === import.meta.url;
-
 const draftPath = process.argv[2];
 const dry = process.argv.includes("--dry");
-if (!runAsCli) {
-  // импорт: ничего не делаем
-} else if (!draftPath) {
+if (!draftPath) {
   console.error("укажи файл черновика: npx vite-node scripts/add-recipes.ts scripts/drafts/<файл>.ts");
   process.exit(1);
 } else {
