@@ -108,6 +108,12 @@ button.primary:active { transform: scale(.98); background: var(--accent-press); 
 .seg-item.on { background: var(--surface); box-shadow: var(--shadow-1); font-weight: 600; }
 .seg-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
+/* Две равные кнопки в строку. Раньше стоял flex-wrap, и на телефоне «Сохранить копию»
+   и «Загрузить копию» переносились друг под друга — читалось как список, хотя это
+   пара равнозначных действий. */
+.btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); margin-top: var(--sp-3); }
+.btn-row .chip { justify-content: center; padding: 0 var(--sp-2); }
+
 /* Замер веса: крупная цифра с единицей внутри поля и кнопка рядом.
    Раньше тут стояло обычное узкое поле формы — Сердар справедливо сказал,
    что оно «будто не из этой пьесы»: цифра дня выглядела как поле поиска. */
