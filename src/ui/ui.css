@@ -315,7 +315,11 @@ summary.card-h::-webkit-details-marker { display: none; }
   display: flex; width: 100%; align-items: center; gap: var(--sp-2); justify-content: space-between;
   min-height: 52px; background: none; border: 0; font: inherit; cursor: pointer; text-align: left;
 }
-.day-head .chev, .card-h .chev { color: var(--fg-3); }
+/* Шевроны и кнопки замены — единый набор иконок, а не символы из шрифта:
+   ▾ и ↻ выглядели по-разному на iOS и Android и не совпадали по толщине с текстом */
+.day-head .chev, .card-h .chev { color: var(--fg-3); display: inline-flex; align-items: center; }
+.meal-name .chev { margin-left: var(--sp-1); }
+.swap-btn { display: inline-flex; align-items: center; gap: var(--sp-1); }
 .day-meals { list-style: none; padding: 0 0 var(--sp-2); margin: 0; display: grid; gap: var(--sp-2); }
 .day-meals li { display: grid; grid-template-columns: 46px minmax(0,1fr) auto; gap: var(--sp-1) var(--sp-2); align-items: start; }
 .meal-main { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
