@@ -68,3 +68,26 @@ describe("отметка «съел»: факт против плана", () => 
     expect(plateau(toDayRecords(history, weights), 465).cause).toBe("keep_waiting");
   });
 });
+
+/**
+ * Читмил объявляет сам человек, и приложение не имеет права считать это срывом:
+ * наказывать за честно объявленное заранее — значит учить не объявлять (X28).
+ */
+describe("читмил-день", () => {
+  it("не портит статистику приверженности", () => {
+    const dates = ["2026-07-01", "2026-07-02", "2026-07-03"];
+    const history: DayLog[] = dates.map(date => ({ date, wokeHM: "07:00", quality: 4 }));
+    const eaten: Record<string, DayEaten> = {
+      "2026-07-01": { marks: { breakfast: "ate", lunch: "ate", dinner: "ate" }, planned: 4 },
+      "2026-07-02": { marks: { breakfast: "own" }, planned: 4 },              // читмил
+      "2026-07-03": { marks: { breakfast: "ate", lunch: "ate", dinner: "ate" }, planned: 4 },
+    };
+    const withCheat = toDayRecords(history, [], eaten, ["2026-07-02"]);
+    const marked = withCheat.filter(d => d.food?.followed !== undefined);
+    expect(marked).toHaveLength(2);
+    expect(marked.every(d => d.food!.followed)).toBe(true);
+
+    // без пометки тот же день утянул бы приверженность вниз
+    expect(toDayRecords(history, [], eaten).filter(d => d.food?.followed === false)).toHaveLength(1);
+  });
+});

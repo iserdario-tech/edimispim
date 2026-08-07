@@ -27,7 +27,7 @@ function crunchStr(hm: string): string {
 const todayLabel = (): string =>
   new Date().toLocaleDateString("ru-RU", { day: "numeric", month: "long", weekday: "long" });
 
-export function Today({ profile, history, screener, onLog, food, weights, eaten, ratings, onMarkMeal, onSetupFood }: {
+export function Today({ profile, history, screener, onLog, food, weights, eaten, ratings, cheatDays, onMarkMeal, onCheatDay, onSetupFood }: {
   profile: Profile;
   history: DayLog[];
   screener?: ScreenerResult | null;
@@ -36,7 +36,11 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
   weights?: { date: string; kg: number }[];
   eaten?: Record<string, DayEaten>;
   ratings?: Record<string, 1 | -1>;
+  /** Дни, которые человек сам объявил читмилом. Хранятся в истории, а не в контексте суток:
+   *  день должен остаться помеченным и завтра, иначе статистика посчитает его срывом. */
+  cheatDays?: string[];
   onMarkMeal?: (date: string, slot: Slot, mark: MealMark, planned: number) => void;
+  onCheatDay?: (date: string, on: boolean) => void;
   onSetupFood?: () => void;
 }) {
   const now = new Date();
@@ -53,6 +57,7 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
   const [notifMsg, setNotifMsg] = useState("");
   const [savedMsg, setSavedMsg] = useState("");
   const notifOn = typeof Notification !== "undefined" && Notification.permission === "granted";
+  const isCheat = !!cheatDays?.includes(today);
 
   useEffect(() => { saveDayDraft({ date: today, mode, crunchEndHM, toggles }); }, [today, mode, crunchEndHM, toggles]);
   // контекст дня — на Worker, иначе пуши шли бы по «обычному дню», а не по тому, что на экране
@@ -86,7 +91,9 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
   );
 
   const foodDay = useMemo(() => {
-    if (!food) return null;
+    // читмил объявляет сам человек: в этот день приложение не считает калории
+    // и не показывает меню — иначе оно спорит с решением, которое уже принято
+    if (!food || isCheat) return null;
     const base = applySafety(computeTargets(food.profile), food.profile, {});
     // во время вхождения в дефицит цель на сегодня своя — она выше конечной и снижается по дням
     const { targets: safe, ramp } = targetsForToday(base, food.startISO, today, food.pace);
@@ -105,7 +112,7 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
       { sleptMin, targetSleepMin: profile.targetSleepMin, quality },
     );
     return { day, safe, diagnosis, ramp };
-  }, [food, wokeHM, bedMin, today, sleptMin, profile.targetSleepMin, quality, ratings]);
+  }, [food, isCheat, wokeHM, bedMin, today, sleptMin, profile.targetSleepMin, quality, ratings]);
 
   const rows = useMemo(() => {
     if (!foodDay) return view.rows;
@@ -125,7 +132,7 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
   };
 
   const explanation = useMemo(() => {
-    const days = toDayRecords(history, weights ?? [], eaten ?? {});
+    const days = toDayRecords(history, weights ?? [], eaten ?? {}, cheatDays ?? []);
     const todayRec = days.find(d => d.date === today)
       ?? { date: today, sleep: { wokeHM, bedHM: bedHM || undefined, quality } };
     return explain({
@@ -135,7 +142,7 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
       screenerFlagged: screener?.flagged,
       caffeineCutoffHM: view.rows.find(r => r.icon === "☕")?.time,
     });
-  }, [history, weights, eaten, today, wokeHM, bedHM, quality, profile.targetSleepMin, screener, view.rows]);
+  }, [history, weights, eaten, cheatDays, today, wokeHM, bedHM, quality, profile.targetSleepMin, screener, view.rows]);
 
   // Стрик и подсветка ближайшего шага были в pospat и потерялись при переносе:
   // первое — единственная награда за регулярность, второе — ответ на «что сейчас».
@@ -197,7 +204,20 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
         </section>
       )}
 
-      {foodDay ? (
+      {isCheat ? (
+        /* Читмил. Никаких цифр, никакого меню и ни одного слова про «отработать»:
+           попытка компенсировать день голоданием — это возврат к жёсткому правилу,
+           то есть ровно к тому, из-за чего люди и срываются (X28). */
+        <div className="day-totals small">
+          <b>Сегодня читмил.</b> Ешь что хочется — сегодня приложение калории не считает
+          и меню не показывает. Завтра просто возвращаемся к плану.
+          <p className="small muted" style={{ margin: "6px 0 0" }}>
+            Отрабатывать этот день голоданием не надо: так делают хуже, а не лучше.
+            Недельный дефицит станет меньше — это всё, что произойдёт. День запланирован
+            тобой, поэтому в статистике он не считается срывом.
+          </p>
+        </div>
+      ) : foodDay ? (
         <div className="day-totals small">
           <b>День целиком:</b> {foodDay.day.totals.kcal} ккал · белок {foodDay.day.totals.protein} г ·
           клетчатка {foodDay.day.totals.fiber} г
@@ -282,6 +302,12 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
             <button className={toggles.noBrightLight ? "chip on" : "chip"} onClick={() => t("noBrightLight")}>Нет дневного света</button>
             <button className={toggles.noCaffeine ? "chip on" : "chip"} onClick={() => t("noCaffeine")}>Без кофеина</button>
             <button className={toggles.hadAlcohol ? "chip on" : "chip"} onClick={() => t("hadAlcohol")}>🍷 Вчера был алкоголь</button>
+            {onCheatDay && (
+              <button className={isCheat ? "chip on" : "chip"}
+                onClick={() => { tap(); onCheatDay(today, !isCheat); }}>
+                🍕 Сегодня читмил
+              </button>
+            )}
           </div>
           <button className={notifOn ? "chip on" : "chip"} onClick={async () => setNotifMsg(await enableNotifications(profile))}>
             {notifOn ? "🔔 Напоминания включены" : "🔔 Включить напоминания"}

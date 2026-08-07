@@ -115,6 +115,22 @@ export function App() {
     });
   };
 
+  /**
+   * Объявить (или отменить) читмил. Хранится в истории, а не в контексте суток: день должен
+   * остаться помеченным и назавтра, иначе статистика приверженности сочтёт его провалом —
+   * то есть накажет ровно за то, что человек честно объявил заранее.
+   */
+  const setCheatDay = (date: string, on: boolean) => {
+    setState((prev) => {
+      if (!prev) return prev;
+      const rest = (prev.cheatDays ?? []).filter(d => d !== date);
+      const cheatDays = (on ? [...rest, date] : rest).sort().slice(-180);
+      const next = { ...prev, cheatDays };
+      saveState(next);
+      return next;
+    });
+  };
+
   const addWeight = (kg: number) => {
     setState((prev) => {
       if (!prev) return prev;
@@ -187,14 +203,15 @@ export function App() {
         <Today
           profile={state.profile} history={state.history} screener={state.screener}
           onLog={saveLog} food={state.food} weights={state.weights}
-          eaten={state.eaten} ratings={state.ratings} onMarkMeal={markMeal}
+          eaten={state.eaten} ratings={state.ratings} cheatDays={state.cheatDays}
+          onMarkMeal={markMeal} onCheatDay={setCheatDay}
           onSetupFood={() => openOverlay("food")}
         />
       )}
       {tab === "week" && (
         <Week
           profile={state.profile} history={state.history} food={state.food}
-          weights={state.weights} eaten={state.eaten} onAddWeight={addWeight}
+          weights={state.weights} eaten={state.eaten} cheatDays={state.cheatDays} onAddWeight={addWeight}
           ratings={state.ratings} onRate={rateDish}
           onSetupFood={() => openOverlay("food")}
         />
