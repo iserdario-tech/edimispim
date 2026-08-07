@@ -143,10 +143,16 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
             сне в исследованиях меньшая часть потерянного веса приходится на жир.
           </p>
         )}
-        <div className="w-input" style={{ marginTop: 10 }}>
-          <input type="number" step="0.1" placeholder="вес, кг" value={kg}
-            onChange={e => setKg(e.target.value)} aria-label="Вес в килограммах" />
-          <button className="chip" onClick={() => { const v = +kg; if (v) { onAddWeight(v); setKg(""); } }}>
+        {/* Поле веса: крупная цифра и подпись «кг» внутри поля — чтобы это читалось
+            как замер, а не как случайное поле формы посреди карточки */}
+        <div className="w-input">
+          <div className="w-field">
+            <input type="number" inputMode="decimal" step="0.1" placeholder="0,0" value={kg}
+              onChange={e => setKg(e.target.value)} aria-label="Вес в килограммах" />
+            <span className="w-unit">кг</span>
+          </div>
+          <button className="w-save" disabled={!+kg}
+            onClick={() => { const v = +kg; if (v) { onAddWeight(v); setKg(""); } }}>
             Записать
           </button>
         </div>
