@@ -28,7 +28,8 @@ describe("weeklyInsight", () => {
     expect(w.avgSleepMin).toBe(420);    // (480+360)/2
   });
   it("regularity high when wake times stable", () => {
-    const hist = [10,11,12].map(d => day(`2026-07-${d}`, "07:00", 3));
+    // четыре ночи — минимум, с которого приложение вообще называет цифру
+    const hist = [9,10,11,12].map(d => day(`2026-07-${d}`, "07:00", 3));
     expect(weeklyInsight(hist, "2026-07-12", 465).regularity).toBe(100);
   });
   it("counts alcohol nights in last 7 and warns at 3+", () => {
@@ -59,7 +60,7 @@ describe("streakDays", () => {
 
 describe("alcohol toggle", () => {
   it("caps readiness below charged", () => {
-    const hist = [1,2,3].map(d => day(`2026-06-0${d}`, "07:00", 4, "23:00"));
+    const hist = [1,2,3,4].map(d => day(`2026-06-0${d}`, "07:00", 4, "23:00"));
     const good = { profile, lastNight: { wokeHM: "07:00", bedHM: "23:00", quality: 5 as const }, history: hist };
     expect(computeReadiness(good).level).toBe("charged");
     expect(computeReadiness({ ...good, hadAlcohol: true }).level).toBe("ok");

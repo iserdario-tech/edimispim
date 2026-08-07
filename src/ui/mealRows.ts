@@ -1,4 +1,4 @@
-import type { Day, Meal } from "../food/types.js";
+import type { Day, Meal, Slot } from "../food/types.js";
 import { fmtHM } from "../time.js";
 
 /**
@@ -17,6 +17,8 @@ export interface TimelineRow {
   past?: boolean;
   startMin: number;
   kind: "sleep" | "food";
+  /** У строки еды — какой это приём: по нему вешается отметка «съел». */
+  slot?: Slot;
 }
 
 const ICON: Record<string, string> = {
@@ -57,6 +59,7 @@ export function mealRows(day: Day, bedMin: number, nowMin: number): TimelineRow[
       past: m.timeMin < nowMin,
       startMin: m.timeMin,
       kind: "food" as const,
+      slot: m.slot,
     };
   });
 }

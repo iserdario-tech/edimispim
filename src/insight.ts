@@ -11,7 +11,7 @@ const daysAgo = (todayISO: string, iso: string): number =>
 
 export interface WeeklyInsight {
   daysLogged: number;         // отмечено дней за последние 7
-  regularity: number;         // 0..100 (по подъёмам)
+  regularity: number | null;  // 0..100 (по подъёмам); null — ночей меньше четырёх
   avgQuality: number | null;  // среднее качество сна, 1..5
   avgSleepMin: number | null; // среднее по дням, где записан отбой
   alcoholNights: number;      // ночей с алкоголем за последние 7
@@ -28,9 +28,11 @@ export function weeklyInsight(history: DayLog[], todayISO: string, targetSleepMi
     ? "Отмечайся каждое утро — через пару дней покажу тренд по сну."
     : alcoholNights >= 3
       ? "Алкоголь 3+ ночи за неделю заметно режет глубокий и REM-сон. Меньше выпивки ближе ко сну — больше бодрости."
-      : reg >= 80
-        ? "Режим стабильный — это лучший рычаг бодрости. Так держать."
-        : "Подъёмы «гуляют». Стабильное время подъёма даст больше бодрости, чем кофе.";
+      : reg === null
+        ? "Отмечайся каждое утро — через пару дней покажу, ровно ли держится режим."
+        : reg >= 80
+          ? "Режим стабильный — это лучший рычаг бодрости. Так держать."
+          : "Подъёмы «гуляют». Стабильное время подъёма даст больше бодрости, чем кофе.";
   return {
     daysLogged,
     regularity: reg,
