@@ -4,6 +4,7 @@ import { SHOPS, DEFAULT_SHOP_ID, shopById, searchUrl } from "../food/shops.js";
 import { planPurchase, type BuyLine, type Pantry } from "../food/packaging.js";
 import { PRICES_SOURCE, PRICES_DATE, costOf } from "../food/prices.js";
 import { hintFor } from "../food/ingredients.js";
+import { tap } from "./haptics.js";
 
 const SHOP_KEY = "edimispim.shop";
 const PANTRY_KEY = "edimispim.pantry";
@@ -71,6 +72,7 @@ export function GroceryBlock({ grocery }: { grocery: Grocery }) {
 
   /** Галочка: продукт взят или уже есть — кладём в кладовку вместе с остатком упаковки. */
   const toggle = (line: BuyLine, checked: boolean) => {
+    tap();
     const key = pantryKey(line.name, line.unit);
     const next = { ...pantry };
     if (checked) next[key] = line.need + line.leftover;   // купленное минус съеденное = остаток

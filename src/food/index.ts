@@ -9,6 +9,10 @@ export {
   generateAdaptedDay, isRoughNight, simplifyPool, ROUGH_SLEEP_DEFICIT_MIN,
   type NightSummary,
 } from "./adapt";
+export {
+  rampIn, targetsForToday, prefersFamiliar, RAMP_DAYS, DEFAULT_PACE,
+  type RampPace, type RampState,
+} from "./rampin";
 export { buildGroceryList } from "./grocery";
 export type * from "./types";
 export { diagnosePool, type PoolDiagnosis } from "./diagnose";

@@ -2,12 +2,13 @@ import React, { useMemo, useState } from "react";
 import type { Profile, DayLog } from "../index.js";
 import { parseHM, fmtHM, weeklyInsight } from "../index.js";
 import type { FoodSettings } from "./storage.js";
-import { computeTargets, applySafety, generateWeek, buildGroceryList, expectedBedMin, filterRecipes, swapDish, type Day } from "../food/index.js";
+import { computeTargets, applySafety, generateDay, buildGroceryList, expectedBedMin, filterRecipes, swapDish, targetsForToday, prefersFamiliar, type Day } from "../food/index.js";
 import type { Recipe } from "../food/types.js";
+import { followedPlan, type DayEaten } from "../food/eaten.js";
 import recipesJson from "../food/data/recipes.json";
 import { anchor, anchorSummaryRU } from "../anchor.js";
 import { toDayRecords } from "./dayRecords.js";
-import { localDateISO } from "../today-date.js";
+import { localDateISO, mondayOf, plusDaysISO } from "../today-date.js";
 import { nextStep } from "../next-step.js";
 import { plateau } from "../plateau.js";
 import { GroceryBlock, MealIngredients } from "./Grocery.js";
@@ -24,11 +25,12 @@ const DOW = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
  * Никаких коэффициентов и p-значений — статистики на двух неделях всё равно нет,
  * а вид точной цифры создаёт ложную уверенность.
  */
-export function Week({ profile, history, food, weights, onAddWeight, onSetupFood }: {
+export function Week({ profile, history, food, weights, eaten, onAddWeight, onSetupFood }: {
   profile: Profile;
   history: DayLog[];
   food?: FoodSettings;
   weights?: { date: string; kg: number }[];
+  eaten?: Record<string, DayEaten>;
   onAddWeight: (kg: number) => void;
   onSetupFood: () => void;
 }) {
@@ -38,17 +40,30 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
   const [kg, setKg] = useState("");
   const today = localDateISO();
 
+  /**
+   * Меню недели. Каждый день считается по СВОЕЙ цели: во время вхождения в дефицит
+   * калораж спускается изо дня в день, и неделя должна это показывать — иначе человек
+   * видит одну цифру и не понимает, почему в приложении «Сегодня» стоит другая.
+   */
   const plan = useMemo(() => {
     if (!food) return null;
     const safe = applySafety(computeTargets(food.profile), food.profile, {});
     const bedMin = expectedBedMin(parseHM(profile.anchorWakeHM), profile.targetSleepMin);
-    const week = generateWeek(safe, RECIPES, {
-      rhythm: { wakeMin: parseHM(profile.anchorWakeHM), bedMin },
-      mealCount: food.mealCount,
-      constraints: food.constraints,
+    const pool = filterRecipes(RECIPES, food.constraints);
+    const monday = mondayOf(today);
+    const days = Array.from({ length: 7 }, (_, d) => {
+      const date = plusDaysISO(monday, d);
+      const { targets, ramp } = targetsForToday(safe, food.startISO, date, food.pace);
+      const day = generateDay(targets, pool, {
+        rhythm: { wakeMin: parseHM(profile.anchorWakeHM), bedMin },
+        mealCount: food.mealCount, offset: d, familiar: prefersFamiliar(ramp),
+      });
+      return { date, day, targets, ramp };
     });
-    return { week, grocery: buildGroceryList(week), safe, pool: filterRecipes(RECIPES, food.constraints) };
-  }, [food, profile]);
+    const week = days.map(d => d.day);
+    const todayRamp = targetsForToday(safe, food.startISO, today, food.pace);
+    return { days, week, grocery: buildGroceryList(week), safe, pool, ramp: todayRamp.ramp };
+  }, [food, profile, today]);
 
   const toggleDay = (i: number) => setOpenDays(prev => {
     const next = new Set(prev);
@@ -58,17 +73,24 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
   const allOpen = !!plan && openDays.size === plan.week.length;
   const toggleAll = () => setOpenDays(allOpen ? new Set() : new Set(plan!.week.map((_, i) => i)));
 
-  /** Заменить одно блюдо: следующий рецепт того же типа, порция под ту же долю калорий. */
-  const swapOne = (day: Day, index: number) => {
+  /**
+   * Заменить одно блюдо: следующий рецепт того же типа, порция под ту же долю калорий.
+   * Цель берётся у ЭТОГО дня, а не общая: во время вхождения у каждого дня она своя,
+   * и замена по общей цели тихо ломала бы калораж дня.
+   */
+  const swapOne = (dayIdx: number, index: number) => {
     if (!plan || !food) return;
-    if (swapDish(day, index, plan.safe, plan.pool, food.mealCount)) setRev(r => r + 1);
+    const d = plan.days[dayIdx];
+    if (d && swapDish(d.day, index, d.targets, plan.pool, food.mealCount)) setRev(r => r + 1);
   };
   /** Заменить все блюда дня разом — когда день целиком не нравится. */
-  const swapWholeDay = (day: Day) => {
+  const swapWholeDay = (dayIdx: number) => {
     if (!plan || !food) return;
+    const d = plan.days[dayIdx];
+    if (!d) return;
     let changed = false;
-    for (let i = 0; i < day.meals.length; i++) {
-      if (swapDish(day, i, plan.safe, plan.pool, food.mealCount)) changed = true;
+    for (let i = 0; i < d.day.meals.length; i++) {
+      if (swapDish(d.day, i, d.targets, plan.pool, food.mealCount)) changed = true;
     }
     if (changed) setRev(r => r + 1);
   };
@@ -78,7 +100,7 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
     [history, today, profile.targetSleepMin],
   );
 
-  const records = useMemo(() => toDayRecords(history, weights ?? []), [history, weights]);
+  const records = useMemo(() => toDayRecords(history, weights ?? [], eaten ?? {}), [history, weights, eaten]);
   const anchorInfo = useMemo(() => anchor(records, profile.targetSleepMin), [records, profile.targetSleepMin]);
   const step = useMemo(() => nextStep(records, !!food), [records, food]);
   const plateauInfo = useMemo(() => plateau(records, profile.targetSleepMin), [records, profile.targetSleepMin]);
@@ -91,6 +113,16 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
       return history.find(h => h.date === d)?.quality ?? null;
     });
   }, [history, today]);
+
+  // за последнюю неделю: сколько дней прошло по плану еды из тех, что вообще отмечались
+  const foodWeek = useMemo(() => {
+    const from = plusDaysISO(today, -6);
+    const marks = Object.entries(eaten ?? {})
+      .filter(([d]) => d >= from && d <= today)
+      .map(([, e]) => followedPlan(e))
+      .filter((v): v is boolean => v !== undefined);
+    return { marked: marks.length, followed: marks.filter(Boolean).length };
+  }, [eaten, today]);
 
   const weightSeries = weights ?? [];
   const delta = weightSeries.length >= 2
@@ -109,6 +141,29 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
           <p className="small muted" style={{ marginTop: 6 }}>Уже есть: {step.done} из {step.need}.</p>
         )}
       </section>
+
+      {/* Где ты в лестнице. Без этого низкая цель выглядит как обещание, которое приложение
+          почему-то не выполняет: в «Сегодня» одна цифра, в цели — другая. */}
+      {plan?.ramp.active && (
+        <section className="card">
+          <h3 className="card-h">Вход в режим</h3>
+          <div className="ramp-row">
+            <div className="ramp-bar" role="img"
+              aria-label={`День ${plan.ramp.day} из ${plan.ramp.total}`}>
+              <span style={{ width: `${Math.round((plan.ramp.day / plan.ramp.total) * 100)}%` }} />
+            </div>
+            <span className="small muted">день {plan.ramp.day} из {plan.ramp.total}</span>
+          </div>
+          <p className="small">
+            Сегодня <b>{plan.ramp.kcalToday} ккал</b>, цель — {plan.ramp.kcalGoal}.
+            Спускаемся понемногу: так первая неделя не отбивает желание.
+          </p>
+          <p className="small muted">
+            Вес первые недели будет идти медленнее, чем при резком старте. Смысл не в скорости,
+            а в том, чтобы дойти: с плавным входом бросают заметно реже.
+          </p>
+        </section>
+      )}
 
       {plateauInfo.messageRU && (
         <section className="card">
@@ -131,6 +186,13 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
             <SleepSparkline series={qualitySeries} />
             <span className="small muted">качество сна, 7 дней</span>
           </div>
+        )}
+        {/* Приверженность еде считается по отметкам «съел», а не по отметкам сна:
+            раньше их просто не существовало, и про еду приложение ничего не знало. */}
+        {foodWeek.marked > 0 && (
+          <p className="small" style={{ marginTop: 8 }}>
+            По плану еды прошло <b>{foodWeek.followed} из {foodWeek.marked}</b> отмеченных дней.
+          </p>
         )}
         {delta != null && (
           <p className="small" style={{ marginTop: 8 }}>
@@ -197,13 +259,16 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
               </button>
             </div>
             <p className="small muted">
-              Цель: {plan.safe.kcalTarget} ккал и {plan.safe.proteinGTarget} г белка в день.
-              Ужин каждый день привязан к твоему отбою. Кнопка ↻ меняет блюдо, сохраняя баланс дня.
+              {plan.ramp.active
+                ? <>Идёт вход в режим: цель по калориям снижается изо дня в день, к {plan.ramp.total}-му
+                   дню — {plan.ramp.kcalGoal} ккал. Белок ({plan.safe.proteinGTarget} г) не снижается вовсе.</>
+                : <>Цель: {plan.safe.kcalTarget} ккал и {plan.safe.proteinGTarget} г белка в день.</>}
+              {" "}Ужин каждый день привязан к твоему отбою. Кнопка ↻ меняет блюдо, сохраняя баланс дня.
             </p>
             {/* дни раскладываются по ширине окна: на телефоне столбиком,
                 на компьютере — сколько колонок влезло */}
             <div className="week-days">
-            {plan.week.map((day, i) => (
+            {plan.days.map(({ day, ramp }, i) => (
               <div key={i} className="day-block">
                 <div className="day-head-row">
                   <button className="day-head" aria-expanded={openDays.has(i)}
@@ -216,13 +281,14 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
                   </button>
                   <button className="swap-btn" title="Заменить все блюда дня"
                     aria-label={`Заменить все блюда дня ${i + 1}`}
-                    onClick={() => swapWholeDay(day)}><IconSwap /> день</button>
+                    onClick={() => swapWholeDay(i)}><IconSwap /> день</button>
                 </div>
                 {openDays.has(i) && (
                   <>
                   <div className="day-summary small muted">
                     За день: {day.totals.kcal} ккал · белок {day.totals.protein} г ·
                     клетчатка {day.totals.fiber} г из 30
+                    {ramp.active && <> · вход в режим, день {ramp.day} из {ramp.total}</>}
                   </div>
                   <ul className="day-meals">
                     {day.meals.map((m, k) => {
@@ -243,7 +309,7 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
                           </span>
                           <button className="swap-btn" title="Заменить блюдо"
                             aria-label={`Заменить блюдо: ${m.recipe.name}`}
-                            onClick={() => swapOne(day, k)}><IconSwap /></button>
+                            onClick={() => swapOne(i, k)}><IconSwap /></button>
                           {openMeal === key && <MealIngredients meal={m} />}
                         </li>
                       );

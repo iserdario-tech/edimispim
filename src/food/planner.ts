@@ -176,6 +176,7 @@ export interface DayOptions {
   mealCount?: MealCount;
   offset?: number;              // двигает выбор рецептов: разнообразие по дням
   roughNight?: boolean;         // после плохой ночи: сдвиг калоража вперёд + позднее сладкое
+  familiar?: boolean;           // начало вхождения в дефицит: еда попривычнее (поплотнее)
 }
 
 /**
@@ -242,6 +243,20 @@ const easiest = (options: Recipe[]): Recipe[] =>
   [...options].sort((a, b) => effortOf(a) - effortOf(b)).slice(0, EASY_KEEP);
 
 /**
+ * Привычная еда в начале вхождения в дефицит: верхняя половина набора по плотности энергии.
+ *
+ * Пока калораж почти не срезан, лёгкое блюдо приходится увеличивать до горы еды — а человек
+ * пришёл не за этим. Половина, а не «три самых плотных», чтобы неделя не выродилась в три
+ * блюда: выбор дня всё равно идёт по всему оставшемуся списку.
+ */
+const DENSE_MIN_OPTIONS = 4;
+const denser = (options: Recipe[]): Recipe[] => {
+  if (options.length <= DENSE_MIN_OPTIONS) return options;
+  const sorted = [...options].sort((a, b) => (b.energy_density ?? 0) - (a.energy_density ?? 0));
+  return sorted.slice(0, Math.max(DENSE_MIN_OPTIONS, Math.ceil(sorted.length / 2)));
+};
+
+/**
  * Один день: доли по выбранной схеме, времена — от ритма суток.
  * Сладкое вписано в дневную норму, поэтому не ломает дефицит.
  */
@@ -263,7 +278,9 @@ export function generateDay(targets: Targets, pool: Recipe[], opts: DayOptions):
     // после плохой ночи рамка по размеру порции шире: важнее найти блюдо побыстрее
     const fit = fittingOptions(byType(type), slotKcal, opts.roughNight);
     const good = proteinRich(fit, type, r => Math.max(0.5, +(slotKcal / r.kcal).toFixed(1)));
-    const recipe = pickForDay(opts.roughNight ? easiest(good) : good, offset);
+    // после плохой ночи простота важнее привычности: усилия сегодня взять неоткуда
+    const narrowed = opts.roughNight ? easiest(good) : opts.familiar ? denser(good) : good;
+    const recipe = pickForDay(narrowed, offset);
     if (!recipe) continue;
     const servings = Math.max(0.5, +(slotKcal / recipe.kcal).toFixed(1));
     meals.push({ recipe, servings, timeMin: times[type as Slot] ?? 0, slot: type });

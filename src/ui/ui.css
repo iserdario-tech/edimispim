@@ -366,6 +366,25 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
 }
 .anchor-num .small { font-size: var(--t-footnote); font-weight: 400; color: var(--fg-2); }
 
+/* Отметка «съел» — маленькие тумблеры прямо в ленте суток.
+   Осознанно неяркие: это запись факта, а не задание, которое надо выполнить. */
+.eat-row { display: flex; gap: var(--sp-2); margin-top: var(--sp-2); }
+.eat-btn {
+  min-height: 32px; padding: 0 var(--sp-3); border-radius: var(--r-control);
+  border: var(--hairline) solid var(--separator); background: transparent;
+  color: var(--fg-2); font-size: var(--t-footnote); cursor: pointer;
+}
+.eat-btn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* Вход в режим: полоса пройденного пути. Заливка — тот же акцент, что у активных элементов,
+   чтобы это читалось как «идёт», а не как предупреждение. */
+.ramp-row { display: flex; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-2); }
+.ramp-bar {
+  flex: 1; height: 8px; border-radius: 4px; overflow: hidden;
+  background: color-mix(in srgb, var(--fg-3) 28%, transparent);
+}
+.ramp-bar span { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+
 /* Покупки со ссылками в сервис доставки */
 .shop-list li { align-items: baseline; }
 .shop-link {
