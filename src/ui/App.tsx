@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import type { Profile, ScreenerResult, DayLog } from "../index.js";
 import { Onboarding } from "./Onboarding.js";
 import { Today } from "./Today.js";
-import { Week } from "./Week.js";
+import { Food } from "./Food.js";
+import { Progress } from "./Progress.js";
 import { Profile as ProfileScreen } from "./Profile.js";
 import { FoodSetup } from "./FoodSetup.js";
 import { Coach } from "./Coach.js";
@@ -208,20 +209,28 @@ export function App() {
           onSetupFood={() => openOverlay("food")}
         />
       )}
-      {tab === "week" && (
-        <Week
-          profile={state.profile} history={state.history} food={state.food}
-          weights={state.weights} eaten={state.eaten} cheatDays={state.cheatDays} onAddWeight={addWeight}
+      {tab === "food" && (
+        <Food
+          profile={state.profile} food={state.food}
           ratings={state.ratings} onRate={rateDish}
           onSetupFood={() => openOverlay("food")}
         />
       )}
+      {tab === "progress" && (
+        <Progress
+          profile={state.profile} history={state.history} food={state.food}
+          weights={state.weights} eaten={state.eaten} cheatDays={state.cheatDays}
+          onAddWeight={addWeight}
+        />
+      )}
       {tab === "coach" && (
         <main className="wrap chat-screen">
-          <p className="small muted">
-            Отвечает по научной базе о сне и питании и видит, как у тебя дела сейчас.
-            Не заменяет врача.
-          </p>
+          {/* Заголовок такой же, как на остальных вкладках: раздел без Large Title
+              выпадал из системы и читался как чужой экран внутри приложения. */}
+          <h1 className="page-title">
+            Вопрос
+            <span className="page-sub">отвечает по научной базе, видит твои дела и не заменяет врача</span>
+          </h1>
           <Coach contextRU={coachContext(state)} />
         </main>
       )}

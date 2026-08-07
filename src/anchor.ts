@@ -37,8 +37,16 @@ const isWeekend = (iso: string): boolean => {
 };
 
 export interface AnchorResult {
-  score: number;                   // 0..100 — единый показатель, который и показываем
-  regularity: number;              // 0..100 по времени подъёма (устойчив к выбросам)
+  /**
+   * 0..100 — единый показатель, который и показываем. `null`, пока ночей слишком мало.
+   *
+   * Раньше здесь всегда стояло число, и человек, не отметивший ни одной ночи, видел
+   * «100 из 100» — идеальную ровность режима, о котором приложение не знало ничего.
+   * Выдуманная цифра хуже отсутствующей: она выглядит как достижение и обесценивает
+   * настоящие сто баллов у того, кто их заработал.
+   */
+  score: number | null;
+  regularity: number | null;       // 0..100 по времени подъёма; null — ночей меньше четырёх
   socialJetlagMin: number | null;  // null — не хватает будних или выходных ночей
   weekdayMidsleep: number | null;
   weekendMidsleep: number | null;
@@ -61,9 +69,20 @@ const hm = (min: number): string =>
 /** Сколько ночей каждого типа нужно, чтобы вообще говорить о джетлаге. */
 const MIN_NIGHTS = 2;
 
+/**
+ * Сколько ночей нужно, чтобы вообще называть цифру ровности.
+ *
+ * Четыре — не круглое число с потолка: ровно столько приложение просит в «Что дальше»
+ * («с четырёх ночей уже видно, ровно ли держится режим»). Два экрана не должны
+ * расходиться в том, когда данных достаточно.
+ */
+const MIN_NIGHTS_FOR_SCORE = 4;
+
 export function anchor(days: DayRecord[], targetSleepMin: number): AnchorResult {
   const withSleep = days.filter(d => d.sleep?.bedHM);
-  const regularity = regularityScore(toSleepLogs(days));
+  const logs = toSleepLogs(days);
+  const regularity = regularityScore(logs);
+  const enough = logs.length >= MIN_NIGHTS_FOR_SCORE;
 
   const mid = (list: DayRecord[]) =>
     list.map(d => midsleepMin(d.sleep!.bedHM!, d.sleep!.wokeHM, targetSleepMin));
@@ -73,12 +92,15 @@ export function anchor(days: DayRecord[], targetSleepMin: number): AnchorResult 
 
   if (weekdays.length < MIN_NIGHTS || weekends.length < MIN_NIGHTS) {
     return {
-      score: regularity,           // пока сравнивать не с чем — показываем ровность подъёма
+      // пока сравнивать не с чем — показываем ровность подъёма, но только если ночей хватает
+      score: enough ? regularity : null,
       regularity,
       socialJetlagMin: null,
       weekdayMidsleep: weekdays.length ? mean(weekdays) : null,
       weekendMidsleep: weekends.length ? mean(weekends) : null,
-      verdictRU: "Отмечай и будни, и выходные — тогда покажу, насколько разъезжается режим.",
+      verdictRU: enough
+        ? "Отмечай и будни, и выходные — тогда покажу, насколько разъезжается режим."
+        : `Отметь ещё ${MIN_NIGHTS_FOR_SCORE - logs.length} ноч${nightsPlural(MIN_NIGHTS_FOR_SCORE - logs.length)} — с четырёх уже видно, ровно ли держится режим.`,
     };
   }
 
@@ -92,7 +114,7 @@ export function anchor(days: DayRecord[], targetSleepMin: number): AnchorResult 
     // два выходных из семи не сдвигают медиану, и подъём на три часа позже по субботам
     // давал честные «100 из 100» прямо рядом с надписью «разъезд 2 часа».
     // Одна цифра не должна противоречить другой на том же экране.
-    score: Math.min(regularity, jetlagScore(jetlag)),
+    score: regularity === null ? null : Math.min(regularity, jetlagScore(jetlag)),
     regularity,
     socialJetlagMin: jetlag,
     weekdayMidsleep: wd,
@@ -100,6 +122,8 @@ export function anchor(days: DayRecord[], targetSleepMin: number): AnchorResult 
     verdictRU: verdict(jetlag, we > wd),
   };
 }
+
+const nightsPlural = (n: number): string => (n === 1 ? "ь" : n < 5 ? "и" : "ей");
 
 function verdict(jetlagMin: number, weekendLater: boolean): string {
   const h = (jetlagMin / 60).toFixed(1).replace(".0", "");
