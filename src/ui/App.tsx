@@ -166,7 +166,8 @@ export function App() {
   if (!state || editing) {
     return <>
       {state && <ScreenHeader title="Сон" onBack={back} />}
-      <Onboarding initial={state?.profile} onDone={(profile: Profile, screener: ScreenerResult) => {
+      <Onboarding initial={state?.profile} onRestore={() => fileRef.current?.click()}
+        onDone={(profile: Profile, screener: ScreenerResult) => {
       const picked = state ? { food: state.food, weights: state.weights ?? [] } : pickUpOldApps();
       const food = state?.food ?? picked.food;
       const weights = state?.weights ?? picked.weights;
@@ -181,6 +182,10 @@ export function App() {
       setTab(returnTab);
       void syncPushContext(profile);
     }} />
+      {/* Поле выбора файла нужно и здесь: основное живёт в ветке с готовым состоянием,
+          а «Загрузить копию» на онбординге как раз для тех, у кого состояния ещё нет. */}
+      <input ref={fileRef} type="file" accept="application/json,.json" hidden
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) restore(f); e.target.value = ""; }} />
     </>;
   }
 
