@@ -98,7 +98,7 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
 
   return (
     <main className="wrap">
-      <h2>Неделя целиком</h2>
+      <h1 className="page-title">Неделя</h1>
 
       <section className="card accent">
         <h3 className="card-h">Что дальше</h3>

@@ -21,6 +21,10 @@ function crunchStr(hm: string): string {
   return `${hh}:${String(m ?? 0).padStart(2, "0")}`;
 }
 
+/** «7 августа, четверг» — дата под крупным заголовком, как в системных приложениях. */
+const todayLabel = (): string =>
+  new Date().toLocaleDateString("ru-RU", { day: "numeric", month: "long", weekday: "long" });
+
 export function Today({ profile, history, screener, onLog, food, weights, onSetupFood }: {
   profile: Profile;
   history: DayLog[];
@@ -134,6 +138,10 @@ export function Today({ profile, history, screener, onLog, food, weights, onSetu
 
   return (
     <main className="wrap two-col">
+      <h1 className="page-title">
+        Сегодня
+        <span className="page-sub">{todayLabel()}</span>
+      </h1>
       <div className="col-side">
       {/* Главное сообщение дня — первое, что видно */}
       <section className="why-today">
