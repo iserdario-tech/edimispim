@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { rampIn, targetsForToday, densityCeiling, RAMP_DAYS } from "../src/food/rampin";
-import type { SafeTargets } from "../src/food/types";
+import { rampIn, targetsForToday, prefersFamiliar, RAMP_DAYS } from "../src/food/rampin";
+import { generateDay, filterRecipes } from "../src/food/planner";
+import recipesJson from "../src/food/data/recipes.json";
+import type { Recipe, SafeTargets } from "../src/food/types";
+
+const RECIPES = recipesJson as Recipe[];
+const ALL_COOKWARE = ["stove", "oven", "microwave", "blender", "multicooker", "airfryer"];
 
 const targets: SafeTargets = {
   bmr: 1700, tdee: 2400, kcalTarget: 1800, proteinGTarget: 130, fiberGTarget: 30,
@@ -64,11 +69,32 @@ describe("плавное вхождение в дефицит", () => {
     expect(rampIn(odd, "2026-08-07", "2026-08-07", "normal").kcalToday).toBe(1800);
   });
 
-  it("в начале допускаются блюда поплотнее, ближе к цели ограничение снимается", () => {
-    const start = rampIn(targets, "2026-08-07", "2026-08-07", "normal");
-    const late = rampIn(targets, "2026-08-07", "2026-08-19", "normal");
-    expect(densityCeiling(start)).toBeGreaterThan(2);
-    expect(densityCeiling(late)).toBeNull();
-    expect(densityCeiling(rampIn(targets, undefined, "2026-08-07"))).toBeNull();
+  it("привычная еда — в первой половине входа, дальше обычный набор", () => {
+    expect(prefersFamiliar(rampIn(targets, "2026-08-07", "2026-08-07", "normal"))).toBe(true);
+    expect(prefersFamiliar(rampIn(targets, "2026-08-07", "2026-08-13", "normal"))).toBe(true);
+    expect(prefersFamiliar(rampIn(targets, "2026-08-07", "2026-08-19", "normal"))).toBe(false);
+    expect(prefersFamiliar(rampIn(targets, undefined, "2026-08-07"))).toBe(false);
+  });
+
+  /**
+   * Обещание пункта: «на первой неделе приоритет блюдам, которые ближе к привычной еде».
+   * Первая версия делала обратное — ставила потолок по плотности и выбрасывала как раз
+   * пасту и жаркое. Поэтому проверяем не вызов функции, а результат на реальном наборе:
+   * еда действительно плотнее, а калораж и белок при этом не поехали.
+   */
+  it("«привычно» даёт более плотную еду, не ломая калораж и белок", () => {
+    const pool = filterRecipes(RECIPES, { cookware: ALL_COOKWARE });
+    const week = (familiar: boolean) => [...Array(7)].map((_, d) =>
+      generateDay(targets, pool, { rhythm: { wakeMin: 420, bedMin: 1380 }, mealCount: 4, offset: d, familiar }));
+    const density = (days: ReturnType<typeof week>) => {
+      const meals = days.flatMap(x => x.meals);
+      return meals.reduce((s, m) => s + (m.recipe.energy_density ?? 0), 0) / meals.length;
+    };
+    const plain = week(false), familiar = week(true);
+    expect(density(familiar)).toBeGreaterThan(density(plain));
+    for (const day of familiar) {
+      expect(day.totals.kcal).toBeLessThan(targets.kcalTarget * 1.15);
+      expect(day.totals.protein).toBeGreaterThanOrEqual(targets.proteinGTarget * 0.85);
+    }
   });
 });

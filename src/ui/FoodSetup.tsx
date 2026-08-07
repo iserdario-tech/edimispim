@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import type { FoodSettings } from "./storage.js";
 import type { Activity, Budget, MealCount, Sex } from "../food/types.js";
+import { DEFAULT_PACE, RAMP_DAYS, type RampPace } from "../food/rampin.js";
+import { localDateISO } from "../today-date.js";
 
 const COOKWARE = [
   ["stove", "плита"], ["oven", "духовка"], ["microwave", "микроволновка"],
@@ -40,6 +42,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
   const [mealCount, setMealCount] = useState<MealCount>(initial?.mealCount ?? 4);
   const [cookware, setCookware] = useState<string[]>(initial?.constraints.cookware ?? ["stove", "oven", "microwave"]);
   const [allergens, setAllergens] = useState<string[]>(initial?.constraints.allergens ?? []);
+  const [pace, setPace] = useState<RampPace>(initial?.pace ?? DEFAULT_PACE);
   const saved = initial?.constraints.dislikes ?? [];
   const [noRare, setNoRare] = useState(RARE_INGREDIENTS.every(r => saved.includes(r)));
   const [dislikes, setDislikes] = useState(saved.filter(d => !RARE_INGREDIENTS.includes(d)).join(", "));
@@ -149,6 +152,26 @@ export function FoodSetup({ initial, onDone, onCancel }: {
         </div>
       </section>
 
+      <section className="card">
+        <h3 className="card-h">6 · Как входить в режим</h3>
+        <p className="small muted">
+          С первого дня есть на полном дефиците — самая частая причина бросить на первой неделе.
+          Поэтому начинаем с того калоража, на котором ты и так живёшь, и спускаемся к цели
+          понемногу. Первые дни еда будет привычнее и плотнее — паста, жаркое, запеканки.
+        </p>
+        <div className="seg" role="group" aria-label="Как входить в режим">
+          {([["gentle", "Мягко"], ["normal", "Обычно"], ["none", "Сразу"]] as const).map(([v, ru]) => (
+            <button key={v} className={pace === v ? "seg-item on" : "seg-item"}
+              aria-pressed={pace === v} onClick={() => setPace(v)}>{ru}</button>
+          ))}
+        </div>
+        <p className="small muted">
+          {pace === "none"
+            ? "Целевой калораж с первого дня. Подходит, если ты уже в режиме и привык к нему."
+            : `${RAMP_DAYS[pace]} дней от привычного калоража до цели. Вес первые недели пойдёт медленнее — зато шанс дойти до конца заметно выше.`}
+        </p>
+      </section>
+
       <div style={{ display: "flex", gap: 12, marginTop: 18, flexWrap: "wrap" }}>
         <button className="chip on" onClick={() => onDone({
           profile: { sex, age, heightCm, weightKg, goalWeightKg, activity },
@@ -160,6 +183,9 @@ export function FoodSetup({ initial, onDone, onCancel }: {
             ],
           },
           mealCount,
+          pace,
+          // дата старта ставится один раз: правка формы не должна начинать лестницу заново
+          startISO: initial?.startISO ?? localDateISO(),
         })}>Собрать меню</button>
         {onCancel && <button className="linkbtn" onClick={onCancel}>Не сейчас</button>}
       </div>

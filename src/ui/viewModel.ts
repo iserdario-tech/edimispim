@@ -1,12 +1,12 @@
 import type { DayPlan, Readiness, WindowKind } from "../index.js";
 import { fmtHM } from "../index.js";
+import type { TimelineRow } from "./mealRows.js";
 
-export interface PlanRow {
-  time: string; endTime?: string; icon: string; title: string; detail: string; why: string;
-  past?: boolean;             // шаг уже прошёл (по текущему времени)
-  startMin: number;           // нужен, чтобы слить ленту сна с приёмами пищи в одну ось
-  kind: "sleep" | "food";
-}
+/**
+ * Строка ленты суток — та же, что у приёмов пищи: они и сливаются в одну ось времени.
+ * Раньше здесь лежал точный двойник `TimelineRow`, и типы расходились при каждой правке.
+ */
+export type PlanRow = TimelineRow;
 export interface PlanView {
   readiness: { level: Readiness; label: string; color: string; whyRU: string; priorityRU: string };
   rows: PlanRow[]; notes: string[];

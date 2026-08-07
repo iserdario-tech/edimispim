@@ -13,6 +13,8 @@ import { loadState, saveState, exportAll, importAll, type FoodSettings, type Sto
 import { syncPushContext } from "./notifications.js";
 import { migrateAll } from "../migrate.js";
 import { localDateISO } from "../today-date.js";
+import { toggleMark, type MealMark } from "../food/eaten.js";
+import type { Slot } from "../food/types.js";
 
 /** Данные из pospat и oheedet лежат на том же origin — подхватываем их, а не просим вводить заново. */
 function pickUpOldApps(): { food?: FoodSettings; weights: { date: string; kg: number }[]; notesRU: string[] } {
@@ -72,6 +74,23 @@ export function App() {
       if (!prev) return prev;
       const history = [...prev.history.filter((h) => h.date !== log.date), log].slice(-180);
       const next = { ...prev, history };
+      saveState(next);
+      return next;
+    });
+  };
+
+  /**
+   * Отметка «съел» / «заменил своим». Хранится не больше 180 дней — ровно как история сна:
+   * ряд нужен месяцами для разбора плато, но копить его вечно незачем.
+   */
+  const markMeal = (date: string, slot: Slot, mark: MealMark, planned: number) => {
+    setState((prev) => {
+      if (!prev) return prev;
+      const all = { ...(prev.eaten ?? {}) };
+      all[date] = toggleMark(all[date], slot, mark, planned);
+      const kept = Object.keys(all).sort().slice(-180);
+      const eaten = Object.fromEntries(kept.map(d => [d, all[d]!]));
+      const next = { ...prev, eaten };
       saveState(next);
       return next;
     });
@@ -149,13 +168,14 @@ export function App() {
         <Today
           profile={state.profile} history={state.history} screener={state.screener}
           onLog={saveLog} food={state.food} weights={state.weights}
+          eaten={state.eaten} onMarkMeal={markMeal}
           onSetupFood={() => openOverlay("food")}
         />
       )}
       {tab === "week" && (
         <Week
           profile={state.profile} history={state.history} food={state.food}
-          weights={state.weights} onAddWeight={addWeight}
+          weights={state.weights} eaten={state.eaten} onAddWeight={addWeight}
           onSetupFood={() => openOverlay("food")}
         />
       )}
