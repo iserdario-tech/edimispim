@@ -8,7 +8,29 @@ const emptyScreener: ScreenerAnswers = {
   legUrgeToMoveEvening: false, insomnia3xWeek3Months: false, lowMood2Weeks: false, selfHarmThoughts: false,
 };
 
-export function Onboarding({ initial, onDone }: { initial?: Profile; onDone: (p: Profile, s: ScreenerResult) => void }) {
+/**
+ * Запущено ли приложение с домашнего экрана, а не из браузера.
+ *
+ * Это не косметика: у установленной на «Домой» PWA на iOS **своё хранилище**, отдельное
+ * от Safari. Проверено в симуляторе iOS 27 — приложение, установленное после прохождения
+ * настройки в Safari, открылось с чистого листа. Значит и данные pospat/oheedet,
+ * которые миграция подхватывает из общего origin, сюда сами не попадут.
+ *
+ * Человек, который этого не знает, увидит пустоту и решит, что потерял всё.
+ */
+const isStandalone = (): boolean => {
+  try {
+    return window.matchMedia?.("(display-mode: standalone)").matches
+      || (window.navigator as { standalone?: boolean }).standalone === true;
+  } catch { return false; }
+};
+
+export function Onboarding({ initial, onDone, onRestore }: {
+  initial?: Profile;
+  onDone: (p: Profile, s: ScreenerResult) => void;
+  /** Загрузить копию прямо здесь — иначе совету «перенеси копией» негде сбыться. */
+  onRestore?: () => void;
+}) {
   const [form, setForm] = useState<OnboardingForm>(initial ? formFromProfile(initial) : {
     wakeHM: "07:00", bedHM: "23:00", chronotype: "intermediate",
     caffeineMg: 95, caffeineRegular: true, napPossible: true,
@@ -21,6 +43,22 @@ export function Onboarding({ initial, onDone }: { initial?: Profile; onDone: (p:
     <main className="wrap">
       <h1>Настройка</h1>
       <p className="muted">Пара вопросов — и построим твой план дня.</p>
+
+      {/* Видно только тем, кто открыл приложение с домашнего экрана: у установленной
+          версии на iOS своё хранилище, и данные из Safari в неё не переезжают. */}
+      {!initial && isStandalone() && onRestore && (
+        <section className="card">
+          <h3 className="card-h">Уже пользовался в браузере?</h3>
+          <p className="small">
+            У приложения, добавленного на «Домой», <b>отдельная память</b> — так устроен iOS.
+            Данные из Safari сюда сами не переедут, их нужно перенести файлом.
+          </p>
+          <p className="small muted">
+            В Safari открой тот же адрес → «Я» → «Сохранить». Потом вернись сюда и загрузи файл.
+          </p>
+          <button className="chip" onClick={onRestore}>Загрузить копию</button>
+        </section>
+      )}
 
       <label className="fld">Обычное время подъёма
         <input type="time" value={form.wakeHM} onChange={e=>set({ wakeHM: e.target.value })} />
