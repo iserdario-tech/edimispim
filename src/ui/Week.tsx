@@ -199,6 +199,9 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
               Цель: {plan.safe.kcalTarget} ккал и {plan.safe.proteinGTarget} г белка в день.
               Ужин каждый день привязан к твоему отбою. Кнопка ↻ меняет блюдо, сохраняя баланс дня.
             </p>
+            {/* дни раскладываются по ширине окна: на телефоне столбиком,
+                на компьютере — сколько колонок влезло */}
+            <div className="week-days">
             {plan.week.map((day, i) => (
               <div key={i} className="day-block">
                 <div className="day-head-row">
@@ -249,6 +252,7 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
                 )}
               </div>
             ))}
+            </div>
           </section>
 
           <GroceryBlock grocery={plan.grocery} />
