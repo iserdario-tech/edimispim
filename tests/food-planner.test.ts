@@ -20,13 +20,36 @@ describe("filterRecipes", () => {
     expect(f.some(r => r.id === "d")).toBe(false);   // духовки нет
   });
 
-  it("бюджет small не пускает дорогое блюдо", () => {
+  it("бюджет small отсекает невыгодные блюда по реальным ценам", () => {
+    // цена берётся из состава и справочника цен, а не из поля cost_rub: оно было
+    // «прикидкой на глаз», и у новых рецептов его нет вовсе — раньше они проходили любой бюджет
+    const mk = (id: string, name: string, ing: string, qty: number, protein: number): Recipe => ({
+      id, name, meal_type: "dinner", kcal: 400, protein_g: protein, fiber_g: 5,
+      cookware: ["stove"], allergens: [], cuisine: "universal",
+      ingredients: [{ name: ing, qty, unit: "г", category: "мясо/рыба" }],
+    });
     const RR: Recipe[] = [
-      { id: "cheap", name: "Каша", meal_type: "breakfast", kcal: 300, protein_g: 20, fiber_g: 5, cost_rub: 80, cookware: ["stove"], allergens: [], cuisine: "universal", ingredients: [] },
-      { id: "pricey", name: "Лосось", meal_type: "dinner", kcal: 400, protein_g: 35, fiber_g: 6, cost_rub: 380, cookware: ["stove"], allergens: [], cuisine: "universal", ingredients: [] },
+      mk("d1", "Курица", "куриное филе", 150, 35),
+      mk("d2", "Гречка", "гречка", 100, 12),
+      mk("d3", "Треска", "филе трески", 150, 27),
+      mk("d4", "Лосось", "филе лосося", 200, 40),
+      mk("d5", "Пармезан", "пармезан", 120, 43),
     ];
-    const f = filterRecipes(RR, { budget: "small", cookware: ["stove"] });
-    expect(f.map(r => r.id)).toEqual(["cheap"]);
+    const f = filterRecipes(RR, { budget: "small", cookware: ["stove"] }).map(r => r.id);
+    expect(f).toContain("d2");                       // гречка — 22 ₽ за порцию
+    expect(f).not.toContain("d5");                   // пармезан — 292 ₽ за те же граммы белка
+    expect(f.length).toBeLessThan(RR.length);
+  });
+
+  it("бюджет не оставляет приём без выбора", () => {
+    const mk = (id: string): Recipe => ({
+      id, name: id, meal_type: "lunch", kcal: 500, protein_g: 30, fiber_g: 5,
+      cookware: ["stove"], allergens: [], cuisine: "universal",
+      ingredients: [{ name: "филе лосося", qty: 200, unit: "г", category: "мясо/рыба" }],
+    });
+    // все блюда дорогие — но выкинуть их все нельзя, иначе меню не собрать
+    const f = filterRecipes([mk("a"), mk("b"), mk("c")], { budget: "small", cookware: ["stove"] });
+    expect(f.length).toBeGreaterThanOrEqual(3);
   });
 
   it("нелюбимое ловит русские словоформы (капуста → капустой)", () => {

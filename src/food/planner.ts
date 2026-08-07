@@ -1,10 +1,21 @@
+import { costOf } from "./prices";
 import type {
   Constraints, Day, MealCount, Meal, MealType, Recipe, Slot, Targets,
 } from "./types";
 
-// Бюджет — потолок цены одной порции блюда, ₽. Меняет НАБОР блюд, а не ₽/день:
-// объём продуктов задаёт цель по белку (замерено в oheedet).
-const BUDGET_MEAL_CAP: Record<string, number> = { small: 205, medium: 270, large: Infinity };
+/**
+ * Бюджет — какую долю блюд КАЖДОГО приёма оставляем, считая от дешёвых.
+ *
+ * Раньше стоял потолок в рублях (205 / 270) и сверялся с полем `cost_rub` — той самой
+ * «прикидкой на глаз», которую в 16-й волне признали выдумкой и заменили ценами магазина.
+ * У новых рецептов поля просто нет, поэтому они проходили любой бюджет: выбор «небольшой»
+ * мог выдать неделю ДОРОЖЕ свободного (замерено: 10004 ₽ против 7808 ₽). Теперь цена
+ * порции считается по реальным ценам, а критерий относительный — как у упрощения дня:
+ * он не ломается, когда рецепты добавляют, и не оставляет приём без выбора.
+ */
+const BUDGET_KEEP_SHARE: Record<string, number> = { small: 0.6, medium: 1, large: 1 };
+const MIN_PER_SLOT = 3;              // меньше — планировщику нечем заменять блюдо
+const KEEP_FIBER_TOP = 3;            // сколько богатых клетчаткой блюд слота бюджет не трогает
 
 /**
  * Схемы числа приёмов пищи (X18 / продуктовый вывод C4).
@@ -91,13 +102,50 @@ function shiftEarlier(mains: Partial<Record<MealType, number>>): Partial<Record<
   return out;
 }
 
+/** Цена порции по ценам магазина. `null` — ни одного продукта с известной ценой. */
+export function portionCost(r: Recipe): number | null {
+  let sum = 0, known = false;
+  for (const i of r.ingredients ?? []) {
+    const c = costOf(i.name, i.qty, i.unit);
+    if (c !== null) { sum += c; known = true; }
+  }
+  return known ? Math.round(sum) : null;
+}
+
+/**
+ * Бюджет: «небольшой» оставляет в каждом приёме блюда повыгоднее. Средний и свободный
+ * не режут набор вовсе — «средний» это и есть обычный полный набор.
+ *
+ * Мерило — рубли на грамм белка, а не просто цена порции: дешёвая еда бывает пустой,
+ * и при сортировке по цене белок падал до 73 г при цели 128. Но у самого этого мерила
+ * есть обратная сторона — овощные блюда вылетают первыми, а с ними уходит клетчатка
+ * (замерено: 15 г вместо 30). Поэтому три самых богатых клетчаткой блюда каждого приёма
+ * остаются в наборе при любом бюджете.
+ */
+function applyBudget(rs: Recipe[], budget?: string): Recipe[] {
+  const share = BUDGET_KEEP_SHARE[budget ?? ""] ?? 1;
+  if (share >= 1) return rs;
+  const perProtein = (r: Recipe): number => {
+    const c = portionCost(r);
+    return c === null ? Infinity : c / Math.max(1, r.protein_g);
+  };
+  const out: Recipe[] = [];
+  for (const type of new Set(rs.map(r => r.meal_type))) {
+    const ofType = rs.filter(r => r.meal_type === type);
+    const cheap = [...ofType].sort((a, b) => perProtein(a) - perProtein(b))
+      .slice(0, Math.max(MIN_PER_SLOT, Math.ceil(ofType.length * share)));
+    const fibrous = [...ofType].sort((a, b) => b.fiber_g - a.fiber_g).slice(0, KEEP_FIBER_TOP);
+    out.push(...new Set([...cheap, ...fibrous]));
+  }
+  return out;
+}
+
 export function filterRecipes(recipes: Recipe[], c: Constraints = {}): Recipe[] {
   const allergens = new Set(c.allergens ?? []);
   const dislikes = (c.dislikes ?? []).map(x => String(x).toLowerCase());
   const cookware = new Set(c.cookware ?? []);
   const cuisines = c.cuisines ?? [];
-  const cap = BUDGET_MEAL_CAP[c.budget ?? ""] ?? Infinity;
-  return recipes.filter(r => {
+  const fit = recipes.filter(r => {
     if ((r.allergens ?? []).some(a => allergens.has(a as never))) return false;
     // состав тоже участвует: «нут» в названии есть не у всех блюд с нутом,
     // а человек, написавший «не люблю нут», имел в виду именно продукт
@@ -106,11 +154,11 @@ export function filterRecipes(recipes: Recipe[], c: Constraints = {}): Recipe[] 
     // ponytail: обрезка окончания ловит русские словоформы (капуста→капустой); не полная морфология.
     if (dislikes.some(d => d && hay.includes(d.length > 5 ? d.slice(0, -2) : d))) return false;
     if ((r.cookware ?? []).some(w => !cookware.has(w))) return false;
-    if ((r.cost_rub ?? 0) > cap) return false;
     // мягкий фильтр кухни: universal проходит всегда и покрывает все слоты → план не пустеет
     if (cuisines.length && r.cuisine !== "universal" && !cuisines.includes(r.cuisine as never)) return false;
     return true;
   });
+  return applyBudget(fit, c.budget);
 }
 
 function recomputeTotals(day: Day): void {
@@ -180,7 +228,7 @@ export function generateDay(targets: Targets, pool: Recipe[], opts: DayOptions):
 
   const day: Day = { meals, totals: { kcal: 0, protein: 0, fiber: 0 } };
   recomputeTotals(day);
-  swapForFiber(day, targets, pool, mains, offset);
+  swapForFiber(day, targets, pool, mains, offset, opts.roughNight ? 1 : 2);
   addProteinTopUp(day, targets);
   day.meals.sort((a, b) => a.timeMin - b.timeMin);
   if (opts.roughNight) day.simplified = true;
@@ -201,20 +249,21 @@ export function generateDay(targets: Targets, pool: Recipe[], opts: DayOptions):
  * в понедельник, среду и четверг. Теперь из нескольких лучших вариантов берётся тот,
  * что приходится на этот день, — клетчатка добирается так же, а меню не приедается.
  *
- * ponytail: замена одна. Вторую пробовал — она вытаскивает в упрощённый день блюдо подольше
- * и ломает обещание «после плохой ночи готовки меньше». Один день из семи остаётся около
- * 20 г вместо 30; чинить это стоит расширением набора овощных блюд, а не вторым проходом.
+ * Замен до двух — но только в обычный день. В упрощённый (после плохой ночи) вторая
+ * замена вытаскивала блюдо подольше и ломала обещание «сегодня готовки меньше»,
+ * а это обещание важнее лишних граммов клетчатки. Каждый приём трогается не больше раза.
  */
 function swapForFiber(
-  day: Day, targets: Targets, pool: Recipe[], mains: Partial<Record<MealType, number>>, offset = 0,
+  day: Day, targets: Targets, pool: Recipe[], mains: Partial<Record<MealType, number>>,
+  offset = 0, maxPasses = 2,
 ): void {
-  if (day.totals.fiber >= targets.fiberGTarget) return;
-
+  const touched = new Set<number>();
+  for (let pass = 0; pass < maxPasses && day.totals.fiber < targets.fiberGTarget; pass++) {
   const candidates: { index: number; recipe: Recipe; servings: number; gain: number }[] = [];
 
   day.meals.forEach((meal, index) => {
     const share = mains[meal.recipe.meal_type as MealType];
-    if (share === undefined) return;                       // сладкое и перекусы не трогаем
+    if (share === undefined || touched.has(index)) return;  // сладкое и уже заменённое не трогаем
     const kcalShare = meal.recipe.kcal * meal.servings;    // столько калорий занимает этот приём
     for (const candidate of pool) {
       if (candidate.meal_type !== meal.recipe.meal_type) continue;
@@ -235,7 +284,9 @@ function swapForFiber(
   const chosen = top[offset % top.length]!;
   const target = day.meals[chosen.index]!;
   day.meals[chosen.index] = { ...target, recipe: chosen.recipe, servings: chosen.servings };
+  touched.add(chosen.index);
   recomputeTotals(day);
+  }
 }
 
 /**
