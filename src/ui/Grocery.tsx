@@ -112,7 +112,7 @@ export function GroceryBlock({ grocery }: { grocery: Grocery }) {
   };
 
   return (
-    <section className="card">
+    <section className="card wide">
       <h3 className="card-h">{title} · ≈{cost} ₽</h3>
 
       <div className="chips">

@@ -188,7 +188,7 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
         </section>
       ) : (
         <>
-          <section className="card" key={rev}>
+          <section className="card wide" key={rev}>
             <div className="menu-head">
               <h3 className="card-h" style={{ margin: 0 }}>Меню на 7 дней</h3>
               <button className="linkbtn small" onClick={toggleAll}>
