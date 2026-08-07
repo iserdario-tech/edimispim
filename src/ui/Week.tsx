@@ -12,6 +12,9 @@ import { localDateISO, mondayOf, plusDaysISO } from "../today-date.js";
 import { nextStep } from "../next-step.js";
 import { plateau } from "../plateau.js";
 import { GroceryBlock, MealIngredients } from "./Grocery.js";
+import { Fridge } from "./Fridge.js";
+import { readLS, writeLS, PANTRY_KEY } from "./localStore.js";
+import type { Pantry } from "../food/packaging.js";
 import { SleepSparkline, WeightChart } from "./Charts.js";
 import { IconChevron, IconSwap } from "./Icons.js";
 
@@ -25,12 +28,14 @@ const DOW = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
  * Никаких коэффициентов и p-значений — статистики на двух неделях всё равно нет,
  * а вид точной цифры создаёт ложную уверенность.
  */
-export function Week({ profile, history, food, weights, eaten, onAddWeight, onSetupFood }: {
+export function Week({ profile, history, food, weights, eaten, ratings, onRate, onAddWeight, onSetupFood }: {
   profile: Profile;
   history: DayLog[];
   food?: FoodSettings;
   weights?: { date: string; kg: number }[];
   eaten?: Record<string, DayEaten>;
+  ratings?: Record<string, 1 | -1>;
+  onRate?: (id: string, value: 1 | -1) => void;
   onAddWeight: (kg: number) => void;
   onSetupFood: () => void;
 }) {
@@ -38,6 +43,9 @@ export function Week({ profile, history, food, weights, eaten, onAddWeight, onSe
   const [openMeal, setOpenMeal] = useState<string | null>(null);
   const [rev, setRev] = useState(0);          // счётчик замен — заставляет перерисовать план
   const [kg, setKg] = useState("");
+  // кладовка нужна двум местам сразу: списку покупок и замене блюда, поэтому живёт здесь
+  const [pantry, setPantry] = useState<Pantry>(() => readLS<Pantry>(PANTRY_KEY, {}));
+  const savePantry = (next: Pantry) => { setPantry(next); writeLS(PANTRY_KEY, next); };
   const today = localDateISO();
 
   /**
@@ -49,21 +57,27 @@ export function Week({ profile, history, food, weights, eaten, onAddWeight, onSe
     if (!food) return null;
     const safe = applySafety(computeTargets(food.profile), food.profile, {});
     const bedMin = expectedBedMin(parseHM(profile.anchorWakeHM), profile.targetSleepMin);
-    const pool = filterRecipes(RECIPES, food.constraints);
+    // оценки блюд идут в план: «палец вниз» убирает рецепт совсем, «вверх» — ставит чаще
+    const rated = Object.entries(ratings ?? {});
+    const pool = filterRecipes(RECIPES, {
+      ...food.constraints,
+      bannedIds: rated.filter(([, v]) => v === -1).map(([id]) => id),
+    });
+    const liked = rated.filter(([, v]) => v === 1).map(([id]) => id);
     const monday = mondayOf(today);
     const days = Array.from({ length: 7 }, (_, d) => {
       const date = plusDaysISO(monday, d);
       const { targets, ramp } = targetsForToday(safe, food.startISO, date, food.pace);
       const day = generateDay(targets, pool, {
         rhythm: { wakeMin: parseHM(profile.anchorWakeHM), bedMin },
-        mealCount: food.mealCount, offset: d, familiar: prefersFamiliar(ramp),
+        mealCount: food.mealCount, offset: d, familiar: prefersFamiliar(ramp), liked,
       });
       return { date, day, targets, ramp };
     });
     const week = days.map(d => d.day);
     const todayRamp = targetsForToday(safe, food.startISO, today, food.pace);
     return { days, week, grocery: buildGroceryList(week), safe, pool, ramp: todayRamp.ramp };
-  }, [food, profile, today]);
+  }, [food, profile, today, ratings]);
 
   const toggleDay = (i: number) => setOpenDays(prev => {
     const next = new Set(prev);
@@ -81,7 +95,7 @@ export function Week({ profile, history, food, weights, eaten, onAddWeight, onSe
   const swapOne = (dayIdx: number, index: number) => {
     if (!plan || !food) return;
     const d = plan.days[dayIdx];
-    if (d && swapDish(d.day, index, d.targets, plan.pool, food.mealCount)) setRev(r => r + 1);
+    if (d && swapDish(d.day, index, d.targets, plan.pool, food.mealCount, pantry)) setRev(r => r + 1);
   };
   /** Заменить все блюда дня разом — когда день целиком не нравится. */
   const swapWholeDay = (dayIdx: number) => {
@@ -90,7 +104,7 @@ export function Week({ profile, history, food, weights, eaten, onAddWeight, onSe
     if (!d) return;
     let changed = false;
     for (let i = 0; i < d.day.meals.length; i++) {
-      if (swapDish(d.day, i, d.targets, plan.pool, food.mealCount)) changed = true;
+      if (swapDish(d.day, i, d.targets, plan.pool, food.mealCount, pantry)) changed = true;
     }
     if (changed) setRev(r => r + 1);
   };
@@ -310,7 +324,9 @@ export function Week({ profile, history, food, weights, eaten, onAddWeight, onSe
                           <button className="swap-btn" title="Заменить блюдо"
                             aria-label={`Заменить блюдо: ${m.recipe.name}`}
                             onClick={() => swapOne(i, k)}><IconSwap /></button>
-                          {openMeal === key && <MealIngredients meal={m} />}
+                          {openMeal === key && (
+                            <MealIngredients meal={m} rating={ratings?.[m.recipe.id]} onRate={onRate} />
+                          )}
                         </li>
                       );
                     })}
@@ -322,7 +338,8 @@ export function Week({ profile, history, food, weights, eaten, onAddWeight, onSe
             </div>
           </section>
 
-          <GroceryBlock grocery={plan.grocery} />
+          <Fridge pantry={pantry} onPantry={savePantry} pool={plan.pool} />
+          <GroceryBlock grocery={plan.grocery} pantry={pantry} onPantry={savePantry} />
         </>
       )}
     </main>

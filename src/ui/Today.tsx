@@ -27,7 +27,7 @@ function crunchStr(hm: string): string {
 const todayLabel = (): string =>
   new Date().toLocaleDateString("ru-RU", { day: "numeric", month: "long", weekday: "long" });
 
-export function Today({ profile, history, screener, onLog, food, weights, eaten, onMarkMeal, onSetupFood }: {
+export function Today({ profile, history, screener, onLog, food, weights, eaten, ratings, onMarkMeal, onSetupFood }: {
   profile: Profile;
   history: DayLog[];
   screener?: ScreenerResult | null;
@@ -35,6 +35,7 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
   food?: FoodSettings;
   weights?: { date: string; kg: number }[];
   eaten?: Record<string, DayEaten>;
+  ratings?: Record<string, 1 | -1>;
   onMarkMeal?: (date: string, slot: Slot, mark: MealMark, planned: number) => void;
   onSetupFood?: () => void;
 }) {
@@ -89,17 +90,22 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
     const base = applySafety(computeTargets(food.profile), food.profile, {});
     // во время вхождения в дефицит цель на сегодня своя — она выше конечной и снижается по дням
     const { targets: safe, ramp } = targetsForToday(base, food.startISO, today, food.pace);
-    const pool = filterRecipes(RECIPES, food.constraints);
+    const rated = Object.entries(ratings ?? {});
+    const pool = filterRecipes(RECIPES, {
+      ...food.constraints,
+      bannedIds: rated.filter(([, v]) => v === -1).map(([id]) => id),
+    });
     if (!pool.length) return null;
     const diagnosis = diagnosePool(pool, food.mealCount);
     const day = generateAdaptedDay(
       safe, pool,
       { rhythm: { wakeMin: parseHM(wokeHM), bedMin }, mealCount: food.mealCount,
-        offset: new Date(today).getDay(), familiar: prefersFamiliar(ramp) },
+        offset: new Date(today).getDay(), familiar: prefersFamiliar(ramp),
+        liked: rated.filter(([, v]) => v === 1).map(([id]) => id) },
       { sleptMin, targetSleepMin: profile.targetSleepMin, quality },
     );
     return { day, safe, diagnosis, ramp };
-  }, [food, wokeHM, bedMin, today, sleptMin, profile.targetSleepMin, quality]);
+  }, [food, wokeHM, bedMin, today, sleptMin, profile.targetSleepMin, quality, ratings]);
 
   const rows = useMemo(() => {
     if (!foodDay) return view.rows;

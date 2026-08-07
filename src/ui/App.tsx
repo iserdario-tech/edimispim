@@ -96,6 +96,25 @@ export function App() {
     });
   };
 
+  /**
+   * Оценка блюда. Повторное нажатие той же оценки снимает её: человек передумал —
+   * это нормально, и запирать его в собственном «не люблю» навсегда незачем.
+   *
+   * Оценки не покидают устройство. Коллективный топ блюд, о котором шла речь, требует
+   * отправки данных на сервер — это отдельное решение и отдельная явная галочка.
+   */
+  const rateDish = (id: string, value: 1 | -1) => {
+    setState((prev) => {
+      if (!prev) return prev;
+      const ratings = { ...(prev.ratings ?? {}) };
+      if (ratings[id] === value) delete ratings[id];
+      else ratings[id] = value;
+      const next = { ...prev, ratings };
+      saveState(next);
+      return next;
+    });
+  };
+
   const addWeight = (kg: number) => {
     setState((prev) => {
       if (!prev) return prev;
@@ -168,7 +187,7 @@ export function App() {
         <Today
           profile={state.profile} history={state.history} screener={state.screener}
           onLog={saveLog} food={state.food} weights={state.weights}
-          eaten={state.eaten} onMarkMeal={markMeal}
+          eaten={state.eaten} ratings={state.ratings} onMarkMeal={markMeal}
           onSetupFood={() => openOverlay("food")}
         />
       )}
@@ -176,6 +195,7 @@ export function App() {
         <Week
           profile={state.profile} history={state.history} food={state.food}
           weights={state.weights} eaten={state.eaten} onAddWeight={addWeight}
+          ratings={state.ratings} onRate={rateDish}
           onSetupFood={() => openOverlay("food")}
         />
       )}

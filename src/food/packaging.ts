@@ -141,6 +141,43 @@ export function pantryAfter(lines: BuyLine[]): Pantry {
   return out;
 }
 
+/**
+ * Насколько блюдо собирается из того, что уже дома.
+ *
+ * Считаем по весу требуемого, а не по числу позиций: рецепт, где дома лежит соль и специи,
+ * но нет курицы, «готов на 80 %» по позициям и на 5 % по делу. Специи и мелочь из счёта
+ * выкинуты вовсе — они на кухне есть всегда, и учитывать их значит завышать готовность.
+ */
+export interface Coverage {
+  /** Доля 0..1: сколько нужного лежит дома. */
+  share: number;
+  /** Чего не хватает — в порядке убывания важности (по весу). */
+  missing: string[];
+}
+
+export function coverageOf(
+  ingredients: { name: string; unit: string; qty: number }[],
+  pantry: Pantry,
+  servings = 1,
+): Coverage {
+  let need = 0, have = 0;
+  const short: { name: string; gap: number }[] = [];
+  for (const i of ingredients) {
+    if (isStaple(i.name)) continue;
+    const qty = i.qty * servings;
+    if (qty <= 0) continue;
+    const athome = Math.min(pantry[keyOf(i.name, i.unit)] ?? 0, qty);
+    need += qty;
+    have += athome;
+    if (athome < qty) short.push({ name: i.name, gap: qty - athome });
+  }
+  short.sort((a, b) => b.gap - a.gap);
+  return {
+    share: need > 0 ? have / need : 0,
+    missing: short.map(s => s.name),
+  };
+}
+
 /** Сколько денег «уходит в остаток» — полезно понимать, что фасовки не бесплатны. */
 export const leftoverShare = (lines: BuyLine[]): number => {
   const bought = lines.reduce((s, l) => s + l.buyAmount, 0);

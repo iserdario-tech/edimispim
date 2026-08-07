@@ -366,6 +366,31 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
 }
 .anchor-num .small { font-size: var(--t-footnote); font-weight: 400; color: var(--fg-2); }
 
+/* Холодильник: строка ввода и список того, что дома. Поле количества узкое —
+   там всегда число, и широкое поле только сбивает с толку. */
+.fridge-add { display: flex; gap: var(--sp-2); flex-wrap: wrap; margin: var(--sp-2) 0; }
+.fridge-add input[type="text"] { flex: 1 1 160px; min-width: 0; }
+.fridge-add input[type="number"] { flex: 0 0 88px; }
+.fridge-list { list-style: none; padding: 0; margin: var(--sp-2) 0 0; display: grid; gap: var(--sp-1); }
+.fridge-list li {
+  display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: var(--sp-2);
+  align-items: baseline; padding: var(--sp-1) 0;
+  border-bottom: var(--hairline) solid var(--separator);
+}
+.fridge-name { min-width: 0; overflow-wrap: anywhere; }
+
+/* Оценка блюда в его карточке. «Не нравится» не красим в тревожный цвет:
+   это выбор вкуса, а не ошибка. */
+.rate-row { display: flex; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-2); flex-wrap: wrap; }
+.rate-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: var(--tap); min-height: 32px; padding: 0 var(--sp-2);
+  border: var(--hairline) solid var(--separator); border-radius: var(--r-control);
+  background: transparent; color: var(--fg-2); cursor: pointer;
+}
+.rate-btn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.rate-btn.on.down { background: var(--fg-2); border-color: var(--fg-2); }
+
 /* Отметка «съел» — маленькие тумблеры прямо в ленте суток.
    Осознанно неяркие: это запись факта, а не задание, которое надо выполнить. */
 .eat-row { display: flex; gap: var(--sp-2); margin-top: var(--sp-2); }
