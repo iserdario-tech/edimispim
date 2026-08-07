@@ -198,8 +198,10 @@ export function MealIngredients({ meal, rating, onRate }: {
           <button className={rating === -1 ? "rate-btn on down" : "rate-btn"} aria-pressed={rating === -1}
             aria-label="Не нравится" title="Не нравится — больше не предложу"
             onClick={() => { tap(); onRate(meal.recipe.id, -1); }}><IconThumb down /></button>
-          {rating === 1 && <span className="small muted">буду ставить чаще</span>}
-          {rating === -1 && <span className="small muted">больше не предложу</span>}
+          {rating === 1 && <span className="small muted">буду ставить чаще — примерно в четырёх днях недели из семи</span>}
+          {/* Про возврат говорим сразу: после скрытия блюдо исчезает из меню вместе
+              с этими кнопками, и без подсказки человек не знает, где его искать. */}
+          {rating === -1 && <span className="small muted">убрано из меню · вернуть можно в разделе «Я»</span>}
         </div>
       )}
 
