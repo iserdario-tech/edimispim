@@ -190,6 +190,40 @@ const pickForDay = (options: Recipe[], offset: number): Recipe | undefined =>
   options[Math.round((offset * options.length) / 7) % options.length];
 
 /**
+ * Блюда, у которых порция примерно равна доле калорий этого приёма.
+ *
+ * Иначе планировщик добирает калории множителем порции, и в меню появляется
+ * «крем-суп из брокколи ×3.4» — формально 600 ккал, на деле полтора литра супа.
+ * Ровно та еда, из-за которой правильное питание выглядит как «весь день овощи».
+ * Берём тех, кто укладывается в 0.6–1.6 порции; если таких нет — весь список,
+ * потому что оставить приём пустым хуже.
+ */
+const FIT_MIN = 0.6, FIT_MAX = 1.6;
+const ROUGH_FIT_MIN = 0.5, ROUGH_FIT_MAX = 2;
+function fittingOptions(options: Recipe[], slotKcal: number, wide = false): Recipe[] {
+  const lo = wide ? ROUGH_FIT_MIN : FIT_MIN, hi = wide ? ROUGH_FIT_MAX : FIT_MAX;
+  const fit = options.filter(r => {
+    const s = slotKcal / r.kcal;
+    return s >= lo && s <= hi;
+  });
+  return fit.length ? fit : options;
+}
+
+/** Цена приготовления: сложность и время в одной шкале, шаг сложности ≈ полчаса готовки. */
+export const effortOf = (r: Recipe): number => (r.difficulty ?? 1) * 30 + (r.time_min ?? 0);
+
+/**
+ * После плохой ночи из подходящих блюд остаются три самых простых.
+ *
+ * Сужать пул заранее мало: сначала отбираются блюда, чья порция совпадает с долей калорий,
+ * и среди них «самое простое» может оказаться сорокапятиминутным. Тогда упрощённый день
+ * выходил длиннее обычного на те самые пару минут, которые ломают обещание.
+ */
+const EASY_KEEP = 3;
+const easiest = (options: Recipe[]): Recipe[] =>
+  [...options].sort((a, b) => effortOf(a) - effortOf(b)).slice(0, EASY_KEEP);
+
+/**
  * Один день: доли по выбранной схеме, времена — от ритма суток.
  * Сладкое вписано в дневную норму, поэтому не ломает дефицит.
  */
@@ -207,10 +241,12 @@ export function generateDay(targets: Targets, pool: Recipe[], opts: DayOptions):
   const meals: Meal[] = [];
 
   for (const [type, share] of Object.entries(mains) as [MealType, number][]) {
-    const options = byType(type);
-    const recipe = pickForDay(options, offset);
+    const slotKcal = mainTarget * share;
+    // после плохой ночи рамка по размеру порции шире: важнее найти блюдо побыстрее
+    const fit = fittingOptions(byType(type), slotKcal, opts.roughNight);
+    const recipe = pickForDay(opts.roughNight ? easiest(fit) : fit, offset);
     if (!recipe) continue;
-    const servings = Math.max(0.5, +((mainTarget * share) / recipe.kcal).toFixed(1));
+    const servings = Math.max(0.5, +(slotKcal / recipe.kcal).toFixed(1));
     meals.push({ recipe, servings, timeMin: times[type as Slot] ?? 0, slot: type });
   }
 
@@ -269,10 +305,15 @@ function swapForFiber(
       if (candidate.meal_type !== meal.recipe.meal_type) continue;
       if (candidate.id === meal.recipe.id) continue;
       const servings = Math.max(0.5, +(kcalShare / candidate.kcal).toFixed(1));
+      // порция остаётся порцией: иначе замена подсовывает «крем-суп ×3.4» — полтора литра супа
+      if (servings > FIT_MAX) continue;
       const gain = candidate.fiber_g * servings - meal.recipe.fiber_g * meal.servings;
-      // белок не должен просесть ради клетчатки — это два разных рычага сытости
+      // белок не должен просесть ради клетчатки — это два разных рычага сытости.
+      // На второй замене допуск нулевой: две уступки по 5 г подряд роняли день ниже цели.
       const proteinDrop = meal.recipe.protein_g * meal.servings - candidate.protein_g * servings;
-      if (gain > 0 && proteinDrop <= 5) candidates.push({ index, recipe: candidate, servings, gain });
+      if (gain > 0 && proteinDrop <= (pass === 0 ? 5 : 0)) {
+        candidates.push({ index, recipe: candidate, servings, gain });
+      }
     }
   });
 
