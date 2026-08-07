@@ -13,6 +13,14 @@ const ALLERGENS = [
 ] as const;
 
 /**
+ * Продукты, которых нет в обычном магазине за пределами больших городов.
+ *
+ * Повод: «я временно в командировке в России, гочжан тут не найти». Блюда с ними
+ * не выбрасываются из набора — они просто уходят из меню, пока галочка стоит.
+ */
+export const RARE_INGREDIENTS = ["гочжан", "мисо", "харисса", "тахини", "кимчи", "сироп топинамбура"];
+
+/**
  * Короткая форма про еду. Отдельно от онбординга сна: приложение полезно и без неё
  * (ведёт сон), а меню появляется, когда человек готов её заполнить.
  */
@@ -32,7 +40,9 @@ export function FoodSetup({ initial, onDone, onCancel }: {
   const [mealCount, setMealCount] = useState<MealCount>(initial?.mealCount ?? 4);
   const [cookware, setCookware] = useState<string[]>(initial?.constraints.cookware ?? ["stove", "oven", "microwave"]);
   const [allergens, setAllergens] = useState<string[]>(initial?.constraints.allergens ?? []);
-  const [dislikes, setDislikes] = useState((initial?.constraints.dislikes ?? []).join(", "));
+  const saved = initial?.constraints.dislikes ?? [];
+  const [noRare, setNoRare] = useState(RARE_INGREDIENTS.every(r => saved.includes(r)));
+  const [dislikes, setDislikes] = useState(saved.filter(d => !RARE_INGREDIENTS.includes(d)).join(", "));
 
   const toggle = (list: string[], set: (v: string[]) => void, key: string) =>
     set(list.includes(key) ? list.filter(x => x !== key) : [...list, key]);
@@ -112,11 +122,24 @@ export function FoodSetup({ initial, onDone, onCancel }: {
         <label className="fld small">Что не любишь (через запятую)
           <input type="text" value={dislikes} placeholder="капуста, нут" onChange={e => setDislikes(e.target.value)} />
         </label>
+        <div className="chips">
+          <button className={noRare ? "chip on" : "chip"} onClick={() => setNoRare(!noRare)}>
+            Только обычные продукты
+          </button>
+        </div>
+        <p className="small muted">
+          Уберёт блюда с редкими пастами и приправами — гочжан, мисо, харисса, тахини, кимчи.
+          В большинстве магазинов их нет.
+        </p>
       </section>
 
       <section className="card">
         <h3 className="card-h">5 · Бюджет</h3>
-        <p className="small muted">Меняет набор блюд, а не цену дня: объём продуктов задаёт цель по белку.</p>
+        <p className="small muted">
+          «Небольшой» оставит блюда повыгоднее по цене за грамм белка — неделя выйдет
+          примерно на тысячу рублей дешевле. Цель по калориям и белку при этом та же.
+          «Средний» и «свободный» — весь набор без ограничений.
+        </p>
         <div className="chips">
           <button className={budget === "small" ? "chip on" : "chip"} onClick={() => setBudget("small")}>Небольшой</button>
           <button className={budget === "medium" ? "chip on" : "chip"} onClick={() => setBudget("medium")}>Средний</button>
@@ -129,7 +152,10 @@ export function FoodSetup({ initial, onDone, onCancel }: {
           profile: { sex, age, heightCm, weightKg, goalWeightKg, activity },
           constraints: {
             allergens: allergens as never, cookware, budget, cuisines: [],
-            dislikes: dislikes.split(",").map(s => s.trim()).filter(Boolean),
+            dislikes: [
+              ...dislikes.split(",").map(s => s.trim()).filter(Boolean),
+              ...(noRare ? RARE_INGREDIENTS : []),
+            ],
           },
           mealCount,
         })}>Собрать меню</button>

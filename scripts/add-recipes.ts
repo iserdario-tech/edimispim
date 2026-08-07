@@ -72,10 +72,17 @@ function checkMeta(drafts: Draft[], existing: Recipe[]): string[] {
   return problems;
 }
 
-/** Макросы на одну порцию + плотность энергии (ккал/г) — рычаг сытости. */
-function build(d: Draft): Recipe {
+/**
+ * Макросы считаются ИЗ ТОГО СОСТАВА, который увидит человек в карточке.
+ *
+ * Иначе получается мелкая, но настоящая ложь: состав в карточке округляется до 0,1
+ * («яйцо 1 шт на 4 порции» → 0,3 шт), а калории считались из неокруглённых величин —
+ * и блюдо на карточке не сходилось со своими же цифрами процента на два.
+ * Теперь порядок обратный: сначала состав порции, потом счёт по нему.
+ */
+export function macrosOf(ings: { name: string; qty: number; unit: string }[]) {
   let kcal = 0, protein = 0, fiber = 0, weight = 0;
-  for (const [name, qty, unit] of d.ings) {
+  for (const { name, qty, unit } of ings) {
     const g = gramsOf(name, qty, unit);
     const [k, p, f] = NUTRIENTS[name.toLowerCase().trim()];
     kcal += (k * g) / 100;
@@ -83,57 +90,69 @@ function build(d: Draft): Recipe {
     fiber += (f * g) / 100;
     weight += g;
   }
-  const per = d.servings;
+  return {
+    kcal: Math.round(kcal),
+    protein_g: Math.round(protein * 10) / 10,
+    fiber_g: Math.round(fiber * 10) / 10,
+    energy_density: Math.round((kcal / weight) * 100) / 100,
+  };
+}
+
+function build(d: Draft): Recipe {
+  const ingredients = d.ings.map(([name, qty, unit, category]) => ({
+    name,
+    qty: Math.round((qty / d.servings) * 10) / 10,
+    unit,
+    category,
+  }));
   return {
     id: d.id,
     name: d.name,
     meal_type: d.type,
     cuisine: d.cuisine,
-    kcal: Math.round(kcal / per),
-    protein_g: Math.round((protein / per) * 10) / 10,
-    fiber_g: Math.round((fiber / per) * 10) / 10,
-    energy_density: Math.round((kcal / weight) * 100) / 100,
+    ...macrosOf(ingredients),
     cookware: d.cookware,
     allergens: d.allergens,
     tags: [],
     difficulty: d.difficulty,
     time_min: d.time,
     source: d.src,
-    ingredients: d.ings.map(([name, qty, unit, category]) => ({
-      name,
-      qty: Math.round((qty / per) * 10) / 10,
-      unit,
-      category,
-    })),
+    ingredients,
     steps: d.steps,
   };
 }
 
+// дальше — командная часть; при импорте (например, ради macrosOf) она не запускается
+const runAsCli = process.argv[1] !== undefined
+  && pathToFileURL(resolve(process.argv[1])).href === import.meta.url;
+
 const draftPath = process.argv[2];
 const dry = process.argv.includes("--dry");
-if (!draftPath) {
+if (!runAsCli) {
+  // импорт: ничего не делаем
+} else if (!draftPath) {
   console.error("укажи файл черновика: npx vite-node scripts/add-recipes.ts scripts/drafts/<файл>.ts");
   process.exit(1);
-}
-
-const { DRAFT } = (await import(pathToFileURL(resolve(draftPath)).href)) as { DRAFT: Draft[] };
-const existing = JSON.parse(readFileSync(RECIPES_PATH, "utf8")) as Recipe[];
-
-const problems = [...checkMeta(DRAFT, existing), ...checkProducts(DRAFT)];
-if (problems.length) {
-  console.error(`Не добавлено, сначала почини ${problems.length}:`);
-  for (const p of problems) console.error("  ·", p);
-  process.exit(1);
-}
-
-const added = DRAFT.map(build);
-for (const r of added) {
-  console.log(`${r.id}  ${r.kcal} ккал · белок ${r.protein_g} · клетчатка ${r.fiber_g}  ${r.name}`);
-}
-
-if (dry) {
-  console.log("\n--dry: файл не тронут");
 } else {
-  writeFileSync(RECIPES_PATH, JSON.stringify([...existing, ...added], null, 2) + "\n", "utf8");
-  console.log(`\nДобавлено ${added.length}, всего ${existing.length + added.length}. Дальше: npm test`);
+  const { DRAFT } = (await import(pathToFileURL(resolve(draftPath)).href)) as { DRAFT: Draft[] };
+  const existing = JSON.parse(readFileSync(RECIPES_PATH, "utf8")) as Recipe[];
+
+  const problems = [...checkMeta(DRAFT, existing), ...checkProducts(DRAFT)];
+  if (problems.length) {
+    console.error(`Не добавлено, сначала почини ${problems.length}:`);
+    for (const p of problems) console.error("  ·", p);
+    process.exit(1);
+  }
+
+  const added = DRAFT.map(build);
+  for (const r of added) {
+    console.log(`${r.id}  ${r.kcal} ккал · белок ${r.protein_g} · клетчатка ${r.fiber_g}  ${r.name}`);
+  }
+
+  if (dry) {
+    console.log("\n--dry: файл не тронут");
+  } else {
+    writeFileSync(RECIPES_PATH, JSON.stringify([...existing, ...added], null, 2) + "\n", "utf8");
+    console.log(`\nДобавлено ${added.length}, всего ${existing.length + added.length}. Дальше: npm test`);
+  }
 }
