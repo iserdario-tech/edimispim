@@ -56,9 +56,9 @@ export function Profile({ food, screener, onEditSleep, onEditFood, onBackup, onR
           Всё хранится только на твоём телефоне. Очистишь браузер — данные пропадут,
           если нет копии. Аккаунтов и облака нет.
         </p>
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-          <button className="chip" onClick={onBackup}>Сохранить копию</button>
-          <button className="chip" onClick={() => fileRef.current?.click()}>Загрузить копию</button>
+        <div className="btn-row">
+          <button className="chip" onClick={onBackup}>Сохранить</button>
+          <button className="chip" onClick={() => fileRef.current?.click()}>Загрузить</button>
           <input ref={fileRef} type="file" accept="application/json,.json" hidden
             onChange={(e) => { const f = e.target.files?.[0]; if (f) onRestore(f); e.target.value = ""; }} />
         </div>
