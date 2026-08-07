@@ -135,7 +135,11 @@ export function FoodSetup({ initial, onDone, onCancel }: {
 
       <section className="card">
         <h3 className="card-h">5 · Бюджет</h3>
-        <p className="small muted">Меняет набор блюд, а не цену дня: объём продуктов задаёт цель по белку.</p>
+        <p className="small muted">
+          «Небольшой» оставит блюда повыгоднее по цене за грамм белка — неделя выйдет
+          примерно на тысячу рублей дешевле. Цель по калориям и белку при этом та же.
+          «Средний» и «свободный» — весь набор без ограничений.
+        </p>
         <div className="chips">
           <button className={budget === "small" ? "chip on" : "chip"} onClick={() => setBudget("small")}>Небольшой</button>
           <button className={budget === "medium" ? "chip on" : "chip"} onClick={() => setBudget("medium")}>Средний</button>

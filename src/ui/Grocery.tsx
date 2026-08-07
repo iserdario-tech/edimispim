@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import type { Grocery, Meal } from "../food/types.js";
 import { SHOPS, DEFAULT_SHOP_ID, shopById, searchUrl } from "../food/shops.js";
 import { planPurchase, type BuyLine, type Pantry } from "../food/packaging.js";
-import { PRICES_SOURCE, PRICES_DATE } from "../food/prices.js";
+import { PRICES_SOURCE, PRICES_DATE, costOf } from "../food/prices.js";
 import { hintFor } from "../food/ingredients.js";
 
 const SHOP_KEY = "edimispim.shop";
@@ -61,6 +61,11 @@ export function GroceryBlock({ grocery }: { grocery: Grocery }) {
   const active = lines.filter(l => !l.staple && l.toBuy > 0);
   const done = lines.filter(l => !l.staple && l.toBuy === 0);
   const cost = day ? day.estCostRub : grocery.estCostRub;
+  // сумма молча пропускала продукты без цены — «≈6954 ₽» читалось как полная стоимость недели
+  const unpriced = useMemo(
+    () => lines.filter(l => !l.staple && l.toBuy > 0 && costOf(l.name, l.toBuy, l.unit) === null),
+    [lines],
+  );
 
   const chooseShop = (id: string) => { setShopId(id); writeLS(SHOP_KEY, id); };
 
@@ -146,9 +151,16 @@ export function GroceryBlock({ grocery }: { grocery: Grocery }) {
         творога, а пачка 200 — в следующий раз приложение не попросит покупать творог снова.
       </p>
       <p className="small muted">
-        Цены — медиана по выдаче «{PRICES_SOURCE}» на {PRICES_DATE.split("-").reverse().join(".")}.
-        В другом городе и магазине будут другие, и со временем они устаревают.
+        Цены сняты в «{PRICES_SOURCE}» {PRICES_DATE.split("-").reverse().join(".")}: из выдачи
+        берётся недорогой обычный вариант, а не премиальный. В другом городе и магазине
+        будут другие, и со временем они устаревают.
       </p>
+      {unpriced.length > 0 && (
+        <p className="small muted">
+          В сумму не вошли позиции, по которым честной цены нет ({unpriced.length}):{" "}
+          {unpriced.map(l => l.name).join(", ")}. Значит, на деле выйдет дороже.
+        </p>
+      )}
     </section>
   );
 }
@@ -191,12 +203,18 @@ export function MealIngredients({ meal }: { meal: Meal }) {
         </>
       )}
 
-      {meal.recipe.source && (
-        <p className="small muted" style={{ marginTop: 10 }}>
-          Рецепт с <a href={meal.recipe.source} target="_blank" rel="noopener noreferrer">источника</a> —
-          состав оттуда, калории пересчитаны приложением по справочнику продуктов.
-        </p>
-      )}
+      {/* про происхождение говорим всегда: тишина у «домашних» рецептов читалась как
+          «этот тоже откуда-то взят», а половина набора написана для приложения */}
+      <p className="small muted" style={{ marginTop: 10 }}>
+        {meal.recipe.source ? (
+          <>
+            Рецепт с <a href={meal.recipe.source} target="_blank" rel="noopener noreferrer">источника</a> —
+            состав оттуда, калории пересчитаны приложением по справочнику продуктов.
+          </>
+        ) : (
+          <>Рецепт составлен для приложения; калории посчитаны по справочнику продуктов.</>
+        )}
+      </p>
 
       {steps.length > 0 && (
         <>
