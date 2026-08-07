@@ -12,6 +12,7 @@ import { nextStep } from "../next-step.js";
 import { plateau } from "../plateau.js";
 import { GroceryBlock, MealIngredients } from "./Grocery.js";
 import { SleepSparkline, WeightChart } from "./Charts.js";
+import { IconChevron, IconSwap } from "./Icons.js";
 
 const RECIPES = recipesJson as Recipe[];
 const DOW = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
@@ -211,11 +212,11 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
                     <span className="small muted day-nums">
                       {day.totals.kcal} ккал · белок {day.totals.protein} г
                     </span>
-                    <span className="chev">{openDays.has(i) ? "▾" : "▸"}</span>
+                    <span className="chev"><IconChevron open={openDays.has(i)} /></span>
                   </button>
                   <button className="swap-btn" title="Заменить все блюда дня"
                     aria-label={`Заменить все блюда дня ${i + 1}`}
-                    onClick={() => swapWholeDay(day)}>↻ день</button>
+                    onClick={() => swapWholeDay(day)}><IconSwap /> день</button>
                 </div>
                 {openDays.has(i) && (
                   <>
@@ -233,7 +234,7 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
                             <button className="meal-name" aria-expanded={openMeal === key}
                               onClick={() => setOpenMeal(openMeal === key ? null : key)}>
                               {m.recipe.name}
-                              <span className="chev">{openMeal === key ? " ▾" : " ▸"}</span>
+                              <span className="chev"><IconChevron open={openMeal === key} /></span>
                             </button>
                             <span className="small muted meal-meta">
                               {Math.round(m.recipe.kcal * m.servings)} ккал
@@ -242,7 +243,7 @@ export function Week({ profile, history, food, weights, onAddWeight, onSetupFood
                           </span>
                           <button className="swap-btn" title="Заменить блюдо"
                             aria-label={`Заменить блюдо: ${m.recipe.name}`}
-                            onClick={() => swapOne(day, k)}>↻</button>
+                            onClick={() => swapOne(day, k)}><IconSwap /></button>
                           {openMeal === key && <MealIngredients meal={m} />}
                         </li>
                       );
