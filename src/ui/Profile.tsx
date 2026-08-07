@@ -18,7 +18,7 @@ export function Profile({ food, screener, onEditSleep, onEditFood, onBackup, onR
 
   return (
     <main className="wrap">
-      <h2>Я</h2>
+      <h1 className="page-title">Я</h1>
 
       <section className="card">
         <h3 className="card-h">Настройки</h3>

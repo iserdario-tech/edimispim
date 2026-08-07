@@ -1,0 +1,133 @@
+/**
+ * Дизайн-токены в системе Apple.
+ *
+ * Значения взяты со страниц Human Interface Guidelines (снято 2026-08-07):
+ * - шкала текста iOS/iPadOS: Large Title 34/41, Title 1 28/34, Title 2 22/28, Title 3 20/25,
+ *   Headline и Body 17/22, Callout 16/21, Subhead 15/20, Footnote 13/18, Caption 1 12/16,
+ *   Caption 2 11/13 — https://developer.apple.com/design/human-interface-guidelines/typography
+ * - минимальный размер текста 11 pt, тонкие начертания не использовать;
+ * - контраст 4.5:1 до 17 pt и 3:1 от 18 pt и для жирного — .../accessibility
+ * - кнопка 44 pt — .../buttons
+ *
+ * Цвета НЕ скопированы у Apple намеренно: HIG прямо говорит «не хардкодить системные
+ * цвета, значения меняются от релиза к релизу». Взята своя палитра, построенная
+ * по их правилам: семантические имена, вариант для светлой и тёмной темы, вариант
+ * повышенного контраста, ни один цвет не значит двух разных вещей.
+ *
+ * Всё, что здесь есть, — в px: на вебе 1 pt системы ≈ 1 CSS-px при стандартном масштабе.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* ── шкала текста ─────────────────────────────────────────────── */
+  --t-large-title: 34px;   --lh-large-title: 41px;
+  --t-title1: 28px;        --lh-title1: 34px;
+  --t-title2: 22px;        --lh-title2: 28px;
+  --t-title3: 20px;        --lh-title3: 25px;
+  --t-headline: 17px;      --lh-headline: 22px;
+  --t-body: 17px;          --lh-body: 22px;
+  --t-callout: 16px;       --lh-callout: 21px;
+  --t-subhead: 15px;       --lh-subhead: 20px;
+  --t-footnote: 13px;      --lh-footnote: 18px;
+  --t-caption1: 12px;      --lh-caption1: 16px;
+  --t-caption2: 11px;      --lh-caption2: 13px;
+
+  /* ── ритм и форма ─────────────────────────────────────────────── */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px; --sp-6: 24px; --sp-8: 32px;
+  --r-card: 18px;      /* группированный список iOS */
+  --r-control: 12px;
+  --r-pill: 999px;
+  --tap: 44px;         /* минимальный тач-таргет */
+  --hairline: 0.5px;   /* системный разделитель — тоньше пикселя */
+
+  /* ── цвет: светлая тема (по умолчанию) ────────────────────────── */
+  --accent: #4F46E5;
+  --accent-press: #4338CA;
+  --accent-ink: #ffffff;
+  --accent-dim: #4F46E5;
+  --accent-soft: rgba(79, 70, 229, .10);
+
+  --bg: #F2F2F7;            /* фон сгруппированного списка */
+  --surface: #FFFFFF;       /* карточка на нём */
+  --surface-2: #F7F7FA;     /* вложенный блок */
+  --fg: #000000;            /* основной текст */
+  --fg-2: rgba(60, 60, 67, .60);   /* вторичный */
+  --fg-3: rgba(60, 60, 67, .30);   /* третичный: подписи, плейсхолдеры */
+  --separator: rgba(60, 60, 67, .18);
+  --border: rgba(60, 60, 67, .18);
+  --muted: var(--fg-2);
+
+  --warn: #B25E00;
+  --danger: #C6362F;
+  --ok: #1E7A44;
+
+  /* стекло: приближение Liquid Glass, см. APPLE-DESIGN.md §4 */
+  --glass-bg: rgba(255, 255, 255, .72);
+  --glass-stroke: rgba(255, 255, 255, .65);
+  --glass-blur: saturate(180%) blur(20px);
+  --shadow-1: 0 1px 2px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.06);
+  --shadow-2: 0 2px 6px rgba(0,0,0,.10), 0 18px 40px rgba(0,0,0,.14);
+}
+
+/* ── тёмная тема ────────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent: #7C83F5;
+    --accent-press: #9AA0FF;
+    --accent-ink: #0B0B0F;
+    --accent-dim: #A5AAFF;
+    --accent-soft: rgba(124, 131, 245, .16);
+
+    --bg: #000000;
+    --surface: #1C1C1E;
+    --surface-2: #2C2C2E;
+    --fg: #FFFFFF;
+    --fg-2: rgba(235, 235, 245, .62);
+    --fg-3: rgba(235, 235, 245, .32);
+    --separator: rgba(235, 235, 245, .20);
+    --border: rgba(235, 235, 245, .20);
+
+    --warn: #F0A93B;
+    --danger: #FF6961;
+    --ok: #4BD07E;
+
+    --glass-bg: rgba(28, 28, 30, .68);
+    --glass-stroke: rgba(255, 255, 255, .14);
+    --shadow-1: 0 1px 2px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.45);
+    --shadow-2: 0 2px 8px rgba(0,0,0,.6), 0 20px 44px rgba(0,0,0,.55);
+  }
+}
+
+/* Ручной выбор темы перекрывает системный: атрибут ставит переключатель в «Я» */
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --accent: #7C83F5; --accent-press: #9AA0FF; --accent-ink: #0B0B0F;
+  --accent-dim: #A5AAFF; --accent-soft: rgba(124, 131, 245, .16);
+  --bg: #000000; --surface: #1C1C1E; --surface-2: #2C2C2E;
+  --fg: #FFFFFF; --fg-2: rgba(235, 235, 245, .62); --fg-3: rgba(235, 235, 245, .32);
+  --separator: rgba(235, 235, 245, .20); --border: rgba(235, 235, 245, .20);
+  --warn: #F0A93B; --danger: #FF6961; --ok: #4BD07E;
+  --glass-bg: rgba(28, 28, 30, .68); --glass-stroke: rgba(255, 255, 255, .14);
+  --shadow-1: 0 1px 2px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.45);
+  --shadow-2: 0 2px 8px rgba(0,0,0,.6), 0 20px 44px rgba(0,0,0,.55);
+}
+
+/* Повышенный контраст — отдельный вариант, как требует HIG для своих цветов */
+@media (prefers-contrast: more) {
+  :root {
+    --fg-2: rgba(60, 60, 67, .82);
+    --separator: rgba(60, 60, 67, .40);
+    --border: rgba(60, 60, 67, .40);
+    --glass-bg: rgba(255, 255, 255, .92);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --fg-2: rgba(235, 235, 245, .85);
+      --separator: rgba(235, 235, 245, .42);
+      --border: rgba(235, 235, 245, .42);
+      --glass-bg: rgba(28, 28, 30, .92);
+    }
+  }
+}
