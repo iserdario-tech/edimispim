@@ -7,6 +7,7 @@ import { Profile as ProfileScreen } from "./Profile.js";
 import { FoodSetup } from "./FoodSetup.js";
 import { Coach } from "./Coach.js";
 import { Nav, type Tab } from "./Nav.js";
+import { useSwipeBack } from "./useSwipeBack.js";
 import { ScreenHeader } from "./ScreenHeader.js";
 import { loadState, saveState, exportAll, importAll, type FoodSettings, type StoredState } from "./storage.js";
 import { syncPushContext } from "./notifications.js";
@@ -101,6 +102,11 @@ export function App() {
     void syncPushContext(restored.profile);
     alert("Данные восстановлены ✓");
   };
+
+  // свайп от левого края закрывает вложенный экран — до кнопки в углу одной рукой не дотянуться
+
+  useSwipeBack(!!state && (editing || editingFood), back);
+
 
   if (!state || editing) {
     return <>
