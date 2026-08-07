@@ -28,12 +28,13 @@ const DOW = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
  * Никаких коэффициентов и p-значений — статистики на двух неделях всё равно нет,
  * а вид точной цифры создаёт ложную уверенность.
  */
-export function Week({ profile, history, food, weights, eaten, ratings, onRate, onAddWeight, onSetupFood }: {
+export function Week({ profile, history, food, weights, eaten, cheatDays, ratings, onRate, onAddWeight, onSetupFood }: {
   profile: Profile;
   history: DayLog[];
   food?: FoodSettings;
   weights?: { date: string; kg: number }[];
   eaten?: Record<string, DayEaten>;
+  cheatDays?: string[];
   ratings?: Record<string, 1 | -1>;
   onRate?: (id: string, value: 1 | -1) => void;
   onAddWeight: (kg: number) => void;
@@ -114,7 +115,10 @@ export function Week({ profile, history, food, weights, eaten, ratings, onRate, 
     [history, today, profile.targetSleepMin],
   );
 
-  const records = useMemo(() => toDayRecords(history, weights ?? [], eaten ?? {}), [history, weights, eaten]);
+  const records = useMemo(
+    () => toDayRecords(history, weights ?? [], eaten ?? {}, cheatDays ?? []),
+    [history, weights, eaten, cheatDays],
+  );
   const anchorInfo = useMemo(() => anchor(records, profile.targetSleepMin), [records, profile.targetSleepMin]);
   const step = useMemo(() => nextStep(records, !!food), [records, food]);
   const plateauInfo = useMemo(() => plateau(records, profile.targetSleepMin), [records, profile.targetSleepMin]);
@@ -131,12 +135,14 @@ export function Week({ profile, history, food, weights, eaten, ratings, onRate, 
   // за последнюю неделю: сколько дней прошло по плану еды из тех, что вообще отмечались
   const foodWeek = useMemo(() => {
     const from = plusDaysISO(today, -6);
+    const cheat = new Set(cheatDays ?? []);
     const marks = Object.entries(eaten ?? {})
-      .filter(([d]) => d >= from && d <= today)
+      .filter(([d]) => d >= from && d <= today && !cheat.has(d))
       .map(([, e]) => followedPlan(e))
       .filter((v): v is boolean => v !== undefined);
-    return { marked: marks.length, followed: marks.filter(Boolean).length };
-  }, [eaten, today]);
+    const cheats = (cheatDays ?? []).filter(d => d >= from && d <= today).length;
+    return { marked: marks.length, followed: marks.filter(Boolean).length, cheats };
+  }, [eaten, cheatDays, today]);
 
   const weightSeries = weights ?? [];
   const delta = weightSeries.length >= 2
@@ -206,6 +212,11 @@ export function Week({ profile, history, food, weights, eaten, ratings, onRate, 
         {foodWeek.marked > 0 && (
           <p className="small" style={{ marginTop: 8 }}>
             По плану еды прошло <b>{foodWeek.followed} из {foodWeek.marked}</b> отмеченных дней.
+          </p>
+        )}
+        {foodWeek.cheats > 0 && (
+          <p className="small muted" style={{ marginTop: 4 }}>
+            Читмилов за неделю: {foodWeek.cheats}. Они запланированы тобой и в счёт выше не входят.
           </p>
         )}
         {delta != null && (

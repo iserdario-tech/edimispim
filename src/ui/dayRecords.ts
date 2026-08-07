@@ -16,7 +16,9 @@ export function toDayRecords(
   history: DayLog[],
   weights: { date: string; kg: number }[] = [],
   eaten: Record<string, DayEaten> = {},
+  cheatDays: string[] = [],
 ): DayRecord[] {
+  const cheat = new Set(cheatDays);
   let days: DayRecord[] = [];
   for (const h of history) {
     days = upsertDay(days, {
@@ -26,6 +28,8 @@ export function toDayRecords(
   }
   for (const w of weights) days = upsertDay(days, { date: w.date, body: { weightKg: w.kg } });
   for (const [date, e] of Object.entries(eaten)) {
+    // объявленный читмил не данные о приверженности: он запланирован, а не сорван
+    if (cheat.has(date)) continue;
     const followed = followedPlan(e);
     if (followed !== undefined) days = upsertDay(days, { date, food: { followed } });
   }

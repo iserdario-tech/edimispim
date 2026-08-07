@@ -27,6 +27,9 @@ export interface StoredState {
   eaten?: Record<string, DayEaten>;
   /** Оценки блюд: id рецепта → 1 «нравится» или −1 «больше не предлагать». Только на устройстве. */
   ratings?: Record<string, 1 | -1>;
+  /** Дни, объявленные читмилом. Запланированное послабление — не срыв, и статистика
+   *  приверженности их не считает провалом (обоснование — `X28` научной базы). */
+  cheatDays?: string[];
 }
 // выбранный на сегодня контекст (режим + переключатели), чтобы не терялся при перезапуске PWA
 export interface DayDraft { date: string; mode: DayMode; crunchEndHM: string; toggles: DayToggles }
