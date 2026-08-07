@@ -135,9 +135,11 @@ export function GroceryBlock({ grocery }: { grocery: Grocery }) {
         Отмечай галочкой, что взял. Тап по названию открывает товар в «{shop.name}».
       </p>
 
+      {/* Строка остаётся на своём месте: раньше отмеченное сразу улетало вниз,
+          и список прыгал под пальцем — легко потерять, где ты был. Отмеченное
+          вычёркивается, но не двигается. */}
       <ul className="buy-list">
-        {active.map(l => row(l, false))}
-        {done.map(l => row(l, true))}
+        {lines.filter(l => !l.staple).map(l => row(l, l.toBuy === 0))}
       </ul>
 
       <div className="buy-foot small muted">
