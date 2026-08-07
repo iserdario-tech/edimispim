@@ -70,46 +70,92 @@
   --shadow-2: 0 2px 6px rgba(0,0,0,.10), 0 18px 40px rgba(0,0,0,.14);
 }
 
-/* ── тёмная тема ────────────────────────────────────────────────── */
+/* ── тёмная тема ────────────────────────────────────────────────────
+   Системная тёмная применяется, только если человек НЕ выбрал светлую руками.
+   Раньше здесь стоял просто `:root`, а ручной выбор менял лишь `color-scheme` —
+   переменные оставались тёмными, и переключатель ничего не делал.
+   Это и была ошибка: «не меняется тема, постоянно тёмная». */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --accent: #7C83F5;
-    --accent-press: #9AA0FF;
-    --accent-ink: #0B0B0F;
-    --accent-dim: #A5AAFF;
-    --accent-soft: rgba(124, 131, 245, .16);
+  :root:not([data-theme="light"]) {
+  --accent: #7C83F5;
+  --accent-press: #9AA0FF;
+  --accent-ink: #0B0B0F;
+  --accent-dim: #A5AAFF;
+  --accent-soft: rgba(124, 131, 245, .16);
 
-    --bg: #000000;
-    --surface: #1C1C1E;
-    --surface-2: #2C2C2E;
-    --fg: #FFFFFF;
-    --fg-2: rgba(235, 235, 245, .62);
-    --fg-3: rgba(235, 235, 245, .32);
-    --separator: rgba(235, 235, 245, .20);
-    --border: rgba(235, 235, 245, .20);
+  --bg: #000000;
+  --surface: #1C1C1E;
+  --surface-2: #2C2C2E;
+  --fg: #FFFFFF;
+  --fg-2: rgba(235, 235, 245, .62);
+  --fg-3: rgba(235, 235, 245, .32);
+  --separator: rgba(235, 235, 245, .20);
+  --border: rgba(235, 235, 245, .20);
+  --muted: var(--fg-2);
 
-    --warn: #F0A93B;
-    --danger: #FF6961;
-    --ok: #4BD07E;
+  --warn: #F0A93B;
+  --danger: #FF6961;
+  --ok: #4BD07E;
 
-    --glass-bg: rgba(28, 28, 30, .68);
-    --glass-stroke: rgba(255, 255, 255, .14);
-    --shadow-1: 0 1px 2px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.45);
-    --shadow-2: 0 2px 8px rgba(0,0,0,.6), 0 20px 44px rgba(0,0,0,.55);
+  --glass-bg: rgba(28, 28, 30, .68);
+  --glass-stroke: rgba(255, 255, 255, .14);
+  --shadow-1: 0 1px 2px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.45);
+  --shadow-2: 0 2px 8px rgba(0,0,0,.6), 0 20px 44px rgba(0,0,0,.55);
   }
 }
 
-/* Ручной выбор темы перекрывает системный: атрибут ставит переключатель в «Я» */
-:root[data-theme="light"] { color-scheme: light; }
+/* Ручной выбор перекрывает системный в обе стороны */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --accent: #4F46E5;
+  --accent-press: #4338CA;
+  --accent-ink: #ffffff;
+  --accent-dim: #4F46E5;
+  --accent-soft: rgba(79, 70, 229, .10);
+
+  --bg: #F2F2F7;
+  --surface: #FFFFFF;
+  --surface-2: #F0F0F5;
+  --fg: #000000;
+  --fg-2: rgba(60, 60, 67, .60);
+  --fg-3: rgba(60, 60, 67, .30);
+  --separator: rgba(60, 60, 67, .18);
+  --border: rgba(60, 60, 67, .18);
+  --muted: var(--fg-2);
+
+  --warn: #B25E00;
+  --danger: #C6362F;
+  --ok: #1E7A44;
+
+  --glass-bg: rgba(255, 255, 255, .72);
+  --glass-stroke: rgba(255, 255, 255, .65);
+  --shadow-1: 0 1px 2px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.06);
+  --shadow-2: 0 2px 6px rgba(0,0,0,.10), 0 18px 40px rgba(0,0,0,.14);
+}
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --accent: #7C83F5; --accent-press: #9AA0FF; --accent-ink: #0B0B0F;
-  --accent-dim: #A5AAFF; --accent-soft: rgba(124, 131, 245, .16);
-  --bg: #000000; --surface: #1C1C1E; --surface-2: #2C2C2E;
-  --fg: #FFFFFF; --fg-2: rgba(235, 235, 245, .62); --fg-3: rgba(235, 235, 245, .32);
-  --separator: rgba(235, 235, 245, .20); --border: rgba(235, 235, 245, .20);
-  --warn: #F0A93B; --danger: #FF6961; --ok: #4BD07E;
-  --glass-bg: rgba(28, 28, 30, .68); --glass-stroke: rgba(255, 255, 255, .14);
+  --accent: #7C83F5;
+  --accent-press: #9AA0FF;
+  --accent-ink: #0B0B0F;
+  --accent-dim: #A5AAFF;
+  --accent-soft: rgba(124, 131, 245, .16);
+
+  --bg: #000000;
+  --surface: #1C1C1E;
+  --surface-2: #2C2C2E;
+  --fg: #FFFFFF;
+  --fg-2: rgba(235, 235, 245, .62);
+  --fg-3: rgba(235, 235, 245, .32);
+  --separator: rgba(235, 235, 245, .20);
+  --border: rgba(235, 235, 245, .20);
+  --muted: var(--fg-2);
+
+  --warn: #F0A93B;
+  --danger: #FF6961;
+  --ok: #4BD07E;
+
+  --glass-bg: rgba(28, 28, 30, .68);
+  --glass-stroke: rgba(255, 255, 255, .14);
   --shadow-1: 0 1px 2px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.45);
   --shadow-2: 0 2px 8px rgba(0,0,0,.6), 0 20px 44px rgba(0,0,0,.55);
 }
@@ -123,7 +169,7 @@
     --glass-bg: rgba(255, 255, 255, .92);
   }
   @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not([data-theme="light"]) {
       --fg-2: rgba(235, 235, 245, .85);
       --separator: rgba(235, 235, 245, .42);
       --border: rgba(235, 235, 245, .42);
