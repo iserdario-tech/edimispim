@@ -20,7 +20,12 @@ export function Profile({ food, screener, onEditSleep, onEditFood, onBackup, onR
 
   return (
     <main className="wrap">
-      <h1 className="page-title">Я</h1>
+      {/* Подзаголовок есть у всех четырёх остальных разделов; без него «Я» из одной буквы
+          выглядело обрубком, а не заголовком экрана. */}
+      <h1 className="page-title">
+        Я
+        <span className="page-sub">настройки, оформление и копия данных</span>
+      </h1>
 
       <section className="card">
         <h3 className="card-h">Настройки</h3>

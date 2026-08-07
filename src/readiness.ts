@@ -20,12 +20,15 @@ export function computeReadiness(args: {
 
   let level: Readiness;
   if (shortfall > 90 || q <= 2) level = "in_debt";
-  else if (shortfall <= 30 && q >= 4 && reg >= 80) level = "charged";
+  // без данных о регулярности «бодр» не ставим: это оценка режима, а режима мы ещё не видели
+  else if (shortfall <= 30 && q >= 4 && reg !== null && reg >= 80) level = "charged";
   else level = "ok";
   if (hadAlcohol && level === "charged") level = "ok"; // алкоголь режет глубокий/REM — не «заряжен»
 
   const hours = (dur / 60).toFixed(1);
-  const whyRU = `Сон ~${hours} ч, оценка ${q}/5, регулярность ${reg}/100${hadAlcohol ? " · вчера алкоголь" : ""}`;
+  const parts = [`Сон ~${hours} ч, оценка ${q}/5`];
+  if (reg !== null) parts.push(`регулярность ${reg}/100`);   // пока ночей мало — цифры нет
+  const whyRU = parts.join(", ") + (hadAlcohol ? " · вчера алкоголь" : "");
   const priorityRU = level === "in_debt"
     ? "Ты недоспал. Главное сегодня: короткий сон днём и лечь пораньше."
     : level === "charged"

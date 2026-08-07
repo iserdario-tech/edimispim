@@ -1,5 +1,7 @@
 import type { Profile, DayLog, DayMode, DayToggles, ScreenerResult } from "../index.js";
 import type { Constraints, FoodProfile, MealCount } from "../food/types.js";
+import type { RampPace } from "../food/rampin.js";
+import type { DayEaten } from "../food/eaten.js";
 
 export type StorageLike = { getItem(k: string): string | null; setItem(k: string, v: string): void };
 
@@ -8,6 +10,11 @@ export interface FoodSettings {
   profile: FoodProfile;
   constraints: Constraints;
   mealCount: MealCount;
+  /** Как быстро спускаемся к целевому дефициту. Без значения — «обычно». */
+  pace?: RampPace;
+  /** День, с которого считается вхождение. Ставится один раз и не сбрасывается правкой формы:
+   *  иначе каждый заход в настройки начинал бы лестницу заново и цель не наступала никогда. */
+  startISO?: string;
 }
 
 export interface StoredState {
@@ -16,6 +23,13 @@ export interface StoredState {
   screener: ScreenerResult | null;
   food?: FoodSettings;
   weights?: { date: string; kg: number }[];
+  /** Что съедено по дням: дата → отметки приёмов. Факт, без которого план не с чем сверять. */
+  eaten?: Record<string, DayEaten>;
+  /** Оценки блюд: id рецепта → 1 «нравится» или −1 «больше не предлагать». Только на устройстве. */
+  ratings?: Record<string, 1 | -1>;
+  /** Дни, объявленные читмилом. Запланированное послабление — не срыв, и статистика
+   *  приверженности их не считает провалом (обоснование — `X28` научной базы). */
+  cheatDays?: string[];
 }
 // выбранный на сегодня контекст (режим + переключатели), чтобы не терялся при перезапуске PWA
 export interface DayDraft { date: string; mode: DayMode; crunchEndHM: string; toggles: DayToggles }

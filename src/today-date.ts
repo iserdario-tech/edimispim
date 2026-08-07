@@ -15,3 +15,19 @@ export function localDateISO(d: Date = new Date()): string {
 
 /** Минуты от полуночи по местному времени — для отметки «этот шаг уже прошёл». */
 export const localMinutes = (d: Date = new Date()): number => d.getHours() * 60 + d.getMinutes();
+
+/**
+ * Дата через n суток от указанной. Считается в UTC-полдне, а не сложением 86400 секунд:
+ * при переходе на летнее время сутки бывают 23 и 25 часов, и наивный сдвиг промахивается днём.
+ */
+export function plusDaysISO(iso: string, n: number): string {
+  const d = new Date(iso + "T12:00:00Z");
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Понедельник той недели, в которую попадает дата, — с него начинается меню недели. */
+export function mondayOf(iso: string): string {
+  const d = new Date(iso + "T12:00:00Z");
+  return plusDaysISO(iso, -((d.getUTCDay() + 6) % 7));
+}

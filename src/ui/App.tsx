@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import type { Profile, ScreenerResult, DayLog } from "../index.js";
 import { Onboarding } from "./Onboarding.js";
 import { Today } from "./Today.js";
-import { Week } from "./Week.js";
+import { Food } from "./Food.js";
+import { Progress } from "./Progress.js";
 import { Profile as ProfileScreen } from "./Profile.js";
 import { FoodSetup } from "./FoodSetup.js";
 import { Coach } from "./Coach.js";
@@ -13,6 +14,8 @@ import { loadState, saveState, exportAll, importAll, type FoodSettings, type Sto
 import { syncPushContext } from "./notifications.js";
 import { migrateAll } from "../migrate.js";
 import { localDateISO } from "../today-date.js";
+import { toggleMark, type MealMark } from "../food/eaten.js";
+import type { Slot } from "../food/types.js";
 
 /** Данные из pospat и oheedet лежат на том же origin — подхватываем их, а не просим вводить заново. */
 function pickUpOldApps(): { food?: FoodSettings; weights: { date: string; kg: number }[]; notesRU: string[] } {
@@ -72,6 +75,58 @@ export function App() {
       if (!prev) return prev;
       const history = [...prev.history.filter((h) => h.date !== log.date), log].slice(-180);
       const next = { ...prev, history };
+      saveState(next);
+      return next;
+    });
+  };
+
+  /**
+   * Отметка «съел» / «заменил своим». Хранится не больше 180 дней — ровно как история сна:
+   * ряд нужен месяцами для разбора плато, но копить его вечно незачем.
+   */
+  const markMeal = (date: string, slot: Slot, mark: MealMark, planned: number) => {
+    setState((prev) => {
+      if (!prev) return prev;
+      const all = { ...(prev.eaten ?? {}) };
+      all[date] = toggleMark(all[date], slot, mark, planned);
+      const kept = Object.keys(all).sort().slice(-180);
+      const eaten = Object.fromEntries(kept.map(d => [d, all[d]!]));
+      const next = { ...prev, eaten };
+      saveState(next);
+      return next;
+    });
+  };
+
+  /**
+   * Оценка блюда. Повторное нажатие той же оценки снимает её: человек передумал —
+   * это нормально, и запирать его в собственном «не люблю» навсегда незачем.
+   *
+   * Оценки не покидают устройство. Коллективный топ блюд, о котором шла речь, требует
+   * отправки данных на сервер — это отдельное решение и отдельная явная галочка.
+   */
+  const rateDish = (id: string, value: 1 | -1) => {
+    setState((prev) => {
+      if (!prev) return prev;
+      const ratings = { ...(prev.ratings ?? {}) };
+      if (ratings[id] === value) delete ratings[id];
+      else ratings[id] = value;
+      const next = { ...prev, ratings };
+      saveState(next);
+      return next;
+    });
+  };
+
+  /**
+   * Объявить (или отменить) читмил. Хранится в истории, а не в контексте суток: день должен
+   * остаться помеченным и назавтра, иначе статистика приверженности сочтёт его провалом —
+   * то есть накажет ровно за то, что человек честно объявил заранее.
+   */
+  const setCheatDay = (date: string, on: boolean) => {
+    setState((prev) => {
+      if (!prev) return prev;
+      const rest = (prev.cheatDays ?? []).filter(d => d !== date);
+      const cheatDays = (on ? [...rest, date] : rest).sort().slice(-180);
+      const next = { ...prev, cheatDays };
       saveState(next);
       return next;
     });
@@ -149,22 +204,33 @@ export function App() {
         <Today
           profile={state.profile} history={state.history} screener={state.screener}
           onLog={saveLog} food={state.food} weights={state.weights}
+          eaten={state.eaten} ratings={state.ratings} cheatDays={state.cheatDays}
+          onMarkMeal={markMeal} onCheatDay={setCheatDay}
           onSetupFood={() => openOverlay("food")}
         />
       )}
-      {tab === "week" && (
-        <Week
-          profile={state.profile} history={state.history} food={state.food}
-          weights={state.weights} onAddWeight={addWeight}
+      {tab === "food" && (
+        <Food
+          profile={state.profile} food={state.food}
+          ratings={state.ratings} onRate={rateDish}
           onSetupFood={() => openOverlay("food")}
+        />
+      )}
+      {tab === "progress" && (
+        <Progress
+          profile={state.profile} history={state.history} food={state.food}
+          weights={state.weights} eaten={state.eaten} cheatDays={state.cheatDays}
+          onAddWeight={addWeight}
         />
       )}
       {tab === "coach" && (
         <main className="wrap chat-screen">
-          <p className="small muted">
-            Отвечает по научной базе о сне и питании и видит, как у тебя дела сейчас.
-            Не заменяет врача.
-          </p>
+          {/* Заголовок такой же, как на остальных вкладках: раздел без Large Title
+              выпадал из системы и читался как чужой экран внутри приложения. */}
+          <h1 className="page-title">
+            Вопрос
+            <span className="page-sub">отвечает по научной базе, видит твои дела и не заменяет врача</span>
+          </h1>
           <Coach contextRU={coachContext(state)} />
         </main>
       )}

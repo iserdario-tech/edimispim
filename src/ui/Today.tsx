@@ -4,10 +4,12 @@ import { planDay, parseHM, sleepDurationMin, streakDays } from "../index.js";
 import { toPlanView } from "./viewModel.js";
 import { loadDayDraft, saveDayDraft, type FoodSettings } from "./storage.js";
 import { enableNotifications, syncPushContext } from "./notifications.js";
-import { computeTargets, applySafety, filterRecipes, generateAdaptedDay, expectedBedMin, diagnosePool } from "../food/index.js";
-import type { Recipe } from "../food/types.js";
+import { computeTargets, applySafety, filterRecipes, generateAdaptedDay, expectedBedMin, diagnosePool, targetsForToday, prefersFamiliar } from "../food/index.js";
+import type { Recipe, Slot } from "../food/types.js";
+import { eatenTotals, type DayEaten, type MealMark } from "../food/eaten.js";
 import recipesJson from "../food/data/recipes.json";
 import { mealRows, mergeTimeline } from "./mealRows.js";
+import { tap } from "./haptics.js";
 import { explain } from "../explain.js";
 import { toDayRecords } from "./dayRecords.js";
 import { localDateISO, localMinutes } from "../today-date.js";
@@ -25,13 +27,20 @@ function crunchStr(hm: string): string {
 const todayLabel = (): string =>
   new Date().toLocaleDateString("ru-RU", { day: "numeric", month: "long", weekday: "long" });
 
-export function Today({ profile, history, screener, onLog, food, weights, onSetupFood }: {
+export function Today({ profile, history, screener, onLog, food, weights, eaten, ratings, cheatDays, onMarkMeal, onCheatDay, onSetupFood }: {
   profile: Profile;
   history: DayLog[];
   screener?: ScreenerResult | null;
   onLog: (log: DayLog) => void;
   food?: FoodSettings;
   weights?: { date: string; kg: number }[];
+  eaten?: Record<string, DayEaten>;
+  ratings?: Record<string, 1 | -1>;
+  /** Дни, которые человек сам объявил читмилом. Хранятся в истории, а не в контексте суток:
+   *  день должен остаться помеченным и завтра, иначе статистика посчитает его срывом. */
+  cheatDays?: string[];
+  onMarkMeal?: (date: string, slot: Slot, mark: MealMark, planned: number) => void;
+  onCheatDay?: (date: string, on: boolean) => void;
   onSetupFood?: () => void;
 }) {
   const now = new Date();
@@ -48,6 +57,7 @@ export function Today({ profile, history, screener, onLog, food, weights, onSetu
   const [notifMsg, setNotifMsg] = useState("");
   const [savedMsg, setSavedMsg] = useState("");
   const notifOn = typeof Notification !== "undefined" && Notification.permission === "granted";
+  const isCheat = !!cheatDays?.includes(today);
 
   useEffect(() => { saveDayDraft({ date: today, mode, crunchEndHM, toggles }); }, [today, mode, crunchEndHM, toggles]);
   // контекст дня — на Worker, иначе пуши шли бы по «обычному дню», а не по тому, что на экране
@@ -81,26 +91,48 @@ export function Today({ profile, history, screener, onLog, food, weights, onSetu
   );
 
   const foodDay = useMemo(() => {
-    if (!food) return null;
-    const safe = applySafety(computeTargets(food.profile), food.profile, {});
-    const pool = filterRecipes(RECIPES, food.constraints);
+    // читмил объявляет сам человек: в этот день приложение не считает калории
+    // и не показывает меню — иначе оно спорит с решением, которое уже принято
+    if (!food || isCheat) return null;
+    const base = applySafety(computeTargets(food.profile), food.profile, {});
+    // во время вхождения в дефицит цель на сегодня своя — она выше конечной и снижается по дням
+    const { targets: safe, ramp } = targetsForToday(base, food.startISO, today, food.pace);
+    const rated = Object.entries(ratings ?? {});
+    const pool = filterRecipes(RECIPES, {
+      ...food.constraints,
+      bannedIds: rated.filter(([, v]) => v === -1).map(([id]) => id),
+    });
     if (!pool.length) return null;
     const diagnosis = diagnosePool(pool, food.mealCount);
     const day = generateAdaptedDay(
       safe, pool,
-      { rhythm: { wakeMin: parseHM(wokeHM), bedMin }, mealCount: food.mealCount, offset: new Date(today).getDay() },
+      { rhythm: { wakeMin: parseHM(wokeHM), bedMin }, mealCount: food.mealCount,
+        offset: new Date(today).getDay(), familiar: prefersFamiliar(ramp),
+        liked: rated.filter(([, v]) => v === 1).map(([id]) => id) },
       { sleptMin, targetSleepMin: profile.targetSleepMin, quality },
     );
-    return { day, safe, diagnosis };
-  }, [food, wokeHM, bedMin, today, sleptMin, profile.targetSleepMin, quality]);
+    return { day, safe, diagnosis, ramp };
+  }, [food, isCheat, wokeHM, bedMin, today, sleptMin, profile.targetSleepMin, quality, ratings]);
 
   const rows = useMemo(() => {
     if (!foodDay) return view.rows;
     return mergeTimeline(view.rows, mealRows(foodDay.day, bedMin, nowMin));
   }, [view.rows, foodDay, bedMin, nowMin]);
 
+  // факт против плана: что из сегодняшнего меню действительно съедено
+  const todayEaten = eaten?.[today];
+  const fact = useMemo(
+    () => (foodDay ? eatenTotals(foodDay.day, todayEaten) : null),
+    [foodDay, todayEaten],
+  );
+  const markMeal = (slot: Slot, mark: MealMark) => {
+    if (!onMarkMeal || !foodDay) return;
+    tap();
+    onMarkMeal(today, slot, mark, foodDay.day.meals.length);
+  };
+
   const explanation = useMemo(() => {
-    const days = toDayRecords(history, weights ?? []);
+    const days = toDayRecords(history, weights ?? [], eaten ?? {}, cheatDays ?? []);
     const todayRec = days.find(d => d.date === today)
       ?? { date: today, sleep: { wokeHM, bedHM: bedHM || undefined, quality } };
     return explain({
@@ -110,7 +142,7 @@ export function Today({ profile, history, screener, onLog, food, weights, onSetu
       screenerFlagged: screener?.flagged,
       caffeineCutoffHM: view.rows.find(r => r.icon === "☕")?.time,
     });
-  }, [history, weights, today, wokeHM, bedHM, quality, profile.targetSleepMin, screener, view.rows]);
+  }, [history, weights, eaten, cheatDays, today, wokeHM, bedHM, quality, profile.targetSleepMin, screener, view.rows]);
 
   // Стрик и подсветка ближайшего шага были в pospat и потерялись при переносе:
   // первое — единственная награда за регулярность, второе — ответ на «что сейчас».
@@ -129,6 +161,7 @@ export function Today({ profile, history, screener, onLog, food, weights, onSetu
           onChange={e => { setQuality(Number(e.target.value) as 1 | 2 | 3 | 4 | 5); setSavedMsg(""); }} />
       </label>
       <button className="chip on" onClick={() => {
+        tap();
         onLog({ date: today, wokeHM, quality, ...(bedHM ? { bedHM } : {}), ...(toggles.hadAlcohol ? { hadAlcohol: true } : {}) });
         setSavedMsg("Сохранено ✓");
       }}>{loggedToday ? "Обновить отметку" : "Записать ночь"}</button>
@@ -171,11 +204,37 @@ export function Today({ profile, history, screener, onLog, food, weights, onSetu
         </section>
       )}
 
-      {foodDay ? (
+      {isCheat ? (
+        /* Читмил. Никаких цифр, никакого меню и ни одного слова про «отработать»:
+           попытка компенсировать день голоданием — это возврат к жёсткому правилу,
+           то есть ровно к тому, из-за чего люди и срываются (X28). */
+        <div className="day-totals small">
+          <b>Сегодня читмил.</b> Ешь что хочется — сегодня приложение калории не считает
+          и меню не показывает. Завтра просто возвращаемся к плану.
+          <p className="small muted" style={{ margin: "6px 0 0" }}>
+            Отрабатывать этот день голоданием не надо: так делают хуже, а не лучше.
+            Недельный дефицит станет меньше — это всё, что произойдёт. День запланирован
+            тобой, поэтому в статистике он не считается срывом.
+          </p>
+        </div>
+      ) : foodDay ? (
         <div className="day-totals small">
           <b>День целиком:</b> {foodDay.day.totals.kcal} ккал · белок {foodDay.day.totals.protein} г ·
           клетчатка {foodDay.day.totals.fiber} г
           {foodDay.day.simplified && <span className="tag"> · упрощён после плохой ночи</span>}
+          {foodDay.ramp.active && (
+            <p className="small muted" style={{ margin: "6px 0 0" }}>
+              Вход в режим: день {foodDay.ramp.day} из {foodDay.ramp.total}. Сегодня норма выше
+              конечной ({foodDay.ramp.kcalGoal} ккал) — спускаемся понемногу.
+            </p>
+          )}
+          {fact && fact.marked > 0 && (
+            <p className="small" style={{ margin: "6px 0 0" }}>
+              Съедено: <b>{fact.kcal} из {foodDay.day.totals.kcal} ккал</b> · белок {fact.protein} г ·
+              отмечено {fact.marked} из {foodDay.day.meals.length}
+              {fact.marked > fact.ate && <span className="muted"> (часть — своей едой)</span>}
+            </p>
+          )}
           {foodDay.diagnosis.messageRU && (
             <p className="small note-warn" style={{ marginTop: 8 }}>{foodDay.diagnosis.messageRU}</p>
           )}
@@ -208,6 +267,17 @@ export function Today({ profile, history, screener, onLog, food, weights, onSetu
               <div className="row-title">{r.icon} {r.title}</div>
               <div className="row-detail">{r.detail}</div>
               <div className="row-why muted small">{r.why}</div>
+              {/* Факт рядом с планом. Пропущенный приём — это данные, а не провал,
+                  поэтому ничего не осуждаем и ничего не подсвечиваем красным. */}
+              {r.kind === "food" && r.slot && onMarkMeal && (
+                <div className="eat-row">
+                  {([["ate", "съел"], ["own", "своё"]] as const).map(([m, ru]) => (
+                    <button key={m} className={todayEaten?.marks[r.slot!] === m ? "eat-btn on" : "eat-btn"}
+                      aria-pressed={todayEaten?.marks[r.slot!] === m}
+                      onClick={() => markMeal(r.slot!, m)}>{ru}</button>
+                  ))}
+                </div>
+              )}
             </div>
           </li>
         ))}
@@ -232,6 +302,12 @@ export function Today({ profile, history, screener, onLog, food, weights, onSetu
             <button className={toggles.noBrightLight ? "chip on" : "chip"} onClick={() => t("noBrightLight")}>Нет дневного света</button>
             <button className={toggles.noCaffeine ? "chip on" : "chip"} onClick={() => t("noCaffeine")}>Без кофеина</button>
             <button className={toggles.hadAlcohol ? "chip on" : "chip"} onClick={() => t("hadAlcohol")}>🍷 Вчера был алкоголь</button>
+            {onCheatDay && (
+              <button className={isCheat ? "chip on" : "chip"}
+                onClick={() => { tap(); onCheatDay(today, !isCheat); }}>
+                🍕 Сегодня читмил
+              </button>
+            )}
           </div>
           <button className={notifOn ? "chip on" : "chip"} onClick={async () => setNotifMsg(await enableNotifications(profile))}>
             {notifOn ? "🔔 Напоминания включены" : "🔔 Включить напоминания"}

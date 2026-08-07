@@ -13,7 +13,7 @@ describe("readiness", () => {
     expect(r.priorityRU).toMatch(/нап|отбой|раньше/i);
   });
   it("full + good + regular -> charged", () => {
-    const hist = [1,2,3].map(d=>({date:`2026-06-0${d}`, wokeHM:"07:00", bedHM:"23:00", quality:4 as const}));
+    const hist = [1,2,3,4].map(d=>({date:`2026-06-0${d}`, wokeHM:"07:00", bedHM:"23:00", quality:4 as const}));
     const r = computeReadiness({ profile, lastNight:{ wokeHM:"07:00", bedHM:"23:00", quality:5 }, history:hist });
     expect(r.level).toBe("charged");
   });

@@ -1,4 +1,5 @@
 import { costOf } from "./prices";
+import { coverageOf, type Pantry } from "./packaging";
 import type {
   Constraints, Day, MealCount, Meal, MealType, Recipe, Slot, Targets,
 } from "./types";
@@ -145,7 +146,10 @@ export function filterRecipes(recipes: Recipe[], c: Constraints = {}): Recipe[] 
   const dislikes = (c.dislikes ?? []).map(x => String(x).toLowerCase());
   const cookware = new Set(c.cookware ?? []);
   const cuisines = c.cuisines ?? [];
+  const banned = new Set(c.bannedIds ?? []);
   const fit = recipes.filter(r => {
+    // «палец вниз» — самый точный сигнал из всех: человек это блюдо уже видел и не хочет
+    if (banned.has(r.id)) return false;
     if ((r.allergens ?? []).some(a => allergens.has(a as never))) return false;
     // состав тоже участвует: «нут» в названии есть не у всех блюд с нутом,
     // а человек, написавший «не люблю нут», имел в виду именно продукт
@@ -176,6 +180,8 @@ export interface DayOptions {
   mealCount?: MealCount;
   offset?: number;              // двигает выбор рецептов: разнообразие по дням
   roughNight?: boolean;         // после плохой ночи: сдвиг калоража вперёд + позднее сладкое
+  familiar?: boolean;           // начало вхождения в дефицит: еда попривычнее (поплотнее)
+  liked?: string[];             // id блюд с «пальцем вверх» — им отдаётся половина меню
 }
 
 /**
@@ -242,6 +248,35 @@ const easiest = (options: Recipe[]): Recipe[] =>
   [...options].sort((a, b) => effortOf(a) - effortOf(b)).slice(0, EASY_KEEP);
 
 /**
+ * Привычная еда в начале вхождения в дефицит: верхняя половина набора по плотности энергии.
+ *
+ * Пока калораж почти не срезан, лёгкое блюдо приходится увеличивать до горы еды — а человек
+ * пришёл не за этим. Половина, а не «три самых плотных», чтобы неделя не выродилась в три
+ * блюда: выбор дня всё равно идёт по всему оставшемуся списку.
+ */
+const DENSE_MIN_OPTIONS = 4;
+const denser = (options: Recipe[]): Recipe[] => {
+  if (options.length <= DENSE_MIN_OPTIONS) return options;
+  const sorted = [...options].sort((a, b) => (b.energy_density ?? 0) - (a.energy_density ?? 0));
+  return sorted.slice(0, Math.max(DENSE_MIN_OPTIONS, Math.ceil(sorted.length / 2)));
+};
+
+/**
+ * Любимые блюда — примерно половина меню, а не всё подряд.
+ *
+ * Соблазн был отдать понравившимся всё: человек же сам их отметил. Но тогда набор схлопывается
+ * до нескольких блюд, приедается за неделю, и оценка «нравится» превращается в наказание.
+ * Поэтому чередуем по дням: чётные дни берут из любимых, нечётные — из всего набора,
+ * куда любимые тоже входят. Никакой случайности — план должен собираться одинаково
+ * при каждом открытии экрана.
+ */
+function preferLiked(options: Recipe[], liked: string[] | undefined, offset: number): Recipe[] {
+  if (!liked?.length || offset % 2 !== 0) return options;
+  const mine = options.filter(r => liked.includes(r.id));
+  return mine.length ? mine : options;
+}
+
+/**
  * Один день: доли по выбранной схеме, времена — от ритма суток.
  * Сладкое вписано в дневную норму, поэтому не ломает дефицит.
  */
@@ -263,7 +298,9 @@ export function generateDay(targets: Targets, pool: Recipe[], opts: DayOptions):
     // после плохой ночи рамка по размеру порции шире: важнее найти блюдо побыстрее
     const fit = fittingOptions(byType(type), slotKcal, opts.roughNight);
     const good = proteinRich(fit, type, r => Math.max(0.5, +(slotKcal / r.kcal).toFixed(1)));
-    const recipe = pickForDay(opts.roughNight ? easiest(good) : good, offset);
+    // после плохой ночи простота важнее привычности: усилия сегодня взять неоткуда
+    const narrowed = opts.roughNight ? easiest(good) : opts.familiar ? denser(good) : good;
+    const recipe = pickForDay(preferLiked(narrowed, opts.liked, offset), offset);
     if (!recipe) continue;
     const servings = Math.max(0.5, +(slotKcal / recipe.kcal).toFixed(1));
     meals.push({ recipe, servings, timeMin: times[type as Slot] ?? 0, slot: type });
@@ -275,7 +312,7 @@ export function generateDay(targets: Targets, pool: Recipe[], opts: DayOptions):
     const treatSlots: Slot[] = scheme.treatCount >= 2 ? ["dessert", "snack"] : ["dessert"];
     treatSlots.forEach((slot, i) => {
       // сладкое тоже подбирается по размеру порции: иначе в план попадает «десерт ×3.5»
-      const fitDesserts = fittingOptions(desserts, perTreat, opts.roughNight);
+      const fitDesserts = preferLiked(fittingOptions(desserts, perTreat, opts.roughNight), opts.liked, offset);
       const recipe = fitDesserts[(offset + i) % fitDesserts.length];
       if (!recipe) return;
       const servings = Math.max(0.5, +(perTreat / recipe.kcal).toFixed(1));
@@ -418,17 +455,49 @@ export function generateWeek(targets: Targets, recipes: Recipe[], opts: WeekOpti
   return Array.from({ length: 7 }, (_, d) => generateDay(targets, pool, { ...opts, offset: d }));
 }
 
-/** Заменить блюдо: следующий рецепт того же слота, порция под ту же долю калорий. */
+/** Насколько блюдо собирается из домашних запасов — при пустой кладовке всегда 0. */
+const homeShare = (r: Recipe, slotKcal: number, pantry: Pantry): number =>
+  coverageOf(r.ingredients ?? [], pantry, Math.max(0.5, +(slotKcal / r.kcal).toFixed(1))).share;
+
+/**
+ * Кого предложить вместо текущего блюда.
+ *
+ * С кладовкой — самое «домашнее» из подходящих по размеру порции; при равенстве
+ * (обычный случай — кладовка пуста) остаётся прежний обход по кругу, чтобы повторные
+ * нажатия ↻ перебирали набор, а не возвращали одно и то же.
+ */
+function pickReplacement(
+  options: Recipe[], current: Recipe, slotKcal: number, pantry?: Pantry,
+): Recipe | undefined {
+  const others = options.filter(r => r.id !== current.id);
+  if (!others.length) return undefined;
+
+  if (pantry && Object.keys(pantry).length) {
+    const fit = fittingOptions(others, slotKcal);
+    const best = fit.reduce((a, b) => (homeShare(b, slotKcal, pantry) > homeShare(a, slotKcal, pantry) ? b : a));
+    if (homeShare(best, slotKcal, pantry) > 0) return best;
+  }
+
+  const cur = options.findIndex(r => r.id === current.id);
+  return options[(cur + 1) % options.length] ?? others[0];
+}
+
+/**
+ * Заменить блюдо: другой рецепт того же слота, порция под ту же долю калорий.
+ *
+ * Если передана кладовка, замена в первую очередь предлагает то, что можно приготовить
+ * из уже купленного: ходить в магазин ради одной замены — ровно та мелочь, из-за которой
+ * человек вместо готовки заказывает доставку. Без кладовки поведение прежнее —
+ * следующий рецепт по кругу, чтобы кнопка ↻ оставалась предсказуемой.
+ */
 export function swapDish(
   day: Day, mealIndex: number, targets: Targets, pool: Recipe[], count: MealCount = DEFAULT_MEAL_COUNT,
+  pantry?: Pantry,
 ): boolean {
   const meal = day.meals[mealIndex];
   if (!meal) return false;
   const options = pool.filter(r => r.meal_type === meal.recipe.meal_type);
   if (options.length < 2) return false;
-  const cur = options.findIndex(r => r.id === meal.recipe.id);
-  const recipe = options[(cur + 1) % options.length];
-  if (!recipe) return false;
 
   const scheme = SCHEMES[count];
   const isTreat = meal.slot === "dessert" || meal.slot === "snack";
@@ -436,6 +505,9 @@ export function swapDish(
   const share = isTreat
     ? treatKcal / Math.max(1, scheme.treatCount)
     : (targets.kcalTarget - treatKcal) * (scheme.mains[meal.recipe.meal_type] ?? 0.3);
+
+  const recipe = pickReplacement(options, meal.recipe, share, pantry);
+  if (!recipe) return false;
 
   day.meals[mealIndex] = {
     recipe,

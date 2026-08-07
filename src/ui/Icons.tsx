@@ -44,6 +44,22 @@ export const IconWeek = (p: IconProps = {}) => (
   </svg>
 );
 
+/** Еда: тарелка со столовыми приборами — раздел, где готовят и покупают. */
+export const IconFood = (p: IconProps = {}) => (
+  <svg {...svg(p)}>
+    <path d="M6 3v8a2.5 2.5 0 0 0 5 0V3M8.5 11v10" />
+    <path d="M17.5 3c-1.4 1.4-2 3-2 5s.6 3 2 3 2-1 2-3-.6-3.6-2-5Zm0 11v7" />
+  </svg>
+);
+
+/** Итоги: линия тренда — раздел, куда смотрят, а не где действуют. */
+export const IconProgress = (p: IconProps = {}) => (
+  <svg {...svg(p)}>
+    <path d="M4 4v15.5h16" />
+    <path d="M7.5 15.5 12 10l3 3 4-5.5" />
+  </svg>
+);
+
 /** Вопрос: реплика в чате. */
 export const IconCoach = (p: IconProps = {}) => (
   <svg {...svg(p)}><path d="M21 12a8 8 0 0 1-8 8H4l2-3a8 8 0 1 1 15-5Z" /></svg>
@@ -85,4 +101,17 @@ export const IconExternal = (p: IconProps = {}) => (
 /** Проверено. */
 export const IconCheck = (p: IconProps = {}) => (
   <svg {...svg(p)}><path d="M4.5 12.5 9.5 17.5 19.5 6.5" /></svg>
+);
+
+/** Отправить вопрос: стрелка вверх, как в системных полях ввода. */
+export const IconSend = (p: IconProps = {}) => (
+  <svg {...svg({ size: 20, ...p })}><path d="M12 19V5M6 11l6-6 6 6" /></svg>
+);
+
+/** Нравится / не нравится: одна фигура, перевёрнутая по вертикали, — язык иконок один. */
+export const IconThumb = ({ down = false, ...p }: IconProps & { down?: boolean }) => (
+  <svg {...svg({ size: 16, ...p })} style={{ transform: down ? "rotate(180deg)" : "none" }}>
+    <path d="M7 21V10l4.5-7a2.2 2.2 0 0 1 2 3l-1 4h5.2a2 2 0 0 1 2 2.4l-1.4 6.8A2.5 2.5 0 0 1 15.8 21Z" />
+    <path d="M7 10H3.8v11H7" />
+  </svg>
 );
