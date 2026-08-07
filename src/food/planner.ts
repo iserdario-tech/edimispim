@@ -199,6 +199,8 @@ const pickForDay = (options: Recipe[], offset: number): Recipe | undefined =>
  * потому что оставить приём пустым хуже.
  */
 const FIT_MIN = 0.6, FIT_MAX = 1.6;
+/** Потолок порции при доборе белка: полторы порции ещё еда, три — уже добавка. */
+const PORTION_MAX = 2;
 const ROUGH_FIT_MIN = 0.5, ROUGH_FIT_MAX = 2;
 function fittingOptions(options: Recipe[], slotKcal: number, wide = false): Recipe[] {
   const lo = wide ? ROUGH_FIT_MIN : FIT_MIN, hi = wide ? ROUGH_FIT_MAX : FIT_MAX;
@@ -207,6 +209,22 @@ function fittingOptions(options: Recipe[], slotKcal: number, wide = false): Reci
     return s >= lo && s <= hi;
   });
   return fit.length ? fit : options;
+}
+
+/**
+ * Основной приём — это еда, а не гарнир.
+ *
+ * Планировщик брал блюда по разнообразию и на белок в самом блюде не смотрел: на узком
+ * наборе (одна плита, ограничения) в обед мог попасть овощной салат, а в ужин каша —
+ * и день выходил на 87 г белка при цели 120. Поэтому в обед и ужин сначала ищутся блюда,
+ * которые сами по себе дают заметный белок, и только если таких нет — берётся что есть.
+ */
+const PROTEIN_MIN: Partial<Record<MealType, number>> = { lunch: 25, dinner: 25, breakfast: 15 };
+function proteinRich(options: Recipe[], type: MealType, servingsOf: (r: Recipe) => number): Recipe[] {
+  const min = PROTEIN_MIN[type];
+  if (min === undefined) return options;
+  const rich = options.filter(r => r.protein_g * servingsOf(r) >= min);
+  return rich.length ? rich : options;
 }
 
 /** Цена приготовления: сложность и время в одной шкале, шаг сложности ≈ полчаса готовки. */
@@ -244,7 +262,8 @@ export function generateDay(targets: Targets, pool: Recipe[], opts: DayOptions):
     const slotKcal = mainTarget * share;
     // после плохой ночи рамка по размеру порции шире: важнее найти блюдо побыстрее
     const fit = fittingOptions(byType(type), slotKcal, opts.roughNight);
-    const recipe = pickForDay(opts.roughNight ? easiest(fit) : fit, offset);
+    const good = proteinRich(fit, type, r => Math.max(0.5, +(slotKcal / r.kcal).toFixed(1)));
+    const recipe = pickForDay(opts.roughNight ? easiest(good) : good, offset);
     if (!recipe) continue;
     const servings = Math.max(0.5, +(slotKcal / recipe.kcal).toFixed(1));
     meals.push({ recipe, servings, timeMin: times[type as Slot] ?? 0, slot: type });
@@ -255,7 +274,9 @@ export function generateDay(targets: Targets, pool: Recipe[], opts: DayOptions):
     const perTreat = treatKcal / scheme.treatCount;
     const treatSlots: Slot[] = scheme.treatCount >= 2 ? ["dessert", "snack"] : ["dessert"];
     treatSlots.forEach((slot, i) => {
-      const recipe = desserts[(offset + i) % desserts.length];
+      // сладкое тоже подбирается по размеру порции: иначе в план попадает «десерт ×3.5»
+      const fitDesserts = fittingOptions(desserts, perTreat, opts.roughNight);
+      const recipe = fitDesserts[(offset + i) % fitDesserts.length];
       if (!recipe) return;
       const servings = Math.max(0.5, +(perTreat / recipe.kcal).toFixed(1));
       meals.push({ recipe, servings, timeMin: times[slot] ?? 0, slot });
@@ -265,6 +286,7 @@ export function generateDay(targets: Targets, pool: Recipe[], opts: DayOptions):
   const day: Day = { meals, totals: { kcal: 0, protein: 0, fiber: 0 } };
   recomputeTotals(day);
   swapForFiber(day, targets, pool, mains, offset, opts.roughNight ? 1 : 2);
+  swapForProtein(day, targets, pool, mains, offset);
   addProteinTopUp(day, targets);
   day.meals.sort((a, b) => a.timeMin - b.timeMin);
   if (opts.roughNight) day.simplified = true;
@@ -331,7 +353,44 @@ function swapForFiber(
 }
 
 /**
- * Добор белка — в самое белково-ПЛОТНОЕ блюдо (минимум лишних калорий) и не выше +8% цели.
+ * Добор белка ЗАМЕНОЙ блюда — когда порцией уже не помочь.
+ *
+ * Увеличение порции упирается в калораж: если день собрался из некрепких по белку блюд
+ * (а так бывает, когда человек исключает курицу или молочное), он застревает на 89 г
+ * при цели 120. Тогда меняем самый слабый основной приём на белковый в том же слоте
+ * и с той же долей калорий — ровно как добор клетчатки, только рычаг другой.
+ */
+function swapForProtein(
+  day: Day, targets: Targets, pool: Recipe[], mains: Partial<Record<MealType, number>>, offset = 0,
+): void {
+  if (day.totals.protein >= targets.proteinGTarget * 0.85) return;
+
+  let best: { index: number; recipe: Recipe; servings: number; gain: number } | null = null;
+  day.meals.forEach((meal, index) => {
+    if (mains[meal.recipe.meal_type as MealType] === undefined) return;   // сладкое не трогаем
+    const kcalShare = meal.recipe.kcal * meal.servings;
+    for (const candidate of pool) {
+      if (candidate.meal_type !== meal.recipe.meal_type || candidate.id === meal.recipe.id) continue;
+      const servings = Math.max(0.5, +(kcalShare / candidate.kcal).toFixed(1));
+      if (servings > FIT_MAX) continue;
+      const gain = candidate.protein_g * servings - meal.recipe.protein_g * meal.servings;
+      // клетчатку ради белка тоже не роняем: оба рычага нужны
+      const fiberDrop = meal.recipe.fiber_g * meal.servings - candidate.fiber_g * servings;
+      if (gain > (best?.gain ?? 0) && fiberDrop <= 3) {
+        best = { index, recipe: candidate, servings, gain };
+      }
+    }
+  });
+
+  if (!best) return;
+  const chosen: { index: number; recipe: Recipe; servings: number } = best;
+  const target = day.meals[chosen.index]!;
+  day.meals[chosen.index] = { ...target, recipe: chosen.recipe, servings: chosen.servings };
+  recomputeTotals(day);
+}
+
+/**
+ * Добор белка порцией — в самое белково-ПЛОТНОЕ блюдо (минимум лишних калорий) и не выше +8% цели.
  * Урок oheedet: добор по абсолюту раздувал день до +35% и ломал дефицит.
  */
 function addProteinTopUp(day: Day, targets: Targets): void {
@@ -341,7 +400,9 @@ function addProteinTopUp(day: Day, targets: Targets): void {
   const room = Math.max(0, targets.kcalTarget * 1.08 - day.totals.kcal);
   const byProtein = (targets.proteinGTarget - day.totals.protein) / m.recipe.protein_g;
   const byKcal = room / m.recipe.kcal;
-  const add = +Math.min(byProtein, byKcal).toFixed(1);
+  // добор тоже не должен раздувать порцию: «×3.5» — это уже не порция, а добавка
+  const room2 = Math.max(0, PORTION_MAX - m.servings);
+  const add = +Math.min(byProtein, byKcal, room2).toFixed(1);
   if (add > 0) {
     m.servings = +(m.servings + add).toFixed(1);
     recomputeTotals(day);

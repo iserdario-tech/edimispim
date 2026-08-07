@@ -8196,5 +8196,3172 @@
       "Слепи котлеты мокрыми руками.",
       "Готовь на пару 15–20 минут — на сковороде они тоже хороши, но тогда добавится масло."
     ]
+  },
+  {
+    "id": "l46",
+    "name": "Тыквенный суп-пюре с сельдереем",
+    "meal_type": "lunch",
+    "cuisine": "mediterranean",
+    "kcal": 145,
+    "protein_g": 3,
+    "fiber_g": 5.5,
+    "energy_density": 0.49,
+    "cookware": [
+      "stove",
+      "blender"
+    ],
+    "allergens": [],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 30,
+    "source": "https://goodlooker.ru/pp-recepty-iz-tykvy-kabachkov.html",
+    "ingredients": [
+      {
+        "name": "тыква",
+        "qty": 200,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "сельдерей",
+        "qty": 40,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "лук",
+        "qty": 50,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "масло оливковое",
+        "qty": 7.5,
+        "unit": "г",
+        "category": "бакалея"
+      }
+    ],
+    "steps": [
+      "Наруби сельдерей и лук, обжарь на масле до мягкости — на этой основе держится весь вкус супа.",
+      "Добавь тыкву кубиком и туши под крышкой, пока не станет мягкой.",
+      "Пробей блендером, подливая воду до нужной густоты.",
+      "Посоли, поперчи и прогрей ещё минуту."
+    ]
+  },
+  {
+    "id": "l47",
+    "name": "Суп из красной фасоли с грибами",
+    "meal_type": "lunch",
+    "cuisine": "slavic",
+    "kcal": 234,
+    "protein_g": 9.7,
+    "fiber_g": 6.5,
+    "energy_density": 1.11,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [],
+    "tags": [],
+    "difficulty": 2,
+    "time_min": 60,
+    "source": "https://goodlooker.ru/pp-bluda-fasol.html",
+    "ingredients": [
+      {
+        "name": "фасоль красная",
+        "qty": 25,
+        "unit": "г",
+        "category": "крупы"
+      },
+      {
+        "name": "лук",
+        "qty": 25,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "морковь",
+        "qty": 25,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "картофель",
+        "qty": 62.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "грибы шампиньоны",
+        "qty": 30,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "томаты",
+        "qty": 30,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "масло растительное",
+        "qty": 7.5,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "зелень",
+        "qty": 5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Фасоль замочи на ночь и отвари до мягкости — без замачивания она варится втрое дольше.",
+      "Пассеруй лук с морковью 5 минут, добавь грибы и обжарь.",
+      "Положи картофель и подержи на сковороде ещё пять минут.",
+      "Переложи всё к фасоли, залей бульоном, добавь помидоры.",
+      "После закипания вари 10 минут, в конце брось зелень и специи."
+    ]
+  },
+  {
+    "id": "l48",
+    "name": "Лобио с фасолью и грецкими орехами",
+    "meal_type": "lunch",
+    "cuisine": "universal",
+    "kcal": 523,
+    "protein_g": 19.8,
+    "fiber_g": 16,
+    "energy_density": 1.44,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [
+      "nuts"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 25,
+    "source": "https://goodlooker.ru/pp-bluda-fasol.html",
+    "ingredients": [
+      {
+        "name": "фасоль консервированная",
+        "qty": 200,
+        "unit": "г",
+        "category": "консервы"
+      },
+      {
+        "name": "лук",
+        "qty": 50,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "томаты",
+        "qty": 60,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "чеснок",
+        "qty": 3,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "грецкие орехи",
+        "qty": 30,
+        "unit": "г",
+        "category": "орехи"
+      },
+      {
+        "name": "масло оливковое",
+        "qty": 10,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "зелень",
+        "qty": 10,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Орехи измельчи, смешай с рубленым чесноком и зеленью, добавь ложку уксуса и соль — это грузинская заправка, и она важнее самой фасоли.",
+      "Обжарь лук с помидорами до мягкости.",
+      "Добавь слитую фасоль и туши 10 минут.",
+      "Вмешай ореховую смесь и подержи на огне ещё 5 минут."
+    ]
+  },
+  {
+    "id": "l49",
+    "name": "Кабачковые лодочки с курицей и сыром",
+    "meal_type": "lunch",
+    "cuisine": "mediterranean",
+    "kcal": 252,
+    "protein_g": 36,
+    "fiber_g": 1.5,
+    "energy_density": 0.75,
+    "cookware": [
+      "oven"
+    ],
+    "allergens": [
+      "milk"
+    ],
+    "tags": [],
+    "difficulty": 2,
+    "time_min": 50,
+    "source": "https://goodlooker.ru/pp-recepty-iz-tykvy-kabachkov.html",
+    "ingredients": [
+      {
+        "name": "кабачок",
+        "qty": 150,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "куриное филе",
+        "qty": 125,
+        "unit": "г",
+        "category": "мясо/рыба"
+      },
+      {
+        "name": "сыр твёрдый",
+        "qty": 12.5,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "натуральный йогурт",
+        "qty": 50,
+        "unit": "г",
+        "category": "молочное"
+      }
+    ],
+    "steps": [
+      "Разрежь кабачки вдоль и ложкой вынь мякоть, оставив стенки в сантиметр.",
+      "Мякоть наруби, филе нарежь кубиком, смешай с йогуртом и специями.",
+      "Наполни лодочки начинкой и посыпь тёртым сыром.",
+      "Запекай 40 минут при 180 °C — кабачок должен стать мягким, но не расползтись."
+    ]
+  },
+  {
+    "id": "l50",
+    "name": "Кабачковый торт с фетой и морковью",
+    "meal_type": "lunch",
+    "cuisine": "mediterranean",
+    "kcal": 277,
+    "protein_g": 11.3,
+    "fiber_g": 3.6,
+    "energy_density": 0.85,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [
+      "milk",
+      "egg",
+      "gluten"
+    ],
+    "tags": [],
+    "difficulty": 3,
+    "time_min": 50,
+    "source": "https://goodlooker.ru/pp-recepty-iz-tykvy-kabachkov.html",
+    "ingredients": [
+      {
+        "name": "кабачок",
+        "qty": 175,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "мука",
+        "qty": 25,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "яйца",
+        "qty": 0.5,
+        "unit": "шт",
+        "category": "яйца"
+      },
+      {
+        "name": "натуральный йогурт",
+        "qty": 25,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "сыр фета",
+        "qty": 12.5,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "лук",
+        "qty": 25,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "морковь",
+        "qty": 25,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "масло растительное",
+        "qty": 3.8,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "зелень",
+        "qty": 5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Натри кабачки, отожми сок и смешай с яйцами, мукой и специями.",
+      "Раздели тесто на три части и обжарь три коржа с двух сторон.",
+      "Обжарь лук с морковью, смешай с йогуртом и раскрошенной фетой — это прослойка.",
+      "Собери торт слоями и дай постоять полчаса: пропитанный он вкуснее."
+    ]
+  },
+  {
+    "id": "d47",
+    "name": "Овощное рагу с кабачками и баклажаном",
+    "meal_type": "dinner",
+    "cuisine": "mediterranean",
+    "kcal": 211,
+    "protein_g": 5.6,
+    "fiber_g": 9.8,
+    "energy_density": 0.38,
+    "cookware": [
+      "multicooker",
+      "stove"
+    ],
+    "allergens": [],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 40,
+    "source": "https://goodlooker.ru/pp-recepty-iz-tykvy-kabachkov.html",
+    "ingredients": [
+      {
+        "name": "кабачок",
+        "qty": 150,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "баклажан",
+        "qty": 125,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "перец болгарский",
+        "qty": 75,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "томаты",
+        "qty": 100,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "морковь",
+        "qty": 50,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "лук",
+        "qty": 50,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "масло оливковое",
+        "qty": 7.5,
+        "unit": "г",
+        "category": "бакалея"
+      }
+    ],
+    "steps": [
+      "Нарежь все овощи кубиком примерно одного размера — тогда они дойдут одновременно.",
+      "Баклажан посоли и дай постоять 10 минут, потом отожми: уйдёт горечь.",
+      "Сложи всё в кастрюлю или мультиварку, добавь масло и специи.",
+      "Туши под крышкой 30 минут, не перемешивая часто, чтобы овощи не превратились в кашу."
+    ]
+  },
+  {
+    "id": "d48",
+    "name": "Кабачки, фаршированные творогом и чесноком",
+    "meal_type": "dinner",
+    "cuisine": "slavic",
+    "kcal": 223,
+    "protein_g": 21,
+    "fiber_g": 1.7,
+    "energy_density": 0.81,
+    "cookware": [
+      "oven"
+    ],
+    "allergens": [
+      "milk",
+      "egg"
+    ],
+    "tags": [],
+    "difficulty": 2,
+    "time_min": 50,
+    "source": "https://goodlooker.ru/pp-recepty-iz-tykvy-kabachkov.html",
+    "ingredients": [
+      {
+        "name": "кабачок",
+        "qty": 150,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "творог 5%",
+        "qty": 75,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "яйца",
+        "qty": 0.5,
+        "unit": "шт",
+        "category": "яйца"
+      },
+      {
+        "name": "сыр твёрдый",
+        "qty": 12.5,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "чеснок",
+        "qty": 1.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "зелень",
+        "qty": 5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Разрежь кабачки пополам и вынь мякоть.",
+      "Натри внутреннюю сторону лодочек разрезанным зубчиком чеснока — аромат останется на стенках.",
+      "Смешай творог с яйцами, зеленью и специями и наполни лодочки.",
+      "Посыпь тёртым сыром и запекай 40 минут при 180 °C."
+    ]
+  },
+  {
+    "id": "d49",
+    "name": "Стручковая фасоль с яйцом и йогуртовой заправкой",
+    "meal_type": "dinner",
+    "cuisine": "universal",
+    "kcal": 280,
+    "protein_g": 21.3,
+    "fiber_g": 5.4,
+    "energy_density": 0.76,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [
+      "egg",
+      "milk"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 25,
+    "source": "https://goodlooker.ru/pp-bluda-fasol.html",
+    "ingredients": [
+      {
+        "name": "стручковая фасоль",
+        "qty": 200,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "яйца",
+        "qty": 2,
+        "unit": "шт",
+        "category": "яйца"
+      },
+      {
+        "name": "натуральный йогурт",
+        "qty": 50,
+        "unit": "г",
+        "category": "молочное"
+      }
+    ],
+    "steps": [
+      "Опусти фасоль в кипящую подсоленную воду на 5–7 минут и сразу переложи в холодную — останется хрустящей и зелёной.",
+      "Отвари яйца вкрутую и нарежь.",
+      "Смешай фасоль с яйцами, заправь йогуртом со специями."
+    ]
+  },
+  {
+    "id": "d50",
+    "name": "Фасоль в томатном соусе",
+    "meal_type": "dinner",
+    "cuisine": "universal",
+    "kcal": 243,
+    "protein_g": 15.2,
+    "fiber_g": 14.1,
+    "energy_density": 0.69,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 35,
+    "source": "https://goodlooker.ru/pp-bluda-fasol.html",
+    "ingredients": [
+      {
+        "name": "фасоль консервированная",
+        "qty": 200,
+        "unit": "г",
+        "category": "консервы"
+      },
+      {
+        "name": "томаты",
+        "qty": 100,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "лук",
+        "qty": 50,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "чеснок",
+        "qty": 3,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Нарежь лук полукольцами и потуши в жидкости от фасоли — масла не нужно.",
+      "Помидоры пробей блендером и влей в кастрюлю, посоли.",
+      "Туши 20 минут на слабом огне, чтобы соус загустел.",
+      "Добавь фасоль и чеснок, потуши ещё 10 минут и дай настояться."
+    ]
+  },
+  {
+    "id": "d51",
+    "name": "Кабачковые драники в духовке",
+    "meal_type": "dinner",
+    "cuisine": "slavic",
+    "kcal": 121,
+    "protein_g": 6.1,
+    "fiber_g": 3.6,
+    "energy_density": 0.43,
+    "cookware": [
+      "oven"
+    ],
+    "allergens": [
+      "egg"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 30,
+    "source": "https://goodlooker.ru/pp-recepty-iz-tykvy-kabachkov.html",
+    "ingredients": [
+      {
+        "name": "кабачок",
+        "qty": 150,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "лук",
+        "qty": 50,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "морковь",
+        "qty": 50,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "яйца",
+        "qty": 0.5,
+        "unit": "шт",
+        "category": "яйца"
+      }
+    ],
+    "steps": [
+      "Натри кабачок и морковь, лук нарежь мелко.",
+      "Отожми овощную массу — от лишней воды драники расплывутся по противню.",
+      "Смешай с яйцом, солью и перцем.",
+      "Выкладывай ложкой на противень с бумагой и запекай 20 минут при 180 °C."
+    ]
+  },
+  {
+    "id": "b30",
+    "name": "Оладьи из кабачков с зеленью",
+    "meal_type": "breakfast",
+    "cuisine": "slavic",
+    "kcal": 251,
+    "protein_g": 12.9,
+    "fiber_g": 4.1,
+    "energy_density": 0.84,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [
+      "egg"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 25,
+    "source": "https://goodlooker.ru/pp-recepty-iz-tykvy-kabachkov.html",
+    "ingredients": [
+      {
+        "name": "кабачок",
+        "qty": 200,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "овсяные хлопья",
+        "qty": 30,
+        "unit": "г",
+        "category": "крупы"
+      },
+      {
+        "name": "яйца",
+        "qty": 1,
+        "unit": "шт",
+        "category": "яйца"
+      },
+      {
+        "name": "зелень",
+        "qty": 10,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Натри кабачки и оставь на сите на десять минут, потом отожми.",
+      "Смешай с яйцами, хлопьями и зеленью, дай постоять 5 минут — хлопья вберут остатки влаги.",
+      "Жарь на сухой антипригарной сковороде по паре минут с каждой стороны."
+    ]
+  },
+  {
+    "id": "b31",
+    "name": "Тыквенные оладьи на кефире",
+    "meal_type": "breakfast",
+    "cuisine": "slavic",
+    "kcal": 337,
+    "protein_g": 16.5,
+    "fiber_g": 5.4,
+    "energy_density": 0.94,
+    "cookware": [
+      "stove",
+      "blender"
+    ],
+    "allergens": [
+      "egg",
+      "milk",
+      "gluten"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 25,
+    "source": "https://goodlooker.ru/pp-recepty-iz-tykvy-kabachkov.html",
+    "ingredients": [
+      {
+        "name": "тыква",
+        "qty": 200,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "мука",
+        "qty": 50,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "яйца",
+        "qty": 1,
+        "unit": "шт",
+        "category": "яйца"
+      },
+      {
+        "name": "кефир",
+        "qty": 50,
+        "unit": "г",
+        "category": "молочное"
+      }
+    ],
+    "steps": [
+      "Пробей в блендере тыкву с кефиром и яйцами.",
+      "Всыпь муку, щепотку соды, корицу и подсластитель, перемешай до густоты сметаны.",
+      "Жарь на сухой антипригарной сковороде под крышкой — так оладьи пропекутся внутри."
+    ]
+  },
+  {
+    "id": "b32",
+    "name": "Тыквенная каша с рисом на молоке",
+    "meal_type": "breakfast",
+    "cuisine": "slavic",
+    "kcal": 146,
+    "protein_g": 4.7,
+    "fiber_g": 2.7,
+    "energy_density": 0.66,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [
+      "milk"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 45,
+    "source": "https://goodlooker.ru/pp-recepty-iz-tykvy-kabachkov.html",
+    "ingredients": [
+      {
+        "name": "тыква",
+        "qty": 125,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "молоко",
+        "qty": 75,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "рис",
+        "qty": 15,
+        "unit": "г",
+        "category": "крупы"
+      },
+      {
+        "name": "мёд",
+        "qty": 7.5,
+        "unit": "г",
+        "category": "соусы"
+      }
+    ],
+    "steps": [
+      "Нарежь тыкву кубиком и вари в молоке на слабом огне около получаса.",
+      "Всыпь промытый рис и вари до готовности, помешивая — молочная каша легко пригорает.",
+      "Мёд добавляй в конце, в горячую, но не кипящую кашу."
+    ]
+  },
+  {
+    "id": "b33",
+    "name": "Кабачковые маффины с зеленью",
+    "meal_type": "breakfast",
+    "cuisine": "universal",
+    "kcal": 317,
+    "protein_g": 11.8,
+    "fiber_g": 3.1,
+    "energy_density": 1.17,
+    "cookware": [
+      "oven"
+    ],
+    "allergens": [
+      "egg"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 40,
+    "source": "https://goodlooker.ru/pp-recepty-iz-tykvy-kabachkov.html",
+    "ingredients": [
+      {
+        "name": "кабачок",
+        "qty": 150,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "рисовая мука",
+        "qty": 50,
+        "unit": "г",
+        "category": "крупы"
+      },
+      {
+        "name": "яйца",
+        "qty": 1,
+        "unit": "шт",
+        "category": "яйца"
+      },
+      {
+        "name": "зелень",
+        "qty": 10,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Натри кабачок, дай стечь соку и отожми.",
+      "Смешай с мукой, яйцами, зеленью, солью и перцем.",
+      "Разложи по формочкам, заполняя на две трети: тесто поднимется.",
+      "Запекай 30 минут при 180 °C."
+    ]
+  },
+  {
+    "id": "s15",
+    "name": "Тыквенное печенье с овсянкой",
+    "meal_type": "dessert",
+    "cuisine": "universal",
+    "kcal": 142,
+    "protein_g": 6.4,
+    "fiber_g": 3.5,
+    "energy_density": 0.99,
+    "cookware": [
+      "oven",
+      "blender"
+    ],
+    "allergens": [
+      "egg"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 40,
+    "source": "https://goodlooker.ru/pp-recepty-iz-tykvy-kabachkov.html",
+    "ingredients": [
+      {
+        "name": "тыква",
+        "qty": 100,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "овсяные хлопья",
+        "qty": 25,
+        "unit": "г",
+        "category": "крупы"
+      },
+      {
+        "name": "яйца",
+        "qty": 0.3,
+        "unit": "шт",
+        "category": "яйца"
+      }
+    ],
+    "steps": [
+      "Запеки тыкву до мягкости и пробей блендером в пюре.",
+      "Смешай пюре с хлопьями, яйцом, щепоткой соды и подсластителем.",
+      "Выкладывай ложкой на противень и пеки 20 минут при 180 °C."
+    ]
+  },
+  {
+    "id": "s16",
+    "name": "Тыквенно-творожное суфле",
+    "meal_type": "dessert",
+    "cuisine": "slavic",
+    "kcal": 220,
+    "protein_g": 23,
+    "fiber_g": 4,
+    "energy_density": 0.67,
+    "cookware": [
+      "oven",
+      "blender"
+    ],
+    "allergens": [
+      "milk",
+      "egg"
+    ],
+    "tags": [],
+    "difficulty": 2,
+    "time_min": 45,
+    "source": "https://goodlooker.ru/pp-recepty-iz-tykvy-kabachkov.html",
+    "ingredients": [
+      {
+        "name": "тыква",
+        "qty": 200,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "творог 5%",
+        "qty": 100,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "яйца",
+        "qty": 0.5,
+        "unit": "шт",
+        "category": "яйца"
+      }
+    ],
+    "steps": [
+      "Отвари тыкву и измельчи в пюре.",
+      "Белок отдели и взбей с подсластителем до пиков.",
+      "Смешай творог с желтком и тыквенным пюре, затем осторожно введи белки — от этого суфле и поднимается.",
+      "Разложи по формочкам и пеки 30 минут при 180 °C."
+    ]
+  },
+  {
+    "id": "s17",
+    "name": "Тыквенный пудинг с яблоками",
+    "meal_type": "dessert",
+    "cuisine": "slavic",
+    "kcal": 282,
+    "protein_g": 12,
+    "fiber_g": 6.4,
+    "energy_density": 0.76,
+    "cookware": [
+      "stove",
+      "oven"
+    ],
+    "allergens": [
+      "milk",
+      "egg",
+      "gluten"
+    ],
+    "tags": [],
+    "difficulty": 2,
+    "time_min": 50,
+    "source": "https://goodlooker.ru/pp-recepty-iz-tykvy-kabachkov.html",
+    "ingredients": [
+      {
+        "name": "тыква",
+        "qty": 125,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "яблоко",
+        "qty": 125,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "молоко",
+        "qty": 50,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "манная крупа",
+        "qty": 25,
+        "unit": "г",
+        "category": "крупы"
+      },
+      {
+        "name": "яйца",
+        "qty": 0.8,
+        "unit": "шт",
+        "category": "яйца"
+      }
+    ],
+    "steps": [
+      "Вари нарезанную тыкву в молоке 10 минут, добавь яблоки и держи ещё столько же.",
+      "Всыпь манку тонкой струйкой при помешивании и вари 5 минут.",
+      "Дай массе остыть, вмешай желтки и подсластитель.",
+      "Белки взбей отдельно и введи в остывшую массу — в горячей они свернутся.",
+      "Пеки 20–25 минут при 180 °C."
+    ]
+  },
+  {
+    "id": "s18",
+    "name": "Брауни на фасоли с тёмным шоколадом",
+    "meal_type": "dessert",
+    "cuisine": "universal",
+    "kcal": 404,
+    "protein_g": 16.6,
+    "fiber_g": 11.5,
+    "energy_density": 4.04,
+    "cookware": [
+      "oven",
+      "blender"
+    ],
+    "allergens": [
+      "gluten"
+    ],
+    "tags": [],
+    "difficulty": 2,
+    "time_min": 40,
+    "source": "https://goodlooker.ru/pp-bluda-fasol.html",
+    "ingredients": [
+      {
+        "name": "фасоль красная",
+        "qty": 50,
+        "unit": "г",
+        "category": "крупы"
+      },
+      {
+        "name": "какао-порошок",
+        "qty": 7.5,
+        "unit": "г",
+        "category": "соусы"
+      },
+      {
+        "name": "мука",
+        "qty": 25,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "масло растительное",
+        "qty": 10,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "тёмный шоколад 70%",
+        "qty": 7.5,
+        "unit": "г",
+        "category": "соусы"
+      }
+    ],
+    "steps": [
+      "Отвари фасоль до полной мягкости и пробей блендером в гладкое пюре — крупинки в брауни чувствуются сразу.",
+      "Добавь какао, муку, масло, корицу, щепотку соли и подсластитель, перемешай.",
+      "Выложи в форму, разломай сверху шоколад.",
+      "Пеки 20 минут при 180 °C: середина должна остаться чуть влажной, это и есть брауни."
+    ]
+  },
+  {
+    "id": "l51",
+    "name": "Куриные котлеты с капустой в томатном соусе",
+    "meal_type": "lunch",
+    "cuisine": "slavic",
+    "kcal": 178,
+    "protein_g": 18.1,
+    "fiber_g": 2.3,
+    "energy_density": 0.9,
+    "cookware": [
+      "oven",
+      "stove"
+    ],
+    "allergens": [
+      "egg"
+    ],
+    "tags": [],
+    "difficulty": 2,
+    "time_min": 45,
+    "source": "https://goodlooker.ru/pp-recepty-kapusty.html",
+    "ingredients": [
+      {
+        "name": "фарш куриный",
+        "qty": 66.7,
+        "unit": "г",
+        "category": "мясо/рыба"
+      },
+      {
+        "name": "капуста",
+        "qty": 50,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "яйца",
+        "qty": 0.3,
+        "unit": "шт",
+        "category": "яйца"
+      },
+      {
+        "name": "лук",
+        "qty": 50,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "томатная паста",
+        "qty": 10,
+        "unit": "г",
+        "category": "соусы"
+      },
+      {
+        "name": "овсяные хлопья",
+        "qty": 3.3,
+        "unit": "г",
+        "category": "крупы"
+      }
+    ],
+    "steps": [
+      "Нашинкуй капусту и разомни руками с солью — она станет мягкой и отдаст сок.",
+      "Смешай капусту с фаршем, яйцом и специями, слепи котлеты.",
+      "Запекай 15 минут при 180 °C.",
+      "Обжарь лук, добавь воду, молотые хлопья и томатную пасту — получится соус.",
+      "Залей котлеты соусом и туши ещё 15 минут: так они станут сочными."
+    ]
+  },
+  {
+    "id": "l52",
+    "name": "Шаурма с курицей, капустой и чесночным соусом",
+    "meal_type": "lunch",
+    "cuisine": "middleeast",
+    "kcal": 241,
+    "protein_g": 17.6,
+    "fiber_g": 2.1,
+    "energy_density": 1.25,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [
+      "milk",
+      "gluten"
+    ],
+    "tags": [],
+    "difficulty": 2,
+    "time_min": 35,
+    "source": "https://goodlooker.ru/pp-recepty-kapusty.html",
+    "ingredients": [
+      {
+        "name": "куриное филе",
+        "qty": 50,
+        "unit": "г",
+        "category": "мясо/рыба"
+      },
+      {
+        "name": "лаваш",
+        "qty": 0.5,
+        "unit": "шт",
+        "category": "хлеб"
+      },
+      {
+        "name": "лук",
+        "qty": 15,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "томаты",
+        "qty": 20,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "огурец",
+        "qty": 20,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "капуста",
+        "qty": 12.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "сметана 15%",
+        "qty": 25,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "чеснок",
+        "qty": 1.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "зелень",
+        "qty": 3.8,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Потуши филе 15–20 минут и нарежь соломкой.",
+      "Лук залей кипятком на минуту и сбрызни уксусом — уйдёт резкость, получится маринованный.",
+      "Смешай сметану с давленым чесноком и укропом.",
+      "Нашинкуй капусту, нарежь помидор и огурец.",
+      "Собери шаурму на лаваше и обжарь на сухой сковороде с двух сторон."
+    ]
+  },
+  {
+    "id": "l53",
+    "name": "Капуста со стручковой фасолью",
+    "meal_type": "lunch",
+    "cuisine": "slavic",
+    "kcal": 143,
+    "protein_g": 3.1,
+    "fiber_g": 3.8,
+    "energy_density": 0.76,
+    "cookware": [
+      "multicooker",
+      "stove"
+    ],
+    "allergens": [],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 35,
+    "source": "https://goodlooker.ru/pp-recepty-kapusty.html",
+    "ingredients": [
+      {
+        "name": "стручковая фасоль",
+        "qty": 37.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "капуста",
+        "qty": 112.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "лук",
+        "qty": 25,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "масло оливковое",
+        "qty": 10,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "зелень",
+        "qty": 2.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Отвари стручковую фасоль до мягкости.",
+      "Обжарь лук до прозрачности, добавь нашинкованную капусту и держи на огне 5–10 минут.",
+      "Влей половину стакана воды и туши 15 минут под крышкой.",
+      "Добавь фасоль и остаток воды, туши ещё 15 минут. Посыпь укропом."
+    ]
+  },
+  {
+    "id": "l54",
+    "name": "Капустный пирог на цельнозерновой муке",
+    "meal_type": "lunch",
+    "cuisine": "slavic",
+    "kcal": 300,
+    "protein_g": 9.1,
+    "fiber_g": 3.5,
+    "energy_density": 1.96,
+    "cookware": [
+      "oven"
+    ],
+    "allergens": [
+      "gluten"
+    ],
+    "tags": [],
+    "difficulty": 2,
+    "time_min": 50,
+    "source": "https://goodlooker.ru/pp-recepty-kapusty.html",
+    "ingredients": [
+      {
+        "name": "капуста",
+        "qty": 75,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "мука",
+        "qty": 75,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "масло оливковое",
+        "qty": 2.5,
+        "unit": "г",
+        "category": "бакалея"
+      }
+    ],
+    "steps": [
+      "Натри капусту, залей кипятком на пару минут и слей воду — так она не будет хрустеть в пироге.",
+      "Смешай муку с разрыхлителем, добавь воду, масло, соль и приправы до консистенции густой сметаны.",
+      "Выложи капусту в форму и залей тестом.",
+      "Пеки 40 минут при 180 °C."
+    ]
+  },
+  {
+    "id": "l55",
+    "name": "Квашеная капуста с картофелем",
+    "meal_type": "lunch",
+    "cuisine": "slavic",
+    "kcal": 142,
+    "protein_g": 3.6,
+    "fiber_g": 6.3,
+    "energy_density": 0.52,
+    "cookware": [
+      "multicooker",
+      "stove"
+    ],
+    "allergens": [
+      "milk"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 35,
+    "source": "https://goodlooker.ru/pp-recepty-kapusty.html",
+    "ingredients": [
+      {
+        "name": "квашеная капуста",
+        "qty": 150,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "картофель",
+        "qty": 75,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "масло сливочное",
+        "qty": 5,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "лук",
+        "qty": 40,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "зелень",
+        "qty": 5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Нарежь картофель кусочками по два сантиметра, лук кубиком.",
+      "Обжарь картофель на масле пару минут, добавь лук и держи ещё столько же.",
+      "Добавь капусту — если она очень кислая, промой и отожми.",
+      "Туши под крышкой полчаса и посыпь зеленью."
+    ]
+  },
+  {
+    "id": "d52",
+    "name": "Капустные дольки в отрубях",
+    "meal_type": "dinner",
+    "cuisine": "slavic",
+    "kcal": 302,
+    "protein_g": 15.2,
+    "fiber_g": 10.9,
+    "energy_density": 1.06,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [
+      "egg",
+      "gluten"
+    ],
+    "tags": [],
+    "difficulty": 2,
+    "time_min": 60,
+    "source": "https://goodlooker.ru/pp-recepty-kapusty.html",
+    "ingredients": [
+      {
+        "name": "капуста",
+        "qty": 200,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "отруби овсяные",
+        "qty": 45,
+        "unit": "г",
+        "category": "крупы"
+      },
+      {
+        "name": "яйца",
+        "qty": 0.5,
+        "unit": "шт",
+        "category": "яйца"
+      },
+      {
+        "name": "масло оливковое",
+        "qty": 10,
+        "unit": "г",
+        "category": "бакалея"
+      }
+    ],
+    "steps": [
+      "Разрежь кочан на дольки прямо через кочерыжку — она держит лист, и долька не развалится.",
+      "Отвари в подсоленной воде до мягкости и обсуши полотенцем.",
+      "Обмакни в яйцо и обваляй в отрубях (в оригинале пшеничные, овсяные держатся не хуже).",
+      "Жарь на разогретом масле до румяной корочки."
+    ]
+  },
+  {
+    "id": "d53",
+    "name": "Холодный борщ на кефире",
+    "meal_type": "dinner",
+    "cuisine": "slavic",
+    "kcal": 185,
+    "protein_g": 12.8,
+    "fiber_g": 5.9,
+    "energy_density": 0.34,
+    "cookware": [],
+    "allergens": [
+      "milk"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 15,
+    "source": "https://goodlooker.ru/pp-recepty-kapusty.html",
+    "ingredients": [
+      {
+        "name": "капуста",
+        "qty": 70,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "морковь",
+        "qty": 60,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "свёкла",
+        "qty": 40,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "томаты",
+        "qty": 100,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "зелень",
+        "qty": 20,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "кефир",
+        "qty": 250,
+        "unit": "г",
+        "category": "молочное"
+      }
+    ],
+    "steps": [
+      "Нашинкуй капусту как можно тоньше, морковь и свёклу натри.",
+      "Помидор обдай кипятком, сними кожуру и натри.",
+      "Смешай овощи с кефиром, посоли и дай постоять 10 минут, чтобы овощи отдали сок.",
+      "Посыпь зелёным луком."
+    ]
+  },
+  {
+    "id": "d54",
+    "name": "Салат из капусты с огурцом и лимоном",
+    "meal_type": "dinner",
+    "cuisine": "slavic",
+    "kcal": 142,
+    "protein_g": 3.1,
+    "fiber_g": 3.4,
+    "energy_density": 0.64,
+    "cookware": [],
+    "allergens": [],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 10,
+    "source": "https://goodlooker.ru/pp-recepty-kapusty.html",
+    "ingredients": [
+      {
+        "name": "капуста",
+        "qty": 125,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "огурец",
+        "qty": 60,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "лук",
+        "qty": 20,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "масло оливковое",
+        "qty": 10,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "лимон",
+        "qty": 7.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Нарежь капусту тонкой соломкой и помни руками с солью — она станет мягче и сочнее.",
+      "Огурец нарежь соломкой, лук полукольцами.",
+      "Сбрызни лимонным соком, полей маслом и перемешай."
+    ]
+  },
+  {
+    "id": "d55",
+    "name": "Капустные оладьи на кефире",
+    "meal_type": "dinner",
+    "cuisine": "slavic",
+    "kcal": 287,
+    "protein_g": 10.9,
+    "fiber_g": 3.1,
+    "energy_density": 1.22,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [
+      "egg",
+      "milk",
+      "gluten"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 40,
+    "source": "https://goodlooker.ru/pp-recepty-kapusty.html",
+    "ingredients": [
+      {
+        "name": "капуста",
+        "qty": 60,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "лук",
+        "qty": 30,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "яйца",
+        "qty": 0.2,
+        "unit": "шт",
+        "category": "яйца"
+      },
+      {
+        "name": "мука",
+        "qty": 50,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "кефир",
+        "qty": 80,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "масло растительное",
+        "qty": 4,
+        "unit": "г",
+        "category": "бакалея"
+      }
+    ],
+    "steps": [
+      "Нарежь капусту и лук тонкой соломкой.",
+      "Смешай кефир с мукой и щепоткой соды, вбей яйцо.",
+      "Добавь овощи и дай тесту постоять 15–20 минут — сода сработает, и оладьи выйдут пышными.",
+      "Жарь на масле с двух сторон до румяной корочки."
+    ]
+  },
+  {
+    "id": "s19",
+    "name": "Шоколадно-банановое мороженое",
+    "meal_type": "dessert",
+    "cuisine": "universal",
+    "kcal": 135,
+    "protein_g": 3.2,
+    "fiber_g": 3,
+    "energy_density": 0.91,
+    "cookware": [
+      "blender"
+    ],
+    "allergens": [
+      "milk"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 10,
+    "source": "https://goodlooker.ru/pp-deserty-bez-vypechki.html",
+    "ingredients": [
+      {
+        "name": "банан замороженный",
+        "qty": 120,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "молоко",
+        "qty": 25,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "какао-порошок",
+        "qty": 3,
+        "unit": "г",
+        "category": "соусы"
+      }
+    ],
+    "steps": [
+      "Нарежь спелые бананы кружками и заморозь на несколько часов — чем спелее, тем слаще выйдет.",
+      "Пробей замороженные бананы с молоком и какао в блендере до кремовой массы.",
+      "Разложи по креманкам и подавай сразу."
+    ]
+  },
+  {
+    "id": "s20",
+    "name": "Пудинг из чиа с бананом и киви",
+    "meal_type": "dessert",
+    "cuisine": "universal",
+    "kcal": 283,
+    "protein_g": 14.3,
+    "fiber_g": 11.9,
+    "energy_density": 1.11,
+    "cookware": [],
+    "allergens": [
+      "milk"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 10,
+    "source": "https://goodlooker.ru/pp-deserty-bez-vypechki.html",
+    "ingredients": [
+      {
+        "name": "семена чиа",
+        "qty": 30,
+        "unit": "г",
+        "category": "орехи"
+      },
+      {
+        "name": "молоко",
+        "qty": 110,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "греческий йогурт",
+        "qty": 50,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "банан",
+        "qty": 0.5,
+        "unit": "шт",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "киви",
+        "qty": 35,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "С вечера залей чиа молоком и убери в холодильник — за ночь семена набухнут в желе.",
+      "Утром разомни банан с йогуртом.",
+      "Киви нарежь кружками.",
+      "Выложи в стакан слоями: чиа, банановый крем, киви."
+    ]
+  },
+  {
+    "id": "s21",
+    "name": "Творожный воздушный десерт",
+    "meal_type": "dessert",
+    "cuisine": "universal",
+    "kcal": 86,
+    "protein_g": 15.5,
+    "fiber_g": 0,
+    "energy_density": 0.98,
+    "cookware": [],
+    "allergens": [
+      "milk",
+      "egg"
+    ],
+    "tags": [],
+    "difficulty": 2,
+    "time_min": 40,
+    "source": "https://goodlooker.ru/pp-deserty-bez-vypechki.html",
+    "ingredients": [
+      {
+        "name": "творог мягкий",
+        "qty": 50,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "желатин",
+        "qty": 5,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "яичные белки",
+        "qty": 33,
+        "unit": "г",
+        "category": "яйца"
+      }
+    ],
+    "steps": [
+      "Залей желатин 30 мл воды и распусти — в микроволновке хватит двадцати секунд.",
+      "Взбей белки с подсластителем до устойчивых пиков.",
+      "Влей тёплый (не горячий!) желатин тонкой струйкой, продолжая взбивать.",
+      "Вмешай творог, разложи по креманкам и охлади полчаса."
+    ]
+  },
+  {
+    "id": "s22",
+    "name": "Кокосовые творожные шарики",
+    "meal_type": "dessert",
+    "cuisine": "universal",
+    "kcal": 259,
+    "protein_g": 16.9,
+    "fiber_g": 3.4,
+    "energy_density": 2.07,
+    "cookware": [],
+    "allergens": [
+      "milk"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 15,
+    "source": "https://goodlooker.ru/pp-deserty-bez-vypechki.html",
+    "ingredients": [
+      {
+        "name": "творог 5%",
+        "qty": 90,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "кокосовая стружка",
+        "qty": 20,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "мёд",
+        "qty": 10,
+        "unit": "г",
+        "category": "соусы"
+      },
+      {
+        "name": "лимон",
+        "qty": 5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Разотри творог до гладкости.",
+      "Смешай с большей частью стружки, мёдом и лимонной цедрой.",
+      "Скатай шарики и обваляй в оставшейся стружке.",
+      "Дай постоять в холодильнике 20 минут — так они держат форму."
+    ]
+  },
+  {
+    "id": "s23",
+    "name": "Бананы в кляре из рисовой муки",
+    "meal_type": "dessert",
+    "cuisine": "asian",
+    "kcal": 225,
+    "protein_g": 9.7,
+    "fiber_g": 1.5,
+    "energy_density": 1.61,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [
+      "egg"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 15,
+    "source": "https://goodlooker.ru/pp-deserty-bez-vypechki.html",
+    "ingredients": [
+      {
+        "name": "банан",
+        "qty": 1,
+        "unit": "шт",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "яйца",
+        "qty": 1,
+        "unit": "шт",
+        "category": "яйца"
+      },
+      {
+        "name": "рисовая мука",
+        "qty": 20,
+        "unit": "г",
+        "category": "крупы"
+      }
+    ],
+    "steps": [
+      "Взбей яйца с мукой и подсластителем до однородного кляра.",
+      "Нарежь бананы толстыми кружками.",
+      "Обмакни каждый кусочек и жарь на сухой антипригарной сковороде до румяности."
+    ]
+  },
+  {
+    "id": "s24",
+    "name": "Творожно-клубничный мусс с орехами",
+    "meal_type": "dessert",
+    "cuisine": "universal",
+    "kcal": 215,
+    "protein_g": 22.4,
+    "fiber_g": 1.1,
+    "energy_density": 1.3,
+    "cookware": [
+      "blender"
+    ],
+    "allergens": [
+      "milk",
+      "nuts"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 10,
+    "source": "https://goodlooker.ru/pp-deserty-bez-vypechki.html",
+    "ingredients": [
+      {
+        "name": "творог 5%",
+        "qty": 100,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "греческий йогурт",
+        "qty": 35,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "клубника",
+        "qty": 20,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "грецкие орехи",
+        "qty": 10,
+        "unit": "г",
+        "category": "орехи"
+      }
+    ],
+    "steps": [
+      "Взбей творог с йогуртом до гладкого крема.",
+      "Орехи поруби ножом и вмешай — так остаётся хруст.",
+      "Клубнику разомни вилкой и выложи слоями с творожной массой."
+    ]
+  },
+  {
+    "id": "s25",
+    "name": "Шоколадный кекс в кружке",
+    "meal_type": "dessert",
+    "cuisine": "universal",
+    "kcal": 251,
+    "protein_g": 9.3,
+    "fiber_g": 4,
+    "energy_density": 2.47,
+    "cookware": [
+      "microwave",
+      "blender"
+    ],
+    "allergens": [
+      "egg",
+      "milk"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 10,
+    "source": "https://goodlooker.ru/pp-deserty-bez-vypechki.html",
+    "ingredients": [
+      {
+        "name": "овсяные хлопья",
+        "qty": 30,
+        "unit": "г",
+        "category": "крупы"
+      },
+      {
+        "name": "какао-порошок",
+        "qty": 6.5,
+        "unit": "г",
+        "category": "соусы"
+      },
+      {
+        "name": "яйца",
+        "qty": 0.5,
+        "unit": "шт",
+        "category": "яйца"
+      },
+      {
+        "name": "молоко",
+        "qty": 15,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "масло растительное",
+        "qty": 2.5,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "мёд",
+        "qty": 17.5,
+        "unit": "г",
+        "category": "соусы"
+      }
+    ],
+    "steps": [
+      "Смели хлопья в муку.",
+      "Смешай всё до однородного теста и разлей по двум кружкам, заполняя половину: тесто поднимется.",
+      "Готовь в микроволновке 3 минуты. Кекс готов, когда верх перестал блестеть."
+    ]
+  },
+  {
+    "id": "s26",
+    "name": "Запечённые яблоки с мёдом и орехами",
+    "meal_type": "dessert",
+    "cuisine": "slavic",
+    "kcal": 159,
+    "protein_g": 1.8,
+    "fiber_g": 4.1,
+    "energy_density": 0.95,
+    "cookware": [
+      "microwave",
+      "oven"
+    ],
+    "allergens": [
+      "nuts"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 15,
+    "source": "https://goodlooker.ru/pp-deserty-bez-vypechki.html",
+    "ingredients": [
+      {
+        "name": "яблоко",
+        "qty": 150,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "мёд",
+        "qty": 10.5,
+        "unit": "г",
+        "category": "соусы"
+      },
+      {
+        "name": "грецкие орехи",
+        "qty": 7.5,
+        "unit": "г",
+        "category": "орехи"
+      }
+    ],
+    "steps": [
+      "Вырежи сердцевину, не протыкая дно, иначе сок вытечет.",
+      "Заполни яблоки рублеными орехами и корицей.",
+      "Запеки в микроволновке 8 минут или в духовке 20 минут при 180 °C.",
+      "Полей мёдом уже готовые: в нагретом мёде теряется аромат."
+    ]
+  },
+  {
+    "id": "b34",
+    "name": "Пшённая каша на воде с мёдом",
+    "meal_type": "breakfast",
+    "cuisine": "slavic",
+    "kcal": 212,
+    "protein_g": 5.8,
+    "fiber_g": 1.8,
+    "energy_density": 3.39,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 30,
+    "source": "https://goodlooker.ru/pshennaya-kasha.html",
+    "ingredients": [
+      {
+        "name": "пшено",
+        "qty": 50,
+        "unit": "г",
+        "category": "крупы"
+      },
+      {
+        "name": "мёд",
+        "qty": 12.5,
+        "unit": "г",
+        "category": "соусы"
+      }
+    ],
+    "steps": [
+      "Промой пшено горячей водой и подержи в ней минут десять — так уйдёт горчинка, которой пшено славится.",
+      "Слей воду, залей свежей (250 мл) и вари 20 минут на самом малом огне под крышкой.",
+      "Сними с огня, добавь мёд и перемешай: каша станет рыхлой."
+    ]
+  },
+  {
+    "id": "b35",
+    "name": "Пшённая каша с курагой и черносливом",
+    "meal_type": "breakfast",
+    "cuisine": "slavic",
+    "kcal": 213,
+    "protein_g": 6.2,
+    "fiber_g": 3,
+    "energy_density": 3.2,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 40,
+    "source": "https://goodlooker.ru/pshennaya-kasha.html",
+    "ingredients": [
+      {
+        "name": "пшено",
+        "qty": 50,
+        "unit": "г",
+        "category": "крупы"
+      },
+      {
+        "name": "чернослив",
+        "qty": 8.3,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "курага",
+        "qty": 8.3,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Залей пшено кипятком на полчаса и слей воду.",
+      "Влей 450 мл воды и вари 15–20 минут.",
+      "Сухофрукты промой и нарежь кусочками.",
+      "Сними кашу с огня, укутай полотенцем на полчаса — она дойдёт сама и станет рассыпчатой.",
+      "Вмешай сухофрукты перед подачей."
+    ]
+  },
+  {
+    "id": "b36",
+    "name": "Пшённая каша на кокосовом молоке с орехами",
+    "meal_type": "breakfast",
+    "cuisine": "asian",
+    "kcal": 486,
+    "protein_g": 9.7,
+    "fiber_g": 5.4,
+    "energy_density": 2.45,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [
+      "nuts"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 35,
+    "source": "https://goodlooker.ru/pshennaya-kasha.html",
+    "ingredients": [
+      {
+        "name": "пшено",
+        "qty": 55,
+        "unit": "г",
+        "category": "крупы"
+      },
+      {
+        "name": "кокосовое молоко",
+        "qty": 125,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "грецкие орехи",
+        "qty": 5,
+        "unit": "г",
+        "category": "орехи"
+      },
+      {
+        "name": "ягоды замороженные",
+        "qty": 10,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "мёд",
+        "qty": 3.8,
+        "unit": "г",
+        "category": "соусы"
+      }
+    ],
+    "steps": [
+      "Промывай пшено, пока вода не станет прозрачной.",
+      "Залей кокосовым молоком, посоли и после закипания вари 20–25 минут на тихом огне, помешивая.",
+      "Добавь рубленые орехи и ягоды, подсласти мёдом."
+    ]
+  },
+  {
+    "id": "b37",
+    "name": "Яблочные оладьи на рисовой муке",
+    "meal_type": "breakfast",
+    "cuisine": "slavic",
+    "kcal": 226,
+    "protein_g": 5.9,
+    "fiber_g": 2.9,
+    "energy_density": 1.48,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [
+      "egg"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 20,
+    "source": "https://goodlooker.ru/poleznij-zavtrak.html",
+    "ingredients": [
+      {
+        "name": "яблоко",
+        "qty": 90,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "яйца",
+        "qty": 0.5,
+        "unit": "шт",
+        "category": "яйца"
+      },
+      {
+        "name": "рисовая мука",
+        "qty": 30,
+        "unit": "г",
+        "category": "крупы"
+      },
+      {
+        "name": "масло растительное",
+        "qty": 2.5,
+        "unit": "г",
+        "category": "бакалея"
+      }
+    ],
+    "steps": [
+      "Натри яблоко на крупной тёрке.",
+      "Смешай с яйцом, мукой и подсластителем — тесто должно ложиться ложкой, а не растекаться.",
+      "Жарь на разогретой сковороде с каплей масла по паре минут с каждой стороны."
+    ]
+  },
+  {
+    "id": "b38",
+    "name": "Яичница с фасолью, грибами и помидорами",
+    "meal_type": "breakfast",
+    "cuisine": "universal",
+    "kcal": 223,
+    "protein_g": 14.1,
+    "fiber_g": 4.9,
+    "energy_density": 0.97,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [
+      "egg"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 15,
+    "source": "https://goodlooker.ru/poleznij-zavtrak.html",
+    "ingredients": [
+      {
+        "name": "яйца",
+        "qty": 1,
+        "unit": "шт",
+        "category": "яйца"
+      },
+      {
+        "name": "фасоль консервированная",
+        "qty": 60,
+        "unit": "г",
+        "category": "консервы"
+      },
+      {
+        "name": "томаты",
+        "qty": 60,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "грибы шампиньоны",
+        "qty": 40,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "масло растительное",
+        "qty": 5,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "зелень",
+        "qty": 5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Обжарь нарезанные грибы, пока не выпарится вода.",
+      "Добавь помидоры и промытую фасоль, прогрей пару минут.",
+      "Разбей сверху яйца, накрой крышкой и держи на слабом огне до готовности белка.",
+      "Посыпь зеленью."
+    ]
+  },
+  {
+    "id": "b39",
+    "name": "Кукурузная каша с тыквой",
+    "meal_type": "breakfast",
+    "cuisine": "slavic",
+    "kcal": 254,
+    "protein_g": 4.9,
+    "fiber_g": 6.2,
+    "energy_density": 1.39,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [
+      "milk"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 30,
+    "source": "https://goodlooker.ru/poleznij-zavtrak.html",
+    "ingredients": [
+      {
+        "name": "тыква",
+        "qty": 125,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "кукурузная мука",
+        "qty": 50,
+        "unit": "г",
+        "category": "крупы"
+      },
+      {
+        "name": "масло сливочное",
+        "qty": 7.5,
+        "unit": "г",
+        "category": "молочное"
+      }
+    ],
+    "steps": [
+      "Нарежь тыкву кубиком и потуши с половиной стакана воды до мягкости.",
+      "Всыпь кукурузную муку тонкой струйкой, непрерывно размешивая, — иначе будут комки.",
+      "Вари на слабом огне минут двадцать, пока каша не загустеет.",
+      "Добавь масло и дай постоять под крышкой."
+    ]
+  },
+  {
+    "id": "b40",
+    "name": "Пшённая каша с кефиром",
+    "meal_type": "breakfast",
+    "cuisine": "slavic",
+    "kcal": 224,
+    "protein_g": 10,
+    "fiber_g": 1.8,
+    "energy_density": 1.28,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [
+      "milk"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 30,
+    "source": "https://goodlooker.ru/pshennaya-kasha.html",
+    "ingredients": [
+      {
+        "name": "пшено",
+        "qty": 50,
+        "unit": "г",
+        "category": "крупы"
+      },
+      {
+        "name": "кефир",
+        "qty": 125,
+        "unit": "г",
+        "category": "молочное"
+      }
+    ],
+    "steps": [
+      "Промой пшено и вари в 250 мл воды 20–25 минут на медленном огне.",
+      "Слей остатки воды.",
+      "Влей тёплый кефир и перемешай — холодный свернётся хлопьями от горячей каши."
+    ]
+  },
+  {
+    "id": "b41",
+    "name": "Бутерброд с авокадо и яйцом",
+    "meal_type": "breakfast",
+    "cuisine": "universal",
+    "kcal": 367,
+    "protein_g": 15.1,
+    "fiber_g": 10.2,
+    "energy_density": 1.22,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [
+      "egg",
+      "gluten"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 15,
+    "source": "https://goodlooker.ru/poleznij-zavtrak.html",
+    "ingredients": [
+      {
+        "name": "цельнозерновой хлеб",
+        "qty": 60,
+        "unit": "г",
+        "category": "хлеб"
+      },
+      {
+        "name": "авокадо",
+        "qty": 70,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "яйца",
+        "qty": 1,
+        "unit": "шт",
+        "category": "яйца"
+      },
+      {
+        "name": "томаты",
+        "qty": 100,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "лимон",
+        "qty": 10,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Отвари яйцо вкрутую.",
+      "Разомни авокадо с лимонным соком и солью.",
+      "Подсуши хлеб, намажь авокадо, сверху разложи кружки яйца и помидора."
+    ]
+  },
+  {
+    "id": "l56",
+    "name": "Пшённая каша в горшочках с луком и морковью",
+    "meal_type": "lunch",
+    "cuisine": "slavic",
+    "kcal": 245,
+    "protein_g": 7.2,
+    "fiber_g": 2.7,
+    "energy_density": 2.76,
+    "cookware": [
+      "oven",
+      "stove"
+    ],
+    "allergens": [],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 45,
+    "source": "https://goodlooker.ru/pshennaya-kasha.html",
+    "ingredients": [
+      {
+        "name": "пшено",
+        "qty": 60,
+        "unit": "г",
+        "category": "крупы"
+      },
+      {
+        "name": "лук",
+        "qty": 10,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "морковь",
+        "qty": 16,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "масло растительное",
+        "qty": 3,
+        "unit": "г",
+        "category": "бакалея"
+      }
+    ],
+    "steps": [
+      "Промой пшено горячей водой.",
+      "Обжарь лук с тёртой морковью до мягкости.",
+      "Разложи по горшочкам пшено и овощи, залей водой из расчёта три части воды на одну крупы.",
+      "Запекай 30–35 минут при 200 °C под крышками."
+    ]
+  },
+  {
+    "id": "d56",
+    "name": "Салат с куриной грудкой, черри и йогуртом",
+    "meal_type": "dinner",
+    "cuisine": "universal",
+    "kcal": 144,
+    "protein_g": 22.3,
+    "fiber_g": 1.6,
+    "energy_density": 0.56,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [
+      "milk"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 25,
+    "source": "https://goodlooker.ru/poleznij-zavtrak.html",
+    "ingredients": [
+      {
+        "name": "куриное филе",
+        "qty": 75,
+        "unit": "г",
+        "category": "мясо/рыба"
+      },
+      {
+        "name": "черри-томаты",
+        "qty": 60,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "натуральный йогурт",
+        "qty": 62.5,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "салат листовой",
+        "qty": 50,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "зелень",
+        "qty": 7.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Отвари или обжарь филе и дай ему остыть, прежде чем резать: горячее мясо выпустит сок в салат.",
+      "Черри разрежь пополам, салат порви руками.",
+      "Йогурт смешай с рубленой петрушкой, солью и перцем.",
+      "Смешай всё и заправь."
+    ]
+  },
+  {
+    "id": "s27",
+    "name": "Конфеты из сухофруктов с орехами",
+    "meal_type": "dessert",
+    "cuisine": "universal",
+    "kcal": 233,
+    "protein_g": 3.6,
+    "fiber_g": 4.1,
+    "energy_density": 3.33,
+    "cookware": [],
+    "allergens": [
+      "nuts"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 20,
+    "source": "https://goodlooker.ru/pp-deserty-bez-vypechki.html",
+    "ingredients": [
+      {
+        "name": "курага",
+        "qty": 16.7,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "чернослив",
+        "qty": 16.7,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "изюм",
+        "qty": 16.7,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "грецкие орехи",
+        "qty": 10,
+        "unit": "г",
+        "category": "орехи"
+      },
+      {
+        "name": "мёд",
+        "qty": 6.7,
+        "unit": "г",
+        "category": "соусы"
+      },
+      {
+        "name": "семена кунжута",
+        "qty": 3.3,
+        "unit": "г",
+        "category": "орехи"
+      }
+    ],
+    "steps": [
+      "Залей сухофрукты горячей водой на десять минут и обсуши — размякшие легче рубить.",
+      "Мелко нарежь их ножом: блендер превращает массу в пасту, а нужна текстура.",
+      "Смешай с рублеными орехами и мёдом.",
+      "Скатай шарики и обваляй в кунжуте. Дай полежать в холодильнике полчаса."
+    ]
+  },
+  {
+    "id": "s28",
+    "name": "Тыквенные цукаты с корицей",
+    "meal_type": "dessert",
+    "cuisine": "slavic",
+    "kcal": 30,
+    "protein_g": 1.1,
+    "fiber_g": 2.4,
+    "energy_density": 0.28,
+    "cookware": [
+      "stove",
+      "oven"
+    ],
+    "allergens": [],
+    "tags": [],
+    "difficulty": 2,
+    "time_min": 60,
+    "source": "https://goodlooker.ru/pp-recepty-iz-tykvy-kabachkov.html",
+    "ingredients": [
+      {
+        "name": "тыква",
+        "qty": 100,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "апельсин цедра",
+        "qty": 2.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "лимон",
+        "qty": 3.8,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Нарежь тыкву кубиками в полтора сантиметра.",
+      "Провари 5 минут в воде с подсластителем, корицей и цедрой, затем полностью остуди.",
+      "Повтори проварку и остывание ещё три раза — от этого кубики становятся плотными и прозрачными.",
+      "Разложи на противне и суши в духовке на минимальном огне несколько часов."
+    ]
+  },
+  {
+    "id": "s29",
+    "name": "Банановое мороженое с какао",
+    "meal_type": "dessert",
+    "cuisine": "universal",
+    "kcal": 124,
+    "protein_g": 2.6,
+    "fiber_g": 3.4,
+    "energy_density": 1,
+    "cookware": [
+      "blender"
+    ],
+    "allergens": [],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 10,
+    "source": "https://goodlooker.ru/pp-deserty-bez-vypechki.html",
+    "ingredients": [
+      {
+        "name": "банан замороженный",
+        "qty": 120,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "какао-порошок",
+        "qty": 4,
+        "unit": "г",
+        "category": "соусы"
+      }
+    ],
+    "steps": [
+      "Заморозь спелые бананы кружками.",
+      "Пробей в блендере с какао, подливая ложку воды, пока масса не станет кремовой.",
+      "Ешь сразу: постояв, мороженое схватывается в лёд."
+    ]
+  },
+  {
+    "id": "s30",
+    "name": "Печёные яблоки с изюмом и корицей",
+    "meal_type": "dessert",
+    "cuisine": "slavic",
+    "kcal": 146,
+    "protein_g": 1.1,
+    "fiber_g": 4.2,
+    "energy_density": 0.84,
+    "cookware": [
+      "oven"
+    ],
+    "allergens": [],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 30,
+    "source": "https://goodlooker.ru/pp-deserty-bez-vypechki.html",
+    "ingredients": [
+      {
+        "name": "яблоко",
+        "qty": 150,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "изюм",
+        "qty": 15,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "мёд",
+        "qty": 7.5,
+        "unit": "г",
+        "category": "соусы"
+      }
+    ],
+    "steps": [
+      "Вырежи сердцевину, оставив дно целым.",
+      "Запарь изюм кипятком на пять минут, обсуши и смешай с корицей.",
+      "Наполни яблоки и запекай 20 минут при 180 °C.",
+      "Полей мёдом уже готовые."
+    ]
+  },
+  {
+    "id": "d57",
+    "name": "Курица с фасолью и томатами на сковороде",
+    "meal_type": "dinner",
+    "cuisine": "universal",
+    "kcal": 373,
+    "protein_g": 45.1,
+    "fiber_g": 9.1,
+    "energy_density": 0.89,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 25,
+    "source": "https://goodlooker.ru/pp-bluda-fasol.html",
+    "ingredients": [
+      {
+        "name": "куриное филе",
+        "qty": 150,
+        "unit": "г",
+        "category": "мясо/рыба"
+      },
+      {
+        "name": "фасоль консервированная",
+        "qty": 120,
+        "unit": "г",
+        "category": "консервы"
+      },
+      {
+        "name": "томаты",
+        "qty": 100,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "лук",
+        "qty": 40,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "чеснок",
+        "qty": 3,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "масло оливковое",
+        "qty": 5,
+        "unit": "г",
+        "category": "бакалея"
+      }
+    ],
+    "steps": [
+      "Обжарь нарезанное филе на сильном огне до корочки и убери со сковороды — так оно останется сочным.",
+      "На той же сковороде потуши лук с чесноком и помидорами до густоты.",
+      "Добавь промытую фасоль и прогрей пару минут.",
+      "Верни курицу, посоли, поперчи и подержи под крышкой ещё три минуты."
+    ]
+  },
+  {
+    "id": "d58",
+    "name": "Куриные тефтели в томатном соусе",
+    "meal_type": "dinner",
+    "cuisine": "slavic",
+    "kcal": 367,
+    "protein_g": 31.7,
+    "fiber_g": 1.9,
+    "energy_density": 1.47,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [
+      "egg"
+    ],
+    "tags": [],
+    "difficulty": 2,
+    "time_min": 40,
+    "source": "https://goodlooker.ru/pp-recepty-iz-kurinoj-grudki.html",
+    "ingredients": [
+      {
+        "name": "фарш куриный",
+        "qty": 133.3,
+        "unit": "г",
+        "category": "мясо/рыба"
+      },
+      {
+        "name": "рис",
+        "qty": 20,
+        "unit": "г",
+        "category": "крупы"
+      },
+      {
+        "name": "яйца",
+        "qty": 0.3,
+        "unit": "шт",
+        "category": "яйца"
+      },
+      {
+        "name": "лук",
+        "qty": 33.3,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "томатная паста",
+        "qty": 13.3,
+        "unit": "г",
+        "category": "соусы"
+      },
+      {
+        "name": "морковь",
+        "qty": 26.7,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "масло растительное",
+        "qty": 5,
+        "unit": "г",
+        "category": "бакалея"
+      }
+    ],
+    "steps": [
+      "Отвари рис до полуготовности и остуди.",
+      "Смешай фарш с рисом, яйцом, половиной тёртого лука, солью и перцем. Слепи тефтели.",
+      "Обжарь оставшийся лук с морковью, добавь томатную пасту и стакан воды.",
+      "Выложи тефтели в соус и туши под крышкой 25 минут на слабом огне."
+    ]
+  },
+  {
+    "id": "d59",
+    "name": "Творожная запеканка с курицей на сковороде",
+    "meal_type": "dinner",
+    "cuisine": "universal",
+    "kcal": 325,
+    "protein_g": 45.8,
+    "fiber_g": 1.9,
+    "energy_density": 1.02,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [
+      "milk",
+      "egg"
+    ],
+    "tags": [],
+    "difficulty": 2,
+    "time_min": 35,
+    "source": "https://goodlooker.ru/pp-recepty-iz-tvoroga.html",
+    "ingredients": [
+      {
+        "name": "творог 5%",
+        "qty": 100,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "куриное филе",
+        "qty": 100,
+        "unit": "г",
+        "category": "мясо/рыба"
+      },
+      {
+        "name": "яйца",
+        "qty": 0.5,
+        "unit": "шт",
+        "category": "яйца"
+      },
+      {
+        "name": "лук",
+        "qty": 30,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "перец болгарский",
+        "qty": 37.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "оливки",
+        "qty": 17.5,
+        "unit": "г",
+        "category": "консервы"
+      },
+      {
+        "name": "зелень",
+        "qty": 5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Нарежь филе кубиком и обжарь с луком до готовности.",
+      "Смешай творог с яйцами, солью и перцем.",
+      "Выложи на сковороду половину творожной массы, сверху курицу, оливки, перец и зелень, закрой оставшимся творогом.",
+      "Готовь под крышкой на слабом огне 20 минут: сверху схватится, внутри останется нежным."
+    ]
+  },
+  {
+    "id": "l57",
+    "name": "Курица с фасолью и овощами в духовке",
+    "meal_type": "lunch",
+    "cuisine": "universal",
+    "kcal": 320,
+    "protein_g": 37.8,
+    "fiber_g": 8,
+    "energy_density": 0.89,
+    "cookware": [
+      "oven"
+    ],
+    "allergens": [],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 50,
+    "source": "https://goodlooker.ru/pp-bluda-fasol.html",
+    "ingredients": [
+      {
+        "name": "куриное филе",
+        "qty": 125,
+        "unit": "г",
+        "category": "мясо/рыба"
+      },
+      {
+        "name": "фасоль консервированная",
+        "qty": 100,
+        "unit": "г",
+        "category": "консервы"
+      },
+      {
+        "name": "перец болгарский",
+        "qty": 50,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "томаты",
+        "qty": 50,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "лук",
+        "qty": 25,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "масло оливковое",
+        "qty": 5,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "зелень",
+        "qty": 5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Нарежь филе крупными кусками, овощи произвольно.",
+      "Смешай всё с маслом и специями прямо в форме.",
+      "Промытую фасоль добавь сверху — она уже готова, ей нужно только прогреться.",
+      "Запекай 35 минут при 190 °C, накрыв фольгой, потом сними её и подрумянь 10 минут."
+    ]
+  },
+  {
+    "id": "d60",
+    "name": "Котлеты из индейки в духовке",
+    "meal_type": "dinner",
+    "cuisine": "slavic",
+    "kcal": 133,
+    "protein_g": 18,
+    "fiber_g": 0.7,
+    "energy_density": 1.08,
+    "cookware": [
+      "oven"
+    ],
+    "allergens": [
+      "egg",
+      "milk",
+      "gluten"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 60,
+    "source": "https://menunedeli.ru/recipe/kotlety-iz-indejki-v-duxovke-recept-klassicheskij/",
+    "ingredients": [
+      {
+        "name": "индейка филе",
+        "qty": 71.4,
+        "unit": "г",
+        "category": "мясо/рыба"
+      },
+      {
+        "name": "лук",
+        "qty": 17.1,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "хлеб белый",
+        "qty": 14.3,
+        "unit": "г",
+        "category": "хлеб"
+      },
+      {
+        "name": "молоко",
+        "qty": 14.3,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "яйца",
+        "qty": 0.1,
+        "unit": "шт",
+        "category": "яйца"
+      },
+      {
+        "name": "чеснок",
+        "qty": 0.4,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Нарежь батон и залей молоком на 10–15 минут.",
+      "Пропусти через мясорубку индейку, лук и отжатый хлеб.",
+      "Вмешай желток, соль, перец и сушёный чеснок, отбей фарш об миску — так котлеты не развалятся.",
+      "Слепи котлеты примерно по 100 г и выложи на пергамент.",
+      "Запекай 15 минут при 250 °C, затем убавь до 180 °C и держи ещё 15: сильный жар схватывает корочку, слабый доводит внутри."
+    ]
+  },
+  {
+    "id": "l58",
+    "name": "Ленивые голубцы с говядиной и рисом",
+    "meal_type": "lunch",
+    "cuisine": "slavic",
+    "kcal": 372,
+    "protein_g": 20.8,
+    "fiber_g": 2.2,
+    "energy_density": 1.54,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [
+      "egg",
+      "milk"
+    ],
+    "tags": [],
+    "difficulty": 2,
+    "time_min": 50,
+    "source": "https://menunedeli.ru/recipe/lenivye-golubcy-s-farshem-i-risom/",
+    "ingredients": [
+      {
+        "name": "фарш говяжий",
+        "qty": 83.3,
+        "unit": "г",
+        "category": "мясо/рыба"
+      },
+      {
+        "name": "капуста",
+        "qty": 50,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "рис",
+        "qty": 16.7,
+        "unit": "г",
+        "category": "крупы"
+      },
+      {
+        "name": "лук",
+        "qty": 16.7,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "морковь",
+        "qty": 16.7,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "яйца",
+        "qty": 0.2,
+        "unit": "шт",
+        "category": "яйца"
+      },
+      {
+        "name": "томатная паста",
+        "qty": 5,
+        "unit": "г",
+        "category": "соусы"
+      },
+      {
+        "name": "сливки 10%",
+        "qty": 33.3,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "масло растительное",
+        "qty": 5,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "зелень",
+        "qty": 2.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Отвари рис 10 минут до полуготовности и остуди.",
+      "Обжарь лук до прозрачности, добавь тёртую морковь и держи ещё 5–7 минут.",
+      "Всыпь шинкованную капусту и готовь 10 минут — она должна осесть.",
+      "Смешай рис, фарш, овощи, зелень и яйцо, дай постоять 5 минут.",
+      "В сковороду влей сливки с томатной пастой и стаканом воды.",
+      "Слепи шарики, опусти в соус и туши 15 минут, потом переверни и держи под крышкой ещё 20 на слабом огне."
+    ]
+  },
+  {
+    "id": "d61",
+    "name": "Подлива из говяжьего фарша",
+    "meal_type": "dinner",
+    "cuisine": "slavic",
+    "kcal": 268,
+    "protein_g": 19.4,
+    "fiber_g": 0.8,
+    "energy_density": 1.93,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 40,
+    "source": "https://menunedeli.ru/chto-prigotovit-na-obed-i-uzhin/vtorye-blyuda/recepty-iz-govyazhego-farsha/",
+    "ingredients": [
+      {
+        "name": "фарш говяжий",
+        "qty": 100,
+        "unit": "г",
+        "category": "мясо/рыба"
+      },
+      {
+        "name": "томатная паста",
+        "qty": 12.5,
+        "unit": "г",
+        "category": "соусы"
+      },
+      {
+        "name": "лук",
+        "qty": 12.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "морковь",
+        "qty": 10,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "масло растительное",
+        "qty": 3.8,
+        "unit": "г",
+        "category": "бакалея"
+      }
+    ],
+    "steps": [
+      "Обжарь фарш на сильном огне, разбивая комки лопаткой, пока не выпарится сок.",
+      "Добавь лук и тёртую морковь, готовь ещё 5 минут.",
+      "Положи томатную пасту, влей стакан воды, посоли и поперчи.",
+      "Туши на слабом огне 20 минут — соус должен загустеть и стать однородным."
+    ]
   }
 ]
