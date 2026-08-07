@@ -237,6 +237,7 @@ export function App() {
       {tab === "profile" && (
         <ProfileScreen
           food={state.food} screener={state.screener}
+          ratings={state.ratings} onRate={rateDish}
           onEditSleep={() => openOverlay("sleep")}
           onEditFood={() => openOverlay("food")}
           onBackup={backup} onRestore={restore}
