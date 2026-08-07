@@ -90,9 +90,10 @@ export function FoodSetup({ initial, onDone, onCancel }: {
           Сколько раз в день есть. На вес это почти не влияет — выбирай как удобно жить.
           Важнее, чтобы приёмы были примерно в одно время.
         </p>
-        <div className="chips">
+        <div className="seg" role="group" aria-label="Сколько раз в день есть">
           {([2, 3, 4, 5] as MealCount[]).map(n => (
-            <button key={n} className={mealCount === n ? "chip on" : "chip"} onClick={() => setMealCount(n)}>
+            <button key={n} className={mealCount === n ? "seg-item on" : "seg-item"}
+              aria-pressed={mealCount === n} onClick={() => setMealCount(n)}>
               {n} раза
             </button>
           ))}
@@ -140,10 +141,11 @@ export function FoodSetup({ initial, onDone, onCancel }: {
           примерно на тысячу рублей дешевле. Цель по калориям и белку при этом та же.
           «Средний» и «свободный» — весь набор без ограничений.
         </p>
-        <div className="chips">
-          <button className={budget === "small" ? "chip on" : "chip"} onClick={() => setBudget("small")}>Небольшой</button>
-          <button className={budget === "medium" ? "chip on" : "chip"} onClick={() => setBudget("medium")}>Средний</button>
-          <button className={budget === "large" ? "chip on" : "chip"} onClick={() => setBudget("large")}>Свободный</button>
+        <div className="seg" role="group" aria-label="Бюджет">
+          {([["small", "Небольшой"], ["medium", "Средний"], ["large", "Свободный"]] as const).map(([v, ru]) => (
+            <button key={v} className={budget === v ? "seg-item on" : "seg-item"}
+              aria-pressed={budget === v} onClick={() => setBudget(v)}>{ru}</button>
+          ))}
         </div>
       </section>
 
