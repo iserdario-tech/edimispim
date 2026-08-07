@@ -21,6 +21,8 @@ export interface Constraints {
   budget?: Budget;
   cuisines?: Cuisine[];        // пусто = все
   dislikes?: string[];         // свободный ввод
+  /** Блюда с оценкой «палец вниз»: id рецептов, которые больше не предлагаем вовсе. */
+  bannedIds?: string[];
 }
 
 export interface Screen {

@@ -5,17 +5,8 @@ import { planPurchase, type BuyLine, type Pantry } from "../food/packaging.js";
 import { PRICES_SOURCE, PRICES_DATE, costOf } from "../food/prices.js";
 import { hintFor } from "../food/ingredients.js";
 import { tap } from "./haptics.js";
-
-const SHOP_KEY = "edimispim.shop";
-const PANTRY_KEY = "edimispim.pantry";
-
-const readLS = <T,>(key: string, fallback: T): T => {
-  try { const raw = localStorage.getItem(key); return raw ? (JSON.parse(raw) as T) : fallback; }
-  catch { return fallback; }
-};
-const writeLS = (key: string, v: unknown): void => {
-  try { localStorage.setItem(key, JSON.stringify(v)); } catch { /* приватный режим */ }
-};
+import { IconThumb } from "./Icons.js";
+import { readLS, writeLS, SHOP_KEY } from "./localStore.js";
 
 const pantryKey = (name: string, unit: string): string => `${name.toLowerCase().trim()}|${unit}`;
 
@@ -48,9 +39,13 @@ const itemLink = (name: string, shopId: string): string => searchUrl(shopById(sh
  * Отмеченное вычёркивается и само уходит в кладовку — остаток от упаковки учтётся
  * в следующей закупке, отдельной кнопки «закупился» для этого не нужно.
  */
-export function GroceryBlock({ grocery }: { grocery: Grocery }) {
+export function GroceryBlock({ grocery, pantry, onPantry }: {
+  grocery: Grocery;
+  /** Кладовка живёт на экране недели: её же читает замена блюда «из того, что дома». */
+  pantry: Pantry;
+  onPantry: (next: Pantry) => void;
+}) {
   const [shopId, setShopId] = useState(() => readLS(SHOP_KEY, DEFAULT_SHOP_ID));
-  const [pantry, setPantry] = useState<Pantry>(() => readLS<Pantry>(PANTRY_KEY, {}));
   const [scope, setScope] = useState<"week" | number>("week");
 
   const shop = shopById(shopId);
@@ -77,14 +72,14 @@ export function GroceryBlock({ grocery }: { grocery: Grocery }) {
     const next = { ...pantry };
     if (checked) next[key] = line.need + line.leftover;   // купленное минус съеденное = остаток
     else delete next[key];
-    setPantry(next); writeLS(PANTRY_KEY, next);
+    onPantry(next);
   };
 
-  const clearAll = () => { setPantry({}); writeLS(PANTRY_KEY, {}); };
+  const clearAll = () => onPantry({});
   const checkAll = () => {
     const next = { ...pantry };
     for (const l of active) next[pantryKey(l.name, l.unit)] = l.need + l.leftover;
-    setPantry(next); writeLS(PANTRY_KEY, next);
+    onPantry(next);
   };
 
   const row = (line: BuyLine, checked: boolean) => {
@@ -176,7 +171,11 @@ export function GroceryBlock({ grocery }: { grocery: Grocery }) {
  * человек видит «Гочжан-свинина с кимчи», а что с ней делать, не написано.
  * Количества в составе умножены на размер порции, шаги — как в рецепте.
  */
-export function MealIngredients({ meal }: { meal: Meal }) {
+export function MealIngredients({ meal, rating, onRate }: {
+  meal: Meal;
+  rating?: 1 | -1;
+  onRate?: (id: string, value: 1 | -1) => void;
+}) {
   const shopId = readLS(SHOP_KEY, DEFAULT_SHOP_ID);
   const shop = shopById(shopId);
   const ings = (meal.recipe.ingredients ?? []).map(i => ({
@@ -188,6 +187,22 @@ export function MealIngredients({ meal }: { meal: Meal }) {
 
   return (
     <div className="meal-ings">
+      {/* Оценка живёт здесь, а не в списке: решение «нравится» человек принимает,
+          когда видит состав и шаги, а не когда просматривает названия. */}
+      {onRate && (
+        <div className="rate-row">
+          <span className="small muted">Как тебе блюдо?</span>
+          <button className={rating === 1 ? "rate-btn on" : "rate-btn"} aria-pressed={rating === 1}
+            aria-label="Нравится" title="Нравится — будет чаще"
+            onClick={() => { tap(); onRate(meal.recipe.id, 1); }}><IconThumb /></button>
+          <button className={rating === -1 ? "rate-btn on down" : "rate-btn"} aria-pressed={rating === -1}
+            aria-label="Не нравится" title="Не нравится — больше не предложу"
+            onClick={() => { tap(); onRate(meal.recipe.id, -1); }}><IconThumb down /></button>
+          {rating === 1 && <span className="small muted">буду ставить чаще</span>}
+          {rating === -1 && <span className="small muted">больше не предложу</span>}
+        </div>
+      )}
+
       {ings.length > 0 && (
         <>
           <div className="small muted">Продукты на эту порцию · «{shop.name}»</div>

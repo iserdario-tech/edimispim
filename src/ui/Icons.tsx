@@ -86,3 +86,11 @@ export const IconExternal = (p: IconProps = {}) => (
 export const IconCheck = (p: IconProps = {}) => (
   <svg {...svg(p)}><path d="M4.5 12.5 9.5 17.5 19.5 6.5" /></svg>
 );
+
+/** Нравится / не нравится: одна фигура, перевёрнутая по вертикали, — язык иконок один. */
+export const IconThumb = ({ down = false, ...p }: IconProps & { down?: boolean }) => (
+  <svg {...svg({ size: 16, ...p })} style={{ transform: down ? "rotate(180deg)" : "none" }}>
+    <path d="M7 21V10l4.5-7a2.2 2.2 0 0 1 2 3l-1 4h5.2a2 2 0 0 1 2 2.4l-1.4 6.8A2.5 2.5 0 0 1 15.8 21Z" />
+    <path d="M7 10H3.8v11H7" />
+  </svg>
+);

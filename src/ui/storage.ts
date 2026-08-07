@@ -25,6 +25,8 @@ export interface StoredState {
   weights?: { date: string; kg: number }[];
   /** Что съедено по дням: дата → отметки приёмов. Факт, без которого план не с чем сверять. */
   eaten?: Record<string, DayEaten>;
+  /** Оценки блюд: id рецепта → 1 «нравится» или −1 «больше не предлагать». Только на устройстве. */
+  ratings?: Record<string, 1 | -1>;
 }
 // выбранный на сегодня контекст (режим + переключатели), чтобы не терялся при перезапуске PWA
 export interface DayDraft { date: string; mode: DayMode; crunchEndHM: string; toggles: DayToggles }
