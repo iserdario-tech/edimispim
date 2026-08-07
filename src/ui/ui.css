@@ -33,8 +33,9 @@ body {
 /* Крупный заголовок экрана — Large Title из iOS */
 .page-title {
   margin: var(--sp-2) 0 var(--sp-4);
-  font-size: var(--t-large-title); line-height: var(--lh-large-title);
-  font-weight: 700; letter-spacing: -0.5px;
+  /* тянется вместе с шириной окна, а не скачет на брейкпоинте */
+  font-size: clamp(var(--t-title1), 4.2vw + 12px, 44px);
+  line-height: 1.15; font-weight: 700; letter-spacing: -0.5px;
 }
 .page-title .page-sub {
   display: block; margin-top: 2px;
@@ -307,7 +308,8 @@ summary.card-h::-webkit-details-marker { display: none; }
 .back-btn:hover, .back-btn:focus-visible { background: var(--accent-soft); }
 
 /* ─── Неделя ───────────────────────────────────────────────────────── */
-.day-block { border-top: var(--hairline) solid var(--separator); }
+.day-block { border-top: var(--hairline) solid var(--separator); break-inside: avoid; }
+.week-days { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 0 var(--sp-6); }
 .day-head {
   display: flex; width: 100%; align-items: center; gap: var(--sp-2); justify-content: space-between;
   min-height: 52px; background: none; border: 0; font: inherit; cursor: pointer; text-align: left;
@@ -370,7 +372,13 @@ summary.card-h::-webkit-details-marker { display: none; }
 .left-note { color: var(--fg-2); }
 .have-block { margin-top: var(--sp-3); }
 
-.buy-list { list-style: none; padding: 0; margin: var(--sp-3) 0 0; display: grid; gap: 0; }
+/* Список покупок раскладывается по ширине: на телефоне одна колонка,
+   на компьютере — сколько влезет. Одной колонкой он вытягивался на три экрана. */
+.buy-list {
+  list-style: none; padding: 0; margin: var(--sp-3) 0 0;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0 var(--sp-6);
+}
 .buy-row {
   display: grid; grid-template-columns: 28px minmax(0, 1fr) auto;
   align-items: start; gap: 2px var(--sp-3); min-height: var(--tap);
@@ -470,10 +478,16 @@ input[type="range"] { min-height: var(--tap); }
   .two-col .col-main { grid-column: 1; grid-row: 2; }
   .two-col .col-side { grid-column: 2; grid-row: 2; position: sticky; top: var(--sp-8); }
 
+  /* Плитка карточек. align-items: start обязателен: без него карточки тянутся
+     до высоты самой длинной в ряду, и рядом с «Меню на 7 дней» соседи
+     превращались в пустые простыни на пол-экрана. */
   .wrap:not(.two-col):not(.chat-screen) {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-    gap: var(--sp-5); align-content: start;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--sp-5); align-content: start; align-items: start;
   }
+  /* Длинные списки — меню недели и покупки — идут во всю ширину:
+     в узкой колонке они вытягиваются на несколько экранов */
+  .wrap:not(.two-col):not(.chat-screen) > .card.wide { grid-column: 1 / -1; }
   .wrap:not(.two-col):not(.chat-screen) > h1,
   .wrap:not(.two-col):not(.chat-screen) > h2,
   .wrap:not(.two-col):not(.chat-screen) > .card.accent { grid-column: 1 / -1; }
