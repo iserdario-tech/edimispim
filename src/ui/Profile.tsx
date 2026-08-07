@@ -1,3 +1,4 @@
+import { readTheme, applyTheme, type ThemeChoice } from "./theme.js";
 import React, { useRef } from "react";
 import type { ScreenerResult } from "../index.js";
 import type { FoodSettings } from "./storage.js";
@@ -14,11 +15,12 @@ export function Profile({ food, screener, onEditSleep, onEditFood, onBackup, onR
   onBackup: () => void;
   onRestore: (f: File) => void;
 }) {
+  const [theme, setTheme] = React.useState<ThemeChoice>(() => readTheme());
   const fileRef = useRef<HTMLInputElement>(null);
 
   return (
     <main className="wrap">
-      <h2>Я</h2>
+      <h1 className="page-title">Я</h1>
 
       <section className="card">
         <h3 className="card-h">Настройки</h3>
@@ -32,6 +34,20 @@ export function Profile({ food, screener, onEditSleep, onEditFood, onBackup, onR
             {food ? `${food.mealCount} приёма в день, аллергии, бюджет →` : "не заполнено →"}
           </span>
         </button>
+      </section>
+
+      <section className="card">
+        <h3 className="card-h">Оформление</h3>
+        <p className="small muted" style={{ marginTop: 0 }}>
+          По умолчанию — как в системе: днём светлое, ночью тёмное.
+        </p>
+        <div className="seg" role="group" aria-label="Тема оформления">
+          {([["auto", "Системная"], ["light", "Светлая"], ["dark", "Тёмная"]] as const).map(([v, ru]) => (
+            <button key={v} className={theme === v ? "seg-item on" : "seg-item"}
+              aria-pressed={theme === v}
+              onClick={() => { setTheme(v); applyTheme(v); }}>{ru}</button>
+          ))}
+        </div>
       </section>
 
       <section className="card">
