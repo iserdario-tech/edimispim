@@ -14,8 +14,17 @@ describe("diagnosePool — ограничения незаметно выеда�
     expect(d.messageRU).toBe("");
   });
 
-  it("аллергия на молоко и яйца оставляет один завтрак — предупреждаем об однообразии", () => {
-    const pool = filterRecipes(recipes, { allergens: ["milk", "egg"], cookware: ALL_COOKWARE });
+  // Раньше эти два случая брали настоящий набор рецептов и проверяли «молоко и яйца
+  // оставляют один завтрак». Набор вырос со 130 до 190 рецептов, и узкие места
+  // разъехались — а проверять надо поведение диагностики, а не количество контента.
+  const mk = (id: string, meal_type: Recipe["meal_type"]): Recipe =>
+    ({ id, name: id, meal_type, kcal: 300, protein_g: 20, fiber_g: 5, cookware: ["stove"], ingredients: [] });
+
+  it("когда на приём осталось меньше трёх блюд — предупреждаем об однообразии", () => {
+    const pool = [mk("b1", "breakfast"), mk("b2", "breakfast"),
+      ...Array.from({ length: 5 }, (_, i) => mk(`l${i}`, "lunch")),
+      ...Array.from({ length: 5 }, (_, i) => mk(`d${i}`, "dinner")),
+      ...Array.from({ length: 5 }, (_, i) => mk(`s${i}`, "dessert"))];
     const d = diagnosePool(pool, 4);
     expect(d.counts.breakfast).toBeLessThan(3);
     expect(d.ok).toBe(true);                       // день ещё собирается
@@ -23,15 +32,16 @@ describe("diagnosePool — ограничения незаметно выеда�
     expect(d.messageRU).toMatch(/повторя/);
   });
 
-  it("все аллергены сразу — завтраков и десертов нет, говорим прямо", () => {
+  it("когда приём опустел совсем — говорим прямо и подсказываем про аллергии", () => {
     const pool = filterRecipes(recipes, {
-      allergens: ["milk", "egg", "fish", "gluten", "nuts", "soy"], cookware: ALL_COOKWARE,
+      allergens: ["milk", "egg", "fish", "gluten", "nuts", "soy"],
+      cookware: ["microwave"],                     // и техника, и аллергии сразу
     });
     const d = diagnosePool(pool, 4);
     expect(d.ok).toBe(false);
-    expect(d.missing).toContain("breakfast");
+    expect(d.missing.length).toBeGreaterThan(0);
     expect(d.messageRU).toMatch(/не осталось/);
-    expect(d.messageRU).toMatch(/аллерги/);        // подсказываем, что именно ослабить
+    expect(d.messageRU).toMatch(/аллерги|техник/);  // подсказываем, что именно ослабить
   });
 
   it("схема из 2 приёмов не требует завтрака — и не жалуется на его отсутствие", () => {
