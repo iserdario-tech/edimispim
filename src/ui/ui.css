@@ -34,7 +34,7 @@ body {
 .page-title {
   margin: var(--sp-2) 0 var(--sp-4);
   /* тянется вместе с шириной окна, а не скачет на брейкпоинте */
-  font-size: clamp(var(--t-title1), 4.2vw + 12px, 44px);
+  font-size: clamp(var(--t-title1), 4.2vw + 0.75rem, 2.75rem);
   line-height: 1.15; font-weight: 700; letter-spacing: -0.5px;
 }
 .page-title .page-sub {
@@ -101,6 +101,11 @@ button.primary:active { transform: scale(.98); background: var(--accent-press); 
   font-size: var(--t-subhead); transition: background 120ms ease, color 120ms ease;
 }
 .chip.on { background: var(--accent); border-color: transparent; color: var(--accent-ink); font-weight: 600; }
+/* Заблокированная кнопка обязана выглядеть заблокированной: яркая кнопка, которая
+   ничего не делает при нажатии, читается как поломка приложения, а не как «сначала
+   заполни поле». Прозрачность 0.38 — та же, что у системных неактивных элементов. */
+.chip:disabled { opacity: .38; cursor: default; }
+.chip:disabled:active { transform: none; }
 
 /* ─── Сегментированный контрол ─────────────────────────────────────
    Один выбор из нескольких — как системный segmented control:
@@ -116,7 +121,7 @@ button.primary:active { transform: scale(.98); background: var(--accent-press); 
   border: 0; border-radius: 10px;
   background: none; color: var(--fg); cursor: pointer;
   /* подпись ужимается, но не вылезает за свою ячейку и не переносится в две строки */
-  font-size: clamp(11px, 3.2vw, var(--t-footnote)); font-weight: 500;
+  font-size: clamp(var(--t-caption2), 3.2vw, var(--t-footnote)); font-weight: 500;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   transition: background 140ms ease, box-shadow 140ms ease;
 }
@@ -171,7 +176,7 @@ button.primary:active { transform: scale(.98); background: var(--accent-press); 
 .card-h {
   margin: 0 0 var(--sp-2);
   /* текучий размер: 17 на телефоне, до 20 на широком экране */
-  font-size: clamp(var(--t-headline), 0.6vw + 15px, var(--t-title3));
+  font-size: clamp(var(--t-headline), 0.6vw + 0.9375rem, var(--t-title3));
   line-height: 1.3; font-weight: 600; letter-spacing: -0.2px; cursor: pointer;
 }
 .card-h-btn {
@@ -217,7 +222,7 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
   text-transform: uppercase; letter-spacing: .07em; font-weight: 600;
   color: var(--accent-dim); margin-bottom: var(--sp-1);
 }
-.why-today p { margin: 0; font-size: clamp(var(--t-callout), 0.5vw + 15px, var(--t-title3)); line-height: 1.45; }
+.why-today p { margin: 0; font-size: clamp(var(--t-callout), 0.5vw + 0.9375rem, var(--t-title3)); line-height: 1.45; }
 
 .nextup {
   display: flex; flex-direction: column; gap: 2px; margin: var(--sp-4) 0 var(--sp-1);
@@ -283,13 +288,28 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
 }
 .bubble.me { background: var(--accent); color: var(--accent-ink); margin-left: auto; border-bottom-right-radius: 6px; }
 .bubble.coachmsg { background: var(--surface); box-shadow: var(--shadow-1); margin-right: 24px; border-bottom-left-radius: 6px; }
-.coach-ask { display: flex; gap: var(--sp-2); margin-top: var(--sp-3); }
+.coach-ask { display: flex; gap: var(--sp-2); margin-top: var(--sp-3); align-items: center; }
 .coach-ask input {
   flex: 1; min-width: 0; min-height: var(--tap); padding: 0 var(--sp-4);
   border-radius: var(--r-pill); border: var(--hairline) solid var(--border);
   background: var(--surface); color: var(--fg); font: inherit;
 }
-.coach-ask button:disabled { opacity: .45; }
+.coach-ask input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+/* Круглая кнопка отправки — как в системных полях ввода. Пока вопрос не написан,
+   она приглушена, а не просто «серая»: видно, что действие ждёт текста. */
+.coach-send {
+  display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+  width: var(--tap); height: var(--tap); border: 0; border-radius: 50%;
+  background: var(--accent); color: var(--accent-ink); cursor: pointer;
+  transition: opacity 140ms ease, transform 120ms ease;
+}
+.coach-send:active { transform: scale(.94); }
+.coach-send:disabled { opacity: .38; cursor: default; transform: none; }
+.coach-send:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Пустой чат: подсказки прижаты к полю ввода, а не к верху экрана. */
+.coach-empty { margin-top: auto; padding-top: var(--sp-4); }
+.coach-empty .chips { margin-bottom: 0; }
 
 .tips { margin: var(--sp-3) 0 var(--sp-1); border-top: var(--hairline) solid var(--separator); padding-top: var(--sp-3); }
 .tips summary { cursor: pointer; font-weight: 600; min-height: var(--tap); display: flex; align-items: center; }
@@ -302,8 +322,8 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
 .tabbar {
   position: fixed; left: 50%; transform: translateX(-50%);
   bottom: calc(var(--sp-3) + env(safe-area-inset-bottom));
-  z-index: 100; width: min(420px, calc(100% - 32px));
-  display: grid; grid-template-columns: repeat(4, 1fr);
+  z-index: 100; width: min(460px, calc(100% - 24px));
+  display: grid; grid-template-columns: repeat(5, 1fr);
   padding: var(--sp-1);
   border-radius: var(--r-pill);
   background: var(--glass-bg);
@@ -313,11 +333,14 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
 }
 .tab {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-  min-height: var(--tap); padding: var(--sp-1) 0;
+  min-height: var(--tap); padding: var(--sp-1) 2px;
   background: none; border: 0; cursor: pointer; border-radius: var(--r-pill);
   color: var(--fg-2); font-size: var(--t-caption2); font-weight: 500;
-  transition: color 160ms ease, background 160ms ease;
+  transition: color 160ms ease, background 160ms ease, transform 120ms ease;
 }
+/* пятая вкладка ужала ячейку: подпись не должна переносить слово «Сегодня» в две строки */
+.tab span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.tab:active { transform: scale(.94); }
 .tab.on { color: var(--accent); background: var(--accent-soft); font-weight: 600; }
 .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
@@ -344,10 +367,12 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
 /* Шевроны и кнопки замены — единый набор иконок, а не символы из шрифта:
    ▾ и ↻ выглядели по-разному на iOS и Android и не совпадали по толщине с текстом */
 .day-head .chev, .card-h .chev { color: var(--fg-3); display: inline-flex; align-items: center; }
-.meal-name .chev { margin-left: var(--sp-1); }
+.meal-name .chev { display: inline-flex; align-items: center; min-height: var(--lh-body); color: var(--fg-3); }
 .swap-btn { display: inline-flex; align-items: center; gap: var(--sp-1); }
 .day-meals { list-style: none; padding: 0 0 var(--sp-2); margin: 0; display: grid; gap: var(--sp-2); }
-.day-meals li { display: grid; grid-template-columns: 46px minmax(0,1fr) auto; gap: var(--sp-1) var(--sp-2); align-items: start; }
+/* Колонка времени задана в rem, а не в px: при крупном системном шрифте цифры
+   «13:53» переполняли фиксированные 46 px и прилипали к названию блюда вплотную. */
+.day-meals li { display: grid; grid-template-columns: minmax(3.2rem, auto) minmax(0,1fr) auto; gap: var(--sp-1) var(--sp-2); align-items: start; }
 .meal-main { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .meal-meta { white-space: nowrap; color: var(--fg-2); font-size: var(--t-footnote); }
 .day-summary { padding: var(--sp-1) 0 var(--sp-2); border-bottom: var(--hairline) solid var(--separator); margin-bottom: var(--sp-2); color: var(--fg-2); font-size: var(--t-footnote); }
@@ -361,16 +386,27 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
 
 .anchor-row { display: flex; align-items: baseline; gap: var(--sp-3); margin-bottom: var(--sp-1); }
 .anchor-num {
-  font-size: clamp(var(--t-title2), 2vw + 12px, 40px); line-height: 1.1;
+  font-size: clamp(var(--t-title2), 2vw + 0.75rem, 2.5rem); line-height: 1.1;
   font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.5px;
 }
 .anchor-num .small { font-size: var(--t-footnote); font-weight: 400; color: var(--fg-2); }
 
 /* Холодильник: строка ввода и список того, что дома. Поле количества узкое —
    там всегда число, и широкое поле только сбивает с толку. */
-.fridge-add { display: flex; gap: var(--sp-2); flex-wrap: wrap; margin: var(--sp-2) 0; }
-.fridge-add input[type="text"] { flex: 1 1 160px; min-width: 0; }
-.fridge-add input[type="number"] { flex: 0 0 88px; }
+.fridge-add {
+  display: grid; gap: var(--sp-2); margin: var(--sp-2) 0;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "name name" "qty add";
+}
+.fridge-add input[type="text"] { grid-area: name; }
+.fridge-add input[type="number"] { grid-area: qty; }
+.fridge-add button { grid-area: add; }
+.fridge-add input {
+  min-width: 0; min-height: var(--tap); padding: 0 var(--sp-3);
+  border-radius: var(--r-control); border: var(--hairline) solid var(--border);
+  background: var(--surface-2); color: var(--fg); font-size: var(--t-body);
+  -webkit-appearance: none; appearance: none;
+}
 .fridge-list { list-style: none; padding: 0; margin: var(--sp-2) 0 0; display: grid; gap: var(--sp-1); }
 .fridge-list li {
   display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: var(--sp-2);
@@ -420,8 +456,12 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
 .shop-go { color: var(--fg-3); font-size: var(--t-footnote); }
 
 .meal-row { position: relative; }
+/* Название блюда — строка списка iOS: текст слева, шеврон прижат к правому краю.
+   Раньше шеврон стоял в потоке текста и прилипал к последнему слову («…с орехами ⌄»),
+   а при переносе уезжал на новую строку — столбца из шевронов не получалось вовсе. */
 .meal-name {
-  background: none; border: 0; padding: 0; font: inherit; color: inherit;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: var(--sp-2);
+  width: 100%; background: none; border: 0; padding: 0; font: inherit; color: inherit;
   text-align: left; cursor: pointer; min-height: var(--tap);
 }
 .meal-name:hover, .meal-name:focus-visible { color: var(--accent); }
@@ -440,6 +480,11 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
   position: sticky; bottom: calc(84px + env(safe-area-inset-bottom));
   background: var(--bg); padding: var(--sp-2) 0 var(--sp-1); margin-top: auto;
 }
+/* Когда чат пуст, вниз уезжают подсказки, а поле ввода встаёт сразу под ними.
+   Иначе `margin-top: auto` стоял у обоих, свободное место доставалось первому,
+   и между подсказками и полем зияла треть экрана. */
+.chat-screen .coach-empty { margin-top: auto; }
+.chat-screen .coach-empty + .coach-ask { margin-top: 0; }
 .chat-screen .bubble { max-width: 88%; }
 
 /* Покупки: строка товара */
@@ -481,8 +526,13 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
 
 /* Меню: развернуть все + замена блюд */
 .menu-head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); margin-bottom: var(--sp-2); }
-.day-head-row { display: flex; align-items: center; gap: var(--sp-2); }
-.day-head-row .day-head { flex: 1; }
+/* Строка дня. При крупном системном шрифте (Dynamic Type) кнопка «↻ день» переставала
+   помещаться и выталкивала строку за экран — появлялся горизонтальный скролл всей страницы.
+   Apple на этот случай советует ровно одно: перестраивать строку в столбец, а не обрезать.
+   Поэтому строка переносится, а «1570 ккал · белок 118 г» перестаёт быть неразрывной. */
+.day-head-row { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+.day-head-row .day-head { flex: 1 1 60%; min-width: 0; }
+.day-head-row .swap-btn { flex: 0 0 auto; }
 .swap-btn {
   background: var(--surface-2); border: 0; border-radius: var(--r-pill);
   color: var(--fg-2); cursor: pointer; font-size: var(--t-footnote);
@@ -506,7 +556,7 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
 
 .buy-title, .ing-title { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .buy-hint { line-height: 1.3; color: var(--fg-2); font-size: var(--t-caption1); }
-.day-nums { white-space: nowrap; color: var(--fg-2); font-size: var(--t-footnote); }
+.day-nums { color: var(--fg-2); font-size: var(--t-footnote); min-width: 0; overflow-wrap: anywhere; }
 
 .rd { display: flex; gap: var(--sp-3); align-items: center; border-radius: var(--r-card); padding: var(--sp-4); margin-bottom: var(--sp-3); background: var(--surface); box-shadow: var(--shadow-1); }
 .rd-dot { width: 14px; height: 14px; border-radius: 50%; flex: 0 0 auto; }
@@ -520,8 +570,36 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
 
 input[type="range"] { min-height: var(--tap); }
 
+/* ═══ Движение ═══════════════════════════════════════════════════════
+   Apple: анимация должна объяснять причину и следствие, а не украшать.
+   Поэтому здесь ровно два движения — «экран сменился» и «блок раскрылся», —
+   оба короткие (Apple держит микровзаимодействия в пределах 150–300 мс)
+   и оба с ease-out: вход быстрый, без пружин и подпрыгиваний.
+
+   Раскрытие анимируем по opacity и transform, а не по height: анимация высоты
+   заставляет браузер пересчитывать раскладку каждый кадр, и на длинном меню
+   это видно глазом. */
+@keyframes screen-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes reveal-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: none; }
+}
+.wrap { animation: screen-in 220ms ease-out both; }
+.reveal { animation: reveal-in 180ms ease-out both; }
+
+/* Отклик на нажатие: кнопка чуть проседает и возвращается. Размер меняется
+   трансформацией, поэтому соседние элементы не двигаются. */
+.chip:active, .seg-item:active, .eat-btn:active, .rate-btn:active, .swap-btn:active,
+.w-save:active, .day-head:active { transform: scale(.97); }
+.chip, .seg-item, .eat-btn, .rate-btn, .swap-btn, .w-save, .day-head { transition: transform 120ms ease; }
+
+/* Системная настройка «меньше движения» — старше любых наших решений. */
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+  .wrap, .reveal { animation: none; }
 }
 
 /* ═══ Широкий экран ══════════════════════════════════════════════════

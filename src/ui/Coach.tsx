@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { BACKEND_URL } from "./notifications.js";
+import { IconSend } from "./Icons.js";
+import { tap } from "./haptics.js";
 
 interface Turn { role: "user" | "assistant"; content: string }
 
@@ -23,6 +25,7 @@ export function Coach({ contextRU }: { contextRU: string }) {
   const send = async (text: string) => {
     const q = text.trim();
     if (!q || busy) return;
+    tap();
     const next: Turn[] = [...turns, { role: "user", content: q }];
     setTurns(next); setDraft(""); setErr(""); setStreaming(""); setBusy(true);
     try {
@@ -71,18 +74,30 @@ export function Coach({ contextRU }: { contextRU: string }) {
         {err && <div className="small" style={{ color: "#f85149" }}>{err}</div>}
         <div ref={endRef} />
 
+        {/* Пустой чат — это не «ошибка отсутствия сообщений», а приглашение начать.
+            Раньше подсказки жались к верху, а между ними и полем ввода зияло
+            полэкрана пустоты: экран выглядел недоделанным. Теперь они стоят там,
+            где человек и смотрит, — над полем, у большого пальца. */}
         {turns.length === 0 && !busy && (
-          <div className="chips">
-            {HINTS.map((h) => (
-              <button key={h} className="chip" onClick={() => send(h)}>{h}</button>
-            ))}
+          <div className="coach-empty">
+            <p className="small muted">Спроси что угодно про сон, еду и режим. Например:</p>
+            <div className="chips">
+              {HINTS.map((h) => (
+                <button key={h} className="chip" onClick={() => send(h)}>{h}</button>
+              ))}
+            </div>
           </div>
         )}
 
         <form className="coach-ask" onSubmit={(e) => { e.preventDefault(); send(draft); }}>
           <input value={draft} onChange={(e) => setDraft(e.target.value)}
             placeholder="Напиши свой вопрос" aria-label="Вопрос коучу" />
-          <button className="chip" type="submit" disabled={busy || !draft.trim()}>Спросить</button>
+          {/* Круглая кнопка со стрелкой вместо слова «Спросить»: так устроена отправка
+              во всех системных приложениях, и подпись не отъедает ширину у поля. */}
+          <button className="coach-send" type="submit" disabled={busy || !draft.trim()}
+            aria-label="Спросить">
+            <IconSend />
+          </button>
         </form>
         {turns.length > 0 && (
           <button className="linkbtn small" onClick={() => { setTurns([]); setErr(""); }}>Очистить переписку</button>

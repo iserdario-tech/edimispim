@@ -97,7 +97,7 @@ export function Fridge({ pantry, onPantry, pool }: {
               {KNOWN.map(n => <option key={n} value={n} />)}
             </datalist>
             <input type="number" inputMode="decimal" min="0" step="1" value={qty}
-              placeholder={defaultUnit(name)} aria-label="Количество"
+              placeholder={`сколько, ${defaultUnit(name)}`} aria-label={`Количество, ${defaultUnit(name)}`}
               onChange={e => setQty(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter") add(); }} />
             <button className="chip on" onClick={add} disabled={!name.trim() || !(+qty.replace(",", ".") > 0)}>

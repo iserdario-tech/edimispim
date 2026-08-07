@@ -111,7 +111,8 @@ export function explain(input: ExplainInput): Explanation {
   }
 
   // 5. Якорь: регулярность связана с результатом (D1, D2).
-  if (logs.length >= 4 && regularityScore(logs) < 60) {
+  const reg = regularityScore(logs);
+  if (reg !== null && reg < 60) {
     return {
       kind: "anchor",
       textRU: "Время подъёма за неделю сильно гуляет. Стабильный режим связан с результатом не меньше, чем сама диета — попробуй держать подъём в пределах часа даже в выходные.",
