@@ -1,4 +1,5 @@
 import React from "react";
+import { IconBack } from "./Icons.js";
 
 /**
  * Шапка вложенного экрана: стрелка назад и заголовок.
@@ -11,10 +12,7 @@ export function ScreenHeader({ title, onBack }: { title: string; onBack: () => v
   return (
     <header className="screen-head">
       <button className="back-btn" onClick={onBack} aria-label="Назад">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M15 18l-6-6 6-6" />
-        </svg>
+<IconBack />
       </button>
       <h2>{title}</h2>
     </header>

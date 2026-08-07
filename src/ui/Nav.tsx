@@ -9,7 +9,7 @@ export type Tab = "today" | "week" | "coach" | "profile";
  * Разделы — по времени и роли, а НЕ по «сну» и «еде». Вкладки «Сон» и «Еда» вернули бы
  * ровно то, чего проект избегает: два приложения в одном меню. Сутки остаются целыми.
  */
-const TABS: { id: Tab; label: string; icon: () => React.JSX.Element }[] = [
+const TABS: { id: Tab; label: string; icon: (p: { bold?: boolean }) => React.JSX.Element }[] = [
   { id: "today", label: "Сегодня", icon: IconToday },
   { id: "week", label: "Неделя", icon: IconWeek },
   { id: "coach", label: "Вопрос", icon: IconCoach },
@@ -26,7 +26,7 @@ export function Nav({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void })
           aria-current={tab === id ? "page" : undefined}
           onClick={() => onChange(id)}
         >
-          <Icon />
+          <Icon bold={tab === id} />
           <span>{label}</span>
         </button>
       ))}
