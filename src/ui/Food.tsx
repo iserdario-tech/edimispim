@@ -63,7 +63,7 @@ export function Food({ profile, food, ratings, onRate, onSetupFood }: {
    */
   const plan = useMemo(() => {
     if (!food) return null;
-    const safe = applySafety(computeTargets(food.profile), food.profile, {});
+    const safe = applySafety(computeTargets(food.profile), food.profile, food.screen ?? {});
     const bedMin = expectedBedMin(parseHM(profile.anchorWakeHM), profile.targetSleepMin);
     // оценки блюд идут в план: «палец вниз» убирает рецепт совсем, «вверх» — ставит чаще
     const rated = Object.entries(ratings ?? {});
