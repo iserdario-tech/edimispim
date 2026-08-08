@@ -18,8 +18,8 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
       },
       manifest: {
-        name: "едим и спим — сутки целиком",
-        short_name: "едим и спим",
+        name: "edim & spim — сутки целиком",
+        short_name: "edim & spim",
         lang: "ru",
         start_url: ".",
         scope: ".",
