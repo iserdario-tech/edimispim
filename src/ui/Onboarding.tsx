@@ -105,7 +105,7 @@ export function Onboarding({ initial, onDone, onRestore }: {
       <button className="primary" onClick={() => onDone(buildProfile(form), runScreener(scr))}>
         Построить план
       </button>
-      <p className="disclaimer">«Едим и спим» — не медицинское приложение. При нарушениях сна или питания обратись к врачу.</p>
+      <p className="disclaimer">«edim & spim» — не медицинское приложение. При нарушениях сна или питания обратись к врачу.</p>
     </main>
   );
 }
