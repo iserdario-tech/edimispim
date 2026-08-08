@@ -354,8 +354,8 @@ export function generateDay(targets: Targets, pool: Recipe[], opts: DayOptions):
 
   const day: Day = { meals, totals: { kcal: 0, protein: 0, fiber: 0 } };
   recomputeTotals(day);
-  swapForFiber(day, targets, pool, mains, offset, opts.roughNight ? 1 : 2);
-  swapForProtein(day, targets, pool, mains, offset);
+  swapForFiber(day, targets, pool, mains, offset, opts.roughNight ? 1 : 2, opts.liked ?? []);
+  swapForProtein(day, targets, pool, mains, offset, opts.liked ?? []);
   addProteinTopUp(day, targets);
   day.meals.sort((a, b) => a.timeMin - b.timeMin);
   if (opts.roughNight) day.simplified = true;
@@ -382,7 +382,7 @@ export function generateDay(targets: Targets, pool: Recipe[], opts: DayOptions):
  */
 function swapForFiber(
   day: Day, targets: Targets, pool: Recipe[], mains: Partial<Record<MealType, number>>,
-  offset = 0, maxPasses = 2,
+  offset = 0, maxPasses = 2, liked: string[] = [],
 ): void {
   const touched = new Set<number>();
   for (let pass = 0; pass < maxPasses && day.totals.fiber < targets.fiberGTarget; pass++) {
@@ -391,6 +391,9 @@ function swapForFiber(
   day.meals.forEach((meal, index) => {
     const share = mains[meal.recipe.meal_type as MealType];
     if (share === undefined || touched.has(index)) return;  // сладкое и уже заменённое не трогаем
+    // блюдо, которое человек отметил «нравится», автоматика не выкидывает: он поставил его сам,
+    // и молча подменить его ради пары граммов клетчатки — значит обесценить его выбор
+    if (liked.includes(meal.recipe.id)) return;
     const kcalShare = meal.recipe.kcal * meal.servings;    // столько калорий занимает этот приём
     for (const candidate of pool) {
       if (candidate.meal_type !== meal.recipe.meal_type) continue;
@@ -441,13 +444,15 @@ function swapForFiber(
  * и с той же долей калорий — ровно как добор клетчатки, только рычаг другой.
  */
 function swapForProtein(
-  day: Day, targets: Targets, pool: Recipe[], mains: Partial<Record<MealType, number>>, offset = 0,
+  day: Day, targets: Targets, pool: Recipe[], mains: Partial<Record<MealType, number>>,
+  offset = 0, liked: string[] = [],
 ): void {
   if (day.totals.protein >= targets.proteinGTarget * 0.85) return;
 
   const candidates: { index: number; recipe: Recipe; servings: number; gain: number }[] = [];
   day.meals.forEach((meal, index) => {
     if (mains[meal.recipe.meal_type as MealType] === undefined) return;   // сладкое не трогаем
+    if (liked.includes(meal.recipe.id)) return;                           // любимое не подменяем
     const kcalShare = meal.recipe.kcal * meal.servings;
     for (const candidate of pool) {
       if (candidate.meal_type !== meal.recipe.meal_type || candidate.id === meal.recipe.id) continue;
