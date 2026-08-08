@@ -89,22 +89,29 @@ export function FoodSetup({ initial, onDone, onCancel }: {
           <button className={activity === "high" ? "chip on" : "chip"} onClick={() => setActivity("high")}>На ногах</button>
         </div>
 
-        <p className="small muted" style={{ marginTop: 14 }}>
-          Сколько раз в день есть. На вес это почти не влияет — выбирай как удобно жить.
-          Важнее, чтобы приёмы были примерно в одно время.
+      </section>
+
+      {/* Число приёмов пищи — отдельный вопрос, а не часть образа жизни: раньше он стоял
+          под чужим заголовком, и человек искал его в разделе про подвижность дня. */}
+      <section className="card">
+        <h3 className="card-h">3 · Сколько раз в день есть</h3>
+        <p className="small muted">
+          На вес это почти не влияет — выбирай как удобно жить. Важнее, чтобы приёмы
+          были примерно в одно время.
         </p>
         <div className="seg" role="group" aria-label="Сколько раз в день есть">
           {([2, 3, 4, 5] as MealCount[]).map(n => (
             <button key={n} className={mealCount === n ? "seg-item on" : "seg-item"}
               aria-pressed={mealCount === n} onClick={() => setMealCount(n)}>
-              {n} раза
+              {/* «5 раза» — не по-русски; после четырёх счётное слово меняется */}
+              {n} {n < 5 ? "раза" : "раз"}
             </button>
           ))}
         </div>
       </section>
 
       <section className="card">
-        <h3 className="card-h">3 · Что есть на кухне</h3>
+        <h3 className="card-h">4 · Что есть на кухне</h3>
         <p className="small muted">Рецепты подберутся под твою технику — не придётся искать замену на ходу.</p>
         <div className="chips">
           {COOKWARE.map(([key, ru]) => (
@@ -115,7 +122,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
       </section>
 
       <section className="card">
-        <h3 className="card-h">4 · Чего не будет в меню</h3>
+        <h3 className="card-h">5 · Чего не будет в меню</h3>
         <p className="small muted">Аллергии исключаются жёстко, нелюбимое — тоже.</p>
         <div className="chips">
           {ALLERGENS.map(([key, ru]) => (
@@ -138,7 +145,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
       </section>
 
       <section className="card">
-        <h3 className="card-h">5 · Бюджет</h3>
+        <h3 className="card-h">6 · Бюджет</h3>
         <p className="small muted">
           «Небольшой» оставит блюда повыгоднее по цене за грамм белка — неделя выйдет
           примерно на тысячу рублей дешевле. Цель по калориям и белку при этом та же.
@@ -153,7 +160,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
       </section>
 
       <section className="card">
-        <h3 className="card-h">6 · Как входить в режим</h3>
+        <h3 className="card-h">7 · Как входить в режим</h3>
         <p className="small muted">
           С первого дня есть на полном дефиците — самая частая причина бросить на первой неделе.
           Поэтому начинаем с того калоража, на котором ты и так живёшь, и спускаемся к цели
