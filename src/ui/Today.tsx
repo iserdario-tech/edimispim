@@ -98,7 +98,7 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
     // читмил объявляет сам человек: в этот день приложение не считает калории
     // и не показывает меню — иначе оно спорит с решением, которое уже принято
     if (!food || isCheat) return null;
-    const base = applySafety(computeTargets(food.profile), food.profile, {});
+    const base = applySafety(computeTargets(food.profile), food.profile, food.screen ?? {});
     // во время вхождения в дефицит цель на сегодня своя — она выше конечной и снижается по дням
     const { targets: safe, ramp } = targetsForToday(base, food.startISO, today, food.pace);
     const rated = Object.entries(ratings ?? {});
