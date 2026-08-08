@@ -3,6 +3,7 @@ import type { Constraints, FoodProfile, MealCount, Screen, SafeTargets } from ".
 import { computeTargets, applySafety } from "../food/index.js";
 import type { RampPace } from "../food/rampin.js";
 import type { DayEaten } from "../food/eaten.js";
+import type { StopBangAnswers, NesAnswers } from "../screening.js";
 
 export type StorageLike = { getItem(k: string): string | null; setItem(k: string, v: string): void };
 
@@ -19,6 +20,14 @@ export interface FoodSettings {
   /** Скрининг питания (перенесён из oheedet). На нём стоят guardrails безопасности:
    *  при красных флагах дефицит смягчается, а человека отправляют к врачу. */
   screen?: Screen;
+  /**
+   * Ответы скрининга стыка: апноэ сна и ночное питание.
+   *
+   * Храним именно ОТВЕТЫ, а не готовые вердикты: вердикты считаются из них на лету
+   * (`stopBang`, `nightEating`), поэтому формулировки живут в одном месте и правятся
+   * один раз, а не расползаются копиями по хранилищу.
+   */
+  screening?: { stopBang?: StopBangAnswers; nes?: NesAnswers };
 }
 
 /**

@@ -3,6 +3,7 @@ import type { FoodSettings } from "./storage.js";
 import type { Activity, Budget, MealCount, Sex } from "../food/types.js";
 import { DEFAULT_PACE, RAMP_DAYS, type RampPace } from "../food/rampin.js";
 import { localDateISO } from "../today-date.js";
+import { nightEating, type StopBangAnswers, type NesAnswers } from "../screening.js";
 
 const COOKWARE = [
   ["stove", "плита"], ["oven", "духовка"], ["microwave", "микроволновка"],
@@ -43,6 +44,20 @@ export function FoodSetup({ initial, onDone, onCancel }: {
   const [cookware, setCookware] = useState<string[]>(initial?.constraints.cookware ?? ["stove", "oven", "microwave"]);
   const [allergens, setAllergens] = useState<string[]>(initial?.constraints.allergens ?? []);
   const [pace, setPace] = useState<RampPace>(initial?.pace ?? DEFAULT_PACE);
+  // скрининг стыка: «ворота» открывают остальные вопросы, чтобы форма не пугала длиной
+  const sb = initial?.screening?.stopBang;
+  const ne = initial?.screening?.nes;
+  const [apneaGate, setApneaGate] = useState(!!sb?.snoringLoud);
+  const [apnea, setApnea] = useState<Omit<StopBangAnswers, "snoringLoud">>({
+    tiredDaytime: !!sb?.tiredDaytime, observedApnea: !!sb?.observedApnea,
+    highBloodPressure: !!sb?.highBloodPressure, neckOver40cm: !!sb?.neckOver40cm,
+  });
+  const [nesGate, setNesGate] = useState(!!(ne?.eveningHyperphagia || ne?.nightEatingTwicePlus));
+  const [nes, setNes] = useState<Omit<NesAnswers, "eveningHyperphagia" | "nightEatingTwicePlus">>({
+    morningAnorexia: !!ne?.morningAnorexia, urgeToEatBeforeSleep: !!ne?.urgeToEatBeforeSleep,
+    insomnia: !!ne?.insomnia, mustEatToSleep: !!ne?.mustEatToSleep,
+    eveningMoodDrop: !!ne?.eveningMoodDrop, distress: !!ne?.distress,
+  });
   const saved = initial?.constraints.dislikes ?? [];
   const [noRare, setNoRare] = useState(RARE_INGREDIENTS.every(r => saved.includes(r)));
   const [dislikes, setDislikes] = useState(saved.filter(d => !RARE_INGREDIENTS.includes(d)).join(", "));
@@ -179,6 +194,70 @@ export function FoodSetup({ initial, onDone, onCancel }: {
         </p>
       </section>
 
+      {/*
+        Скрининг стыка: апноэ сна и ночное питание. Оба видны только когда сон и еда
+        смотрятся вместе — поодиночке ни pospat, ни oheedet их поймать не могли.
+
+        Вопросов всего тринадцать, но подряд их никто не задаёт: сначала два «ворот».
+        Ответил «нет» — секция закончилась, ответил «да» — доспросим остальное.
+        Apple называет это прогрессивным раскрытием, и здесь оно уместнее всего:
+        большинству эта часть формы стоит пяти секунд.
+      */}
+      <section className="card">
+        <h3 className="card-h">8 · Короткая проверка</h3>
+        <p className="small muted">
+          Два вопроса про сон и еду вместе. Это не диагноз — приложение ничего не лечит
+          и никуда не отправляет данные, а при тревожных ответах просто советует врача
+          и не ставит жёсткий дефицит.
+        </p>
+
+        <label className="chk">
+          <input type="checkbox" checked={apneaGate}
+            onChange={e => setApneaGate(e.target.checked)} />
+          Громко храплю или кто-то замечал остановки дыхания во сне
+        </label>
+        {apneaGate && (
+          <div className="reveal" style={{ paddingLeft: 8 }}>
+            {([
+              ["tiredDaytime", "Днём разбитость даже после долгого сна"],
+              ["observedApnea", "Кто-то замечал именно остановки дыхания"],
+              ["highBloodPressure", "Высокое давление или лечусь от него"],
+              ["neckOver40cm", "Окружность шеи больше 40 см"],
+            ] as const).map(([key, ru]) => (
+              <label key={key} className="chk">
+                <input type="checkbox" checked={!!apnea[key]}
+                  onChange={e => setApnea({ ...apnea, [key]: e.target.checked })} />
+                {ru}
+              </label>
+            ))}
+          </div>
+        )}
+
+        <label className="chk">
+          <input type="checkbox" checked={nesGate}
+            onChange={e => setNesGate(e.target.checked)} />
+          Просыпаюсь ночью поесть или основная еда уходит на вечер
+        </label>
+        {nesGate && (
+          <div className="reveal" style={{ paddingLeft: 8 }}>
+            {([
+              ["morningAnorexia", "Утром есть не хочется"],
+              ["urgeToEatBeforeSleep", "Между ужином и сном тянет есть"],
+              ["insomnia", "Сон рваный: трудно заснуть или просыпаюсь"],
+              ["mustEatToSleep", "Кажется, что без еды не усну"],
+              ["eveningMoodDrop", "К вечеру настроение хуже"],
+              ["distress", "Меня это беспокоит и мешает жить"],
+            ] as const).map(([key, ru]) => (
+              <label key={key} className="chk">
+                <input type="checkbox" checked={!!nes[key]}
+                  onChange={e => setNes({ ...nes, [key]: e.target.checked })} />
+                {ru}
+              </label>
+            ))}
+          </div>
+        )}
+      </section>
+
       <div style={{ display: "flex", gap: 12, marginTop: 18, flexWrap: "wrap" }}>
         <button className="chip on" onClick={() => onDone({
           profile: { sex, age, heightCm, weightKg, goalWeightKg, activity },
@@ -193,6 +272,15 @@ export function FoodSetup({ initial, onDone, onCancel }: {
           pace,
           // дата старта ставится один раз: правка формы не должна начинать лестницу заново
           startISO: initial?.startISO ?? localDateISO(),
+          screening: {
+            stopBang: { snoringLoud: apneaGate, ...apnea },
+            nes: { eveningHyperphagia: nesGate, nightEatingTwicePlus: nesGate, ...nes },
+          },
+          // ночное питание — красный флаг для расчёта: дефицит смягчается, а не максимальный
+          screen: {
+            ...(initial?.screen ?? {}),
+            nesFlagged: nightEating({ eveningHyperphagia: nesGate, nightEatingTwicePlus: nesGate, ...nes }).flagged,
+          },
         })}>Собрать меню</button>
         {onCancel && <button className="linkbtn" onClick={onCancel}>Не сейчас</button>}
       </div>
