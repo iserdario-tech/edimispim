@@ -2,9 +2,9 @@ import React, { useEffect, useMemo, useState } from "react";
 import type { Profile, DayLog, DayMode, DayToggles, ScreenerResult } from "../index.js";
 import { planDay, parseHM, sleepDurationMin, streakDays } from "../index.js";
 import { toPlanView } from "./viewModel.js";
-import { loadDayDraft, saveDayDraft, type FoodSettings } from "./storage.js";
+import { loadDayDraft, saveDayDraft, targetsFor, type FoodSettings } from "./storage.js";
 import { enableNotifications, syncPushContext } from "./notifications.js";
-import { computeTargets, applySafety, filterRecipes, generateAdaptedDay, expectedBedMin, diagnosePool, targetsForToday, prefersFamiliar } from "../food/index.js";
+import { filterRecipes, generateAdaptedDay, expectedBedMin, diagnosePool, targetsForToday, prefersFamiliar } from "../food/index.js";
 import type { Recipe, Slot } from "../food/types.js";
 import { eatenTotals, type DayEaten, type MealMark } from "../food/eaten.js";
 import recipesJson from "../food/data/recipes.json";
@@ -98,7 +98,7 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
     // читмил объявляет сам человек: в этот день приложение не считает калории
     // и не показывает меню — иначе оно спорит с решением, которое уже принято
     if (!food || isCheat) return null;
-    const base = applySafety(computeTargets(food.profile), food.profile, food.screen ?? {});
+    const base = targetsFor(food);
     // во время вхождения в дефицит цель на сегодня своя — она выше конечной и снижается по дням
     const { targets: safe, ramp } = targetsForToday(base, food.startISO, today, food.pace);
     const rated = Object.entries(ratings ?? {});

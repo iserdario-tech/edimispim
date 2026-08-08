@@ -1,7 +1,7 @@
 import type { DayRecord } from "./day-log.js";
 import { parseHM } from "./time.js";
 import { sleepDurationMin } from "./readiness.js";
-import { regularityScore } from "./regularity.js";
+import { regularityScore, MIN_NIGHTS_FOR_REGULARITY } from "./regularity.js";
 import { toSleepLogs } from "./explain.js";
 
 /**
@@ -70,13 +70,11 @@ const hm = (min: number): string =>
 const MIN_NIGHTS = 2;
 
 /**
- * Сколько ночей нужно, чтобы вообще называть цифру ровности.
- *
- * Четыре — не круглое число с потолка: ровно столько приложение просит в «Что дальше»
- * («с четырёх ночей уже видно, ровно ли держится режим»). Два экрана не должны
- * расходиться в том, когда данных достаточно.
+ * Сколько ночей нужно, чтобы вообще называть цифру ровности, — берём у самой метрики.
+ * Порог один на всё приложение: если он разъедется, «Что дальше» будет просить ночи,
+ * которых для цифры уже хватает, или наоборот.
  */
-const MIN_NIGHTS_FOR_SCORE = 4;
+const MIN_NIGHTS_FOR_SCORE = MIN_NIGHTS_FOR_REGULARITY;
 
 export function anchor(days: DayRecord[], targetSleepMin: number): AnchorResult {
   const withSleep = days.filter(d => d.sleep?.bedHM);

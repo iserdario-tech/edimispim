@@ -37,7 +37,6 @@ describe("ничего не теряется при переезде", () => {
   it("копия увозит ВСЁ, что человек накопил руками, а не только профиль", () => {
     const src = memStore();
     saveState(fullState, src);
-    src.setItem("edimispim.favorites", JSON.stringify({ "помидоры|lavka": { url: "https://lavka.yandex.ru/p/1" } }));
     src.setItem("edimispim.pantry", JSON.stringify({ "творог 5%|г": 100 }));
     src.setItem("edimispim.shop", "lavka");
     src.setItem("edimispim.coach.v1", JSON.stringify([{ role: "user", content: "привет" }]));
@@ -49,7 +48,6 @@ describe("ничего не теряется при переезде", () => {
     expect(restored?.food?.mealCount).toBe(4);
     expect(restored?.weights).toHaveLength(1);
     // самое важное: довески доехали
-    expect(dst.getItem("edimispim.favorites")).toContain("lavka.yandex.ru");
     expect(dst.getItem("edimispim.pantry")).toContain("творог");
     expect(dst.getItem("edimispim.shop")).toBe("lavka");
     expect(dst.getItem("edimispim.coach.v1")).toContain("привет");

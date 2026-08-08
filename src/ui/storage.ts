@@ -1,5 +1,6 @@
 import type { Profile, DayLog, DayMode, DayToggles, ScreenerResult } from "../index.js";
-import type { Constraints, FoodProfile, MealCount, Screen } from "../food/types.js";
+import type { Constraints, FoodProfile, MealCount, Screen, SafeTargets } from "../food/types.js";
+import { computeTargets, applySafety } from "../food/index.js";
 import type { RampPace } from "../food/rampin.js";
 import type { DayEaten } from "../food/eaten.js";
 
@@ -19,6 +20,16 @@ export interface FoodSettings {
    *  при красных флагах дефицит смягчается, а человека отправляют к врачу. */
   screen?: Screen;
 }
+
+/**
+ * Цели по калориям и белку для этих настроек — единственная точка входа.
+ *
+ * Раньше строка `applySafety(computeTargets(food.profile), food.profile, …)` стояла
+ * в трёх экранах, и когда к ней добавился скрининг, править пришлось все три.
+ * Один вызов — один шанс забыть аргумент.
+ */
+export const targetsFor = (food: FoodSettings): SafeTargets =>
+  applySafety(computeTargets(food.profile), food.profile, food.screen ?? {});
 
 export interface StoredState {
   profile: Profile;
@@ -114,7 +125,6 @@ export function loadDayDraft(date: string, store: StorageLike = defaultStore()):
  * а на деле половина работы пропадала.
  */
 const EXTRA_KEYS = [
-  "edimispim.favorites",   // мои товары в магазинах
   "edimispim.pantry",      // что осталось дома
   "edimispim.shop",        // выбранный сервис доставки
   "edimispim.coach.v1",    // переписка с коучем
