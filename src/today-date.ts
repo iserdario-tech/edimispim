@@ -26,8 +26,3 @@ export function plusDaysISO(iso: string, n: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-/** Понедельник той недели, в которую попадает дата, — с него начинается меню недели. */
-export function mondayOf(iso: string): string {
-  const d = new Date(iso + "T12:00:00Z");
-  return plusDaysISO(iso, -((d.getUTCDay() + 6) % 7));
-}
