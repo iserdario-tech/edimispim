@@ -31,7 +31,11 @@ describe("оценки блюд", () => {
    */
   it("«палец вверх» ставит блюдо чаще, но не вытесняет остальные", () => {
     const pool = filterRecipes(RECIPES, CONSTRAINTS);
-    const liked = pool.filter(r => r.meal_type === "dinner").slice(0, 3).map(r => r.id);
+    // берём блюда, которые вообще МОГУТ попасть в этот приём: ужин весит около 460 ккал,
+    // и лайк блюду на 900 ккал ничего не изменит — планировщик его не поставит по размеру порции
+    const liked = pool
+      .filter(r => r.meal_type === "dinner" && r.kcal > 350 && r.kcal < 600)
+      .slice(0, 3).map(r => r.id);
     const countLiked = (ids: string[], opts: Parameters<typeof week>[0]) => {
       const dinners = week(opts).flatMap(d => d.meals.filter(m => m.slot === "dinner"));
       return dinners.filter(m => ids.includes(m.recipe.id)).length;
