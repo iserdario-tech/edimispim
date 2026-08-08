@@ -51,7 +51,7 @@ export function Progress({ profile, history, food, weights, eaten, cheatDays, on
   /** Где человек в лестнице входа. Меню для этого собирать не нужно — только цели. */
   const ramp = useMemo(() => {
     if (!food) return null;
-    const safe = applySafety(computeTargets(food.profile), food.profile, {});
+    const safe = applySafety(computeTargets(food.profile), food.profile, food.screen ?? {});
     return targetsForToday(safe, food.startISO, today, food.pace).ramp;
   }, [food, today]);
 

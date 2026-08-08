@@ -17,16 +17,42 @@ import { localDateISO } from "../today-date.js";
 import { toggleMark, type MealMark } from "../food/eaten.js";
 import type { Slot } from "../food/types.js";
 
-/** Данные из pospat и oheedet лежат на том же origin — подхватываем их, а не просим вводить заново. */
-function pickUpOldApps(): { food?: FoodSettings; weights: { date: string; kg: number }[]; notesRU: string[] } {
-  if (typeof localStorage === "undefined") return { weights: [], notesRU: [] };
+/**
+ * Данные из pospat и oheedet лежат на том же origin — подхватываем их, а не просим вводить заново.
+ *
+ * Здесь была самая дорогая потеря во всём приложении: из перенесённых суток забирались
+ * ТОЛЬКО замеры веса, а ночи сна выбрасывались. При этом человеку честно писали
+ * «Перенесено ночей сна: 24» — то есть приложение сообщало о переносе, которого не делало.
+ * Ради этих ночей вся миграция и затевалась: без них не считается ни ровность режима,
+ * ни разбор плато, ни «почему сегодня так».
+ *
+ * Заодно возвращён скрининг питания из oheedet: на нём стоят guardrails безопасности
+ * (мягкий дефицит при красных флагах), и без него они не срабатывали никогда.
+ */
+function pickUpOldApps(): {
+  food?: FoodSettings;
+  weights: { date: string; kg: number }[];
+  history: DayLog[];
+  notesRU: string[];
+} {
+  if (typeof localStorage === "undefined") return { weights: [], history: [], notesRU: [] };
   const m = migrateAll(localStorage);
   const weights = m.days.flatMap(d =>
     typeof d.body?.weightKg === "number" ? [{ date: d.date, kg: d.body.weightKg }] : []);
+  const history: DayLog[] = m.days.flatMap(d => d.sleep ? [{
+    date: d.date,
+    wokeHM: d.sleep.wokeHM,
+    quality: d.sleep.quality,
+    ...(d.sleep.bedHM ? { bedHM: d.sleep.bedHM } : {}),
+    ...(d.sleep.alcohol ? { hadAlcohol: true } : {}),
+  }] : []);
   const food: FoodSettings | undefined = m.foodProfile
-    ? { profile: m.foodProfile, constraints: m.constraints ?? {}, mealCount: 4 }
+    ? {
+        profile: m.foodProfile, constraints: m.constraints ?? {}, mealCount: 4,
+        ...(m.screen ? { screen: m.screen } : {}),
+      }
     : undefined;
-  return { food, weights, notesRU: m.notesRU };
+  return { food, weights, history, notesRU: m.notesRU };
 }
 
 export function App() {
@@ -168,12 +194,14 @@ export function App() {
       {state && <ScreenHeader title="Сон" onBack={back} />}
       <Onboarding initial={state?.profile} onRestore={() => fileRef.current?.click()}
         onDone={(profile: Profile, screener: ScreenerResult) => {
-      const picked = state ? { food: state.food, weights: state.weights ?? [] } : pickUpOldApps();
+      const picked = state
+        ? { food: state.food, weights: state.weights ?? [], history: state.history }
+        : pickUpOldApps();
       const food = state?.food ?? picked.food;
       const weights = state?.weights ?? picked.weights;
       update({
         profile,
-        history: state?.history ?? [],
+        history: state?.history ?? picked.history,   // ночи из pospat, а не пустой массив
         screener,
         ...(food ? { food } : {}),
         ...(weights.length ? { weights } : {}),
