@@ -11,6 +11,7 @@ import { nextStep } from "../next-step.js";
 import { plateau } from "../plateau.js";
 import { SleepSparkline, WeightChart } from "./Charts.js";
 import { tap } from "./haptics.js";
+import { stopBang, nightEating } from "../screening.js";
 
 /**
  * Итоги: где ты сейчас и что дальше.
@@ -47,6 +48,26 @@ export function Progress({ profile, history, food, weights, eaten, cheatDays, on
   const anchorInfo = useMemo(() => anchor(records, profile.targetSleepMin), [records, profile.targetSleepMin]);
   const step = useMemo(() => nextStep(records, !!food), [records, food]);
   const plateauInfo = useMemo(() => plateau(records, profile.targetSleepMin), [records, profile.targetSleepMin]);
+
+  /**
+   * Вердикты скрининга стыка. Считаются из сохранённых ответов, а не хранятся текстом:
+   * формулировки живут в одном месте и правятся один раз.
+   */
+  const screening = useMemo(() => {
+    const a = food?.screening;
+    if (!a || !food) return [];
+    const out: { titleRU: string; messageRU: string }[] = [];
+    if (a.stopBang) {
+      const bmi = food.profile.weightKg / Math.pow(food.profile.heightCm / 100, 2);
+      const r = stopBang(a.stopBang, { bmi, age: food.profile.age, sex: food.profile.sex });
+      if (r.flagged) out.push({ titleRU: `Похоже на апноэ сна · риск ${r.levelRU}`, messageRU: r.messageRU });
+    }
+    if (a.nes) {
+      const r = nightEating(a.nes);
+      if (r.flagged) out.push({ titleRU: "Еда сдвинута на вечер и ночь", messageRU: r.messageRU });
+    }
+    return out;
+  }, [food]);
 
   /** Где человек в лестнице входа. Меню для этого собирать не нужно — только цели. */
   const ramp = useMemo(() => {
@@ -118,6 +139,20 @@ export function Progress({ profile, history, food, weights, eaten, cheatDays, on
           </p>
         </section>
       )}
+
+      {/* Скрининг стыка. Карточка появляется только при флаге: у кого всё чисто, тот
+          про эти опросники больше не вспоминает. Формулировки ведут к врачу и никогда
+          не ставят диагноз — приложение не медицинское и им не притворяется. */}
+      {screening.map(s => (
+        <section key={s.titleRU} className="card">
+          <h3 className="card-h">{s.titleRU}</h3>
+          <p className="small">{s.messageRU}</p>
+          <p className="small muted">
+            Это не диагноз, а повод показаться врачу. Данные никуда не отправлялись —
+            ответы лежат только на твоём телефоне.
+          </p>
+        </section>
+      ))}
 
       {plateauInfo.messageRU && (
         <section className="card">
