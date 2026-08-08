@@ -251,7 +251,10 @@ export function App() {
 
       <input ref={fileRef} type="file" accept="application/json,.json" hidden
         onChange={(e) => { const f = e.target.files?.[0]; if (f) restore(f); e.target.value = ""; }} />
-      <Nav tab={tab} onChange={setTab} />
+      {/* Смена вкладки показывает раздел с начала. Без этого страница удерживала прежнюю
+          прокрутку: с середины «Еды» человек попадал в середину «Итогов» и видел не заголовок,
+          а обрывок карточки. Разделы независимы — общей позиции у них быть не может. */}
+      <Nav tab={tab} onChange={(t) => { setTab(t); window.scrollTo({ top: 0 }); }} />
     </>
   );
 }
