@@ -191,7 +191,7 @@ export const PIECE_GRAMS: Record<string, number> = {
   "лаваш": 90,
 };
 
-export const nutrientsFor = (name: string): Nutrients | undefined =>
+const nutrientsFor = (name: string): Nutrients | undefined =>
   NUTRIENTS[name.toLowerCase().trim()];
 
 /** Вес позиции в граммах: штуки переводятся по среднему весу. */

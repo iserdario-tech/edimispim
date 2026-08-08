@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from "react";
 import type { Profile } from "../index.js";
 import { parseHM, fmtHM } from "../index.js";
-import type { FoodSettings } from "./storage.js";
+import { targetsFor, type FoodSettings } from "./storage.js";
 import {
-  computeTargets, applySafety, generateDay, buildGroceryList, expectedBedMin,
+  generateDay, buildGroceryList, expectedBedMin,
   filterRecipes, swapDish, targetsForToday, prefersFamiliar,
 } from "../food/index.js";
 import type { Recipe } from "../food/types.js";
@@ -63,7 +63,7 @@ export function Food({ profile, food, ratings, onRate, onSetupFood }: {
    */
   const plan = useMemo(() => {
     if (!food) return null;
-    const safe = applySafety(computeTargets(food.profile), food.profile, food.screen ?? {});
+    const safe = targetsFor(food);
     const bedMin = expectedBedMin(parseHM(profile.anchorWakeHM), profile.targetSleepMin);
     // оценки блюд идут в план: «палец вниз» убирает рецепт совсем, «вверх» — ставит чаще
     const rated = Object.entries(ratings ?? {});

@@ -14,7 +14,7 @@ export const BACKEND_URL = "https://edimispim-push.pospat.workers.dev";
 /** Свой сервер уведомлений есть — пуши работают. */
 export const PUSH_READY = true;
 
-export const PUSH_UNAVAILABLE_RU =
+const PUSH_UNAVAILABLE_RU =
   "Напоминания сейчас недоступны. Всё остальное работает и без них — " +
   "приложение считает план прямо на телефоне.";
 

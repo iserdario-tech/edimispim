@@ -23,7 +23,7 @@ export interface Pack {
  * Типичные фасовки российских продуктовых. Не претендуют на точность конкретного магазина —
  * задача не угадать артикул, а не просить купить «450 г творога», которых не бывает.
  */
-export const PACKS: Record<string, Pack> = {
+const PACKS: Record<string, Pack> = {
   "творог 5%": { size: 200, perishDays: 5 },
   "творог мягкий": { size: 180, perishDays: 5 },
   "греческий йогурт": { size: 300, perishDays: 7 },
