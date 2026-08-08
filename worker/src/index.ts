@@ -59,7 +59,7 @@ export default {
           privateJWK: JSON.parse(env.VAPID_PRIVATE),
           subscription: body.subscription!,
           message: {
-            payload: { title: "pospat", body: "Напоминания включены ✅" },
+            payload: { title: "edim & spim", body: "Напоминания включены ✅" },
             adminContact: "mailto:pospat@pospat.app",
             options: { ttl: 600, urgency: "high" },
           },
@@ -86,7 +86,7 @@ export default {
       }
     }
 
-    return new Response("pospat push", { headers: CORS });
+    return new Response("edim & spim push", { headers: CORS });
   },
 
   async scheduled(_evt: ScheduledController, env: Env): Promise<void> {
