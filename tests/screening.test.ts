@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { stopBang, nightEating, type NesAnswers, type StopBangAnswers } from "../src/screening";
+import { computeTargets } from "../src/food/targets";
+import { applySafety } from "../src/food/safety";
 import { applySafety } from "../src/food/safety";
 
 const noStopBang: StopBangAnswers = {
@@ -91,5 +93,44 @@ describe("Синдром ночного питания", () => {
     const safe = applySafety(base, { sex: "m" }, { nesFlagged: flagged });
     expect(safe.kcalTarget).toBeGreaterThanOrEqual(base.tdee - 300);
     expect(safe.referDoctor).toBe(true);
+  });
+});
+
+/**
+ * Скрининг был написан, обоснован наукой и не подключён к интерфейсу — вопросов никто
+ * не задавал (аудит 2026-08-08). Проверяем цепочку целиком: ответы → вердикт → расчёт.
+ * Смысл guardrail: при ночном питании жёсткая диета обычно делает хуже, поэтому
+ * дефицит смягчается, а человека отправляют к специалисту.
+ */
+describe("скрининг доходит до расчёта калорий", () => {
+  const profile = { sex: "m" as const, age: 35, heightCm: 178, weightKg: 100, activity: "low" as const };
+
+  it("ночное питание смягчает дефицит и ведёт к врачу", () => {
+    const nes: NesAnswers = {
+      eveningHyperphagia: true, nightEatingTwicePlus: true,
+      morningAnorexia: true, urgeToEatBeforeSleep: true, insomnia: true,
+      mustEatToSleep: false, eveningMoodDrop: false, distress: true,
+    };
+    expect(nightEating(nes).flagged).toBe(true);
+
+    const base = computeTargets(profile);
+    const plain = applySafety(base, profile, {});
+    const flagged = applySafety(base, profile, { nesFlagged: nightEating(nes).flagged });
+
+    expect(flagged.referDoctor).toBe(true);
+    expect(flagged.kcalTarget).toBeGreaterThan(plain.kcalTarget);   // дефицит мягче
+    expect(flagged.flags).toContain("screen_night_eating");
+  });
+
+  it("чистые ответы ничего не меняют", () => {
+    const calm: NesAnswers = {
+      eveningHyperphagia: false, nightEatingTwicePlus: false,
+      morningAnorexia: false, urgeToEatBeforeSleep: false, insomnia: false,
+      mustEatToSleep: false, eveningMoodDrop: false, distress: false,
+    };
+    const base = computeTargets(profile);
+    const r = applySafety(base, profile, { nesFlagged: nightEating(calm).flagged });
+    expect(r.referDoctor).toBe(false);
+    expect(r.kcalTarget).toBe(applySafety(base, profile, {}).kcalTarget);
   });
 });
