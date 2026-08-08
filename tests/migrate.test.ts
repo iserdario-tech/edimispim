@@ -107,3 +107,41 @@ describe("migrateAll", () => {
     expect(m.notesRU.join(" ")).toMatch(/чистого листа/);
   });
 });
+
+/**
+ * Самая дорогая потеря во всём приложении: из перенесённых суток забирались только
+ * замеры веса, а ночи сна выбрасывались — при этом человеку писали «Перенесено ночей
+ * сна: N». Ради этих ночей вся миграция и затевалась: без них не считаются ни ровность
+ * режима, ни разбор плато, ни «почему сегодня так».
+ */
+describe("перенос отдаёт и ночи, и вес, и скрининг", () => {
+  it("ночи сна доезжают до нового приложения, а не только считаются в отчёте", () => {
+    const store = {
+      "pospat.state.v1": JSON.stringify({
+        profile: { anchorWakeHM: "07:00", targetSleepMin: 465 },
+        history: [
+          { date: "2026-07-01", wokeHM: "07:10", bedHM: "23:20", quality: 4 },
+          { date: "2026-07-02", wokeHM: "06:55", bedHM: "23:05", quality: 3, hadAlcohol: true },
+        ],
+      }),
+      "oheedet": JSON.stringify({
+        profile: { sex: "m", age: 30, heightCm: 180, weightKg: 90, activity: "low" },
+        screen: { scoffScore: 2 },
+        progress: { weights: [{ date: "2026-07-01", kg: 90 }] },
+      }),
+    } as Record<string, string>;
+
+    const m = migrateAll({ getItem: (k) => store[k] ?? null, setItem: () => {} });
+
+    const nights = m.days.filter(d => d.sleep);
+    expect(nights).toHaveLength(2);
+    expect(nights[0]!.sleep!.wokeHM).toBe("07:10");
+    expect(nights[1]!.sleep!.alcohol).toBe(true);
+
+    // и отчёт не должен обещать больше, чем перенесено
+    expect(m.notesRU.join(" ")).toContain("Перенесено ночей сна: 2");
+
+    // скрининг питания нужен guardrails безопасности — он тоже должен доехать
+    expect(m.screen?.scoffScore).toBe(2);
+  });
+});

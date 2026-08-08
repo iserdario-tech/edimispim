@@ -1,5 +1,5 @@
 import type { Profile, DayLog, DayMode, DayToggles, ScreenerResult } from "../index.js";
-import type { Constraints, FoodProfile, MealCount } from "../food/types.js";
+import type { Constraints, FoodProfile, MealCount, Screen } from "../food/types.js";
 import type { RampPace } from "../food/rampin.js";
 import type { DayEaten } from "../food/eaten.js";
 
@@ -15,6 +15,9 @@ export interface FoodSettings {
   /** День, с которого считается вхождение. Ставится один раз и не сбрасывается правкой формы:
    *  иначе каждый заход в настройки начинал бы лестницу заново и цель не наступала никогда. */
   startISO?: string;
+  /** Скрининг питания (перенесён из oheedet). На нём стоят guardrails безопасности:
+   *  при красных флагах дефицит смягчается, а человека отправляют к врачу. */
+  screen?: Screen;
 }
 
 export interface StoredState {
