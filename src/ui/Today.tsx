@@ -13,6 +13,7 @@ import { tap } from "./haptics.js";
 import { explain } from "../explain.js";
 import { toDayRecords } from "./dayRecords.js";
 import { localDateISO, localMinutes } from "../today-date.js";
+import { useNow } from "./useNow.js";
 
 const RECIPES = recipesJson as Recipe[];
 
@@ -23,9 +24,11 @@ function crunchStr(hm: string): string {
   return `${hh}:${String(m ?? 0).padStart(2, "0")}`;
 }
 
-/** «7 августа, четверг» — дата под крупным заголовком, как в системных приложениях. */
-const todayLabel = (): string =>
-  new Date().toLocaleDateString("ru-RU", { day: "numeric", month: "long", weekday: "long" });
+/** «7 августа, четверг» — дата под крупным заголовком, как в системных приложениях.
+ *  Дату берём из того же «сейчас», что и вся лента: иначе после полуночи заголовок
+ *  показывал бы вчерашнее число, пока приложение висит открытым. */
+const todayLabel = (d: Date): string =>
+  d.toLocaleDateString("ru-RU", { day: "numeric", month: "long", weekday: "long" });
 
 export function Today({ profile, history, screener, onLog, food, weights, eaten, ratings, cheatDays, onMarkMeal, onCheatDay, onSetupFood }: {
   profile: Profile;
@@ -43,7 +46,8 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
   onCheatDay?: (date: string, on: boolean) => void;
   onSetupFood?: () => void;
 }) {
-  const now = new Date();
+  // «сейчас» обязано идти вперёд, пока экран открыт: у PWA он живёт часами без перезагрузки
+  const now = useNow();
   const today = localDateISO(now);        // по местному времени: за полночь день уже новый
   const nowMin = localMinutes(now);
   const [draft] = useState(() => loadDayDraft(today));
@@ -173,7 +177,7 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
     <main className="wrap two-col">
       <h1 className="page-title">
         Сегодня
-        <span className="page-sub">{todayLabel()}</span>
+        <span className="page-sub">{todayLabel(now)}</span>
       </h1>
       <div className="col-side">
       {/* Главное сообщение дня — первое, что видно */}
