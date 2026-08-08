@@ -8,7 +8,7 @@ import {
 } from "../food/index.js";
 import type { Recipe } from "../food/types.js";
 import recipesJson from "../food/data/recipes.json";
-import { localDateISO, mondayOf, plusDaysISO } from "../today-date.js";
+import { localDateISO, plusDaysISO } from "../today-date.js";
 import { GroceryBlock, MealIngredients } from "./Grocery.js";
 import { Fridge } from "./Fridge.js";
 import { readLS, writeLS, PANTRY_KEY } from "./localStore.js";
@@ -16,7 +16,19 @@ import type { Pantry } from "../food/packaging.js";
 import { IconChevron, IconSwap } from "./Icons.js";
 
 const RECIPES = recipesJson as Recipe[];
-const DOW = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+/**
+ * Меню считается на СЕМЬ БЛИЖАЙШИХ ДНЕЙ, начиная с сегодняшнего, а не на календарную
+ * неделю с понедельника. Причина простая: список покупок на прошедший вторник бесполезен,
+ * а во время входа в дефицит календарная неделя ещё и прятала весь смысл — старт выпадал
+ * на середину недели, и все семь дней показывали один и тот же начальный калораж
+ * вместо лестницы вниз.
+ */
+const DOW = ["вс", "пн", "вт", "ср", "чт", "пт", "сб"];
+const dayLabel = (iso: string, offset: number): string => {
+  if (offset === 0) return "сегодня";
+  if (offset === 1) return "завтра";
+  return DOW[new Date(iso + "T12:00:00Z").getUTCDay()] ?? "";
+};
 
 /**
  * Еда: меню недели, холодильник, покупки.
@@ -60,9 +72,8 @@ export function Food({ profile, food, ratings, onRate, onSetupFood }: {
       bannedIds: rated.filter(([, v]) => v === -1).map(([id]) => id),
     });
     const liked = rated.filter(([, v]) => v === 1).map(([id]) => id);
-    const monday = mondayOf(today);
     const days = Array.from({ length: 7 }, (_, d) => {
-      const date = plusDaysISO(monday, d);
+      const date = plusDaysISO(today, d);
       const { targets, ramp } = targetsForToday(safe, food.startISO, date, food.pace);
       const day = generateDay(targets, pool, {
         rhythm: { wakeMin: parseHM(profile.anchorWakeHM), bedMin },
@@ -142,12 +153,12 @@ export function Food({ profile, food, ratings, onRate, onSetupFood }: {
         {/* дни раскладываются по ширине окна: на телефоне столбиком,
             на компьютере — сколько колонок влезло */}
         <div className="week-days">
-        {plan.days.map(({ day, ramp }, i) => (
+        {plan.days.map(({ date, day, ramp }, i) => (
           <div key={i} className="day-block">
             <div className="day-head-row">
               <button className="day-head" aria-expanded={openDays.has(i)}
                 onClick={() => toggleDay(i)}>
-                <b>{DOW[i]}</b>
+                <b>{dayLabel(date, i)}</b>
                 <span className="small muted day-nums">
                   {day.totals.kcal} ккал · белок {day.totals.protein} г
                 </span>
