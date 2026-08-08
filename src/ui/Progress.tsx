@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from "react";
 import type { Profile, DayLog } from "../index.js";
 import { weeklyInsight } from "../index.js";
-import type { FoodSettings } from "./storage.js";
-import { computeTargets, applySafety, targetsForToday } from "../food/index.js";
+import { targetsFor, type FoodSettings } from "./storage.js";
+import { targetsForToday } from "../food/index.js";
 import { followedPlan, type DayEaten } from "../food/eaten.js";
 import { anchor, anchorSummaryRU } from "../anchor.js";
 import { toDayRecords } from "./dayRecords.js";
@@ -51,7 +51,7 @@ export function Progress({ profile, history, food, weights, eaten, cheatDays, on
   /** Где человек в лестнице входа. Меню для этого собирать не нужно — только цели. */
   const ramp = useMemo(() => {
     if (!food) return null;
-    const safe = applySafety(computeTargets(food.profile), food.profile, food.screen ?? {});
+    const safe = targetsFor(food);
     return targetsForToday(safe, food.startISO, today, food.pace).ramp;
   }, [food, today]);
 
