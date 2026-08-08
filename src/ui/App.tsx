@@ -173,12 +173,12 @@ export function App() {
   const backup = () => {
     const url = URL.createObjectURL(new Blob([exportAll()], { type: "application/json" }));
     const a = document.createElement("a");
-    a.href = url; a.download = `едим-и-спим-копия-${localDateISO()}.json`;
+    a.href = url; a.download = `edim-spim-копия-${localDateISO()}.json`;
     a.click(); URL.revokeObjectURL(url);
   };
   const restore = async (file: File) => {
     const restored = importAll(await file.text());
-    if (!restored) { alert("Не похоже на копию «едим и спим». Файл не подошёл."); return; }
+    if (!restored) { alert("Не похоже на копию «edim & spim». Файл не подошёл."); return; }
     update(restored);
     void syncPushContext(restored.profile);
     alert("Данные восстановлены ✓");
