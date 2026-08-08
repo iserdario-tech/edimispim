@@ -208,12 +208,44 @@ const FIT_MIN = 0.6, FIT_MAX = 1.6;
 /** Потолок порции при доборе белка: полторы порции ещё еда, три — уже добавка. */
 const PORTION_MAX = 2;
 const ROUGH_FIT_MIN = 0.5, ROUGH_FIT_MAX = 2;
+
+/**
+ * Сколько блюд должно остаться в приёме, чтобы неделя не приелась.
+ *
+ * Семь — по числу дней. Меньше — и одно и то же блюдо неизбежно повторится дважды,
+ * а Сердар сказал ровно это: «блюда каждый день почти одни и те же».
+ */
+const MIN_CHOICES = 7;
+
+/**
+ * Блюда, у которых порция примерно равна доле калорий этого приёма.
+ *
+ * Иначе планировщик добирает калории множителем порции, и в меню появляется
+ * «крем-суп из брокколи ×3.4» — формально 600 ккал, на деле полтора литра супа.
+ *
+ * Рамка РАСТЯГИВАЕТСЯ, пока в приёме не наберётся семь блюд. Жёсткие 0.6–1.6 хорошо
+ * работали при четырёх приёмах в день, но на двух приём стоит уже 1100 ккал, и таких
+ * блюд в наборе единицы: замер показал два разных обеда на всю неделю. Лучше слегка
+ * увеличить порцию знакомого блюда, чем месяц есть одно и то же.
+ */
 function fittingOptions(options: Recipe[], slotKcal: number, wide = false): Recipe[] {
-  const lo = wide ? ROUGH_FIT_MIN : FIT_MIN, hi = wide ? ROUGH_FIT_MAX : FIT_MAX;
-  const fit = options.filter(r => {
+  let lo = wide ? ROUGH_FIT_MIN : FIT_MIN, hi = wide ? ROUGH_FIT_MAX : FIT_MAX;
+  const within = () => options.filter(r => {
     const s = slotKcal / r.kcal;
     return s >= lo && s <= hi;
   });
+  let fit = within();
+  /*
+   * Растягиваем в основном ВВЕРХ — то есть разрешаем взять блюдо поменьше и положить
+   * побольше. Вниз опускать нельзя ниже половины порции: минимальная порция и так
+   * обрезана снизу на 0.5, и блюдо вдвое крупнее слота даёт перебор по калориям.
+   * Тесты поймали это сразу: день после плохой ночи вылез на 1920 ккал при норме 1836.
+   */
+  for (let step = 0; step < 4 && fit.length < MIN_CHOICES; step++) {
+    lo = Math.max(0.5, lo * 0.9);
+    hi *= 1.15;
+    fit = within();
+  }
   return fit.length ? fit : options;
 }
 
@@ -254,11 +286,11 @@ const easiest = (options: Recipe[]): Recipe[] =>
  * пришёл не за этим. Половина, а не «три самых плотных», чтобы неделя не выродилась в три
  * блюда: выбор дня всё равно идёт по всему оставшемуся списку.
  */
-const DENSE_MIN_OPTIONS = 4;
 const denser = (options: Recipe[]): Recipe[] => {
-  if (options.length <= DENSE_MIN_OPTIONS) return options;
+  if (options.length <= MIN_CHOICES) return options;
   const sorted = [...options].sort((a, b) => (b.energy_density ?? 0) - (a.energy_density ?? 0));
-  return sorted.slice(0, Math.max(DENSE_MIN_OPTIONS, Math.ceil(sorted.length / 2)));
+  // половина набора, но никогда не меньше недельной нормы разнообразия
+  return sorted.slice(0, Math.max(MIN_CHOICES, Math.ceil(sorted.length / 2)));
 };
 
 /**
@@ -366,6 +398,9 @@ function swapForFiber(
       const servings = Math.max(0.5, +(kcalShare / candidate.kcal).toFixed(1));
       // порция остаётся порцией: иначе замена подсовывает «крем-суп ×3.4» — полтора литра супа
       if (servings > FIT_MAX) continue;
+      // и не раздувает приём: порция обрезана снизу на 0.5, поэтому блюдо вдвое крупнее слота
+      // всё равно вошло бы — и день вылезал за норму (замер: 1920 ккал при цели 1700)
+      if (candidate.kcal * servings > kcalShare * 1.05) continue;
       const gain = candidate.fiber_g * servings - meal.recipe.fiber_g * meal.servings;
       // белок не должен просесть ради клетчатки — это два разных рычага сытости.
       // На второй замене допуск нулевой: две уступки по 5 г подряд роняли день ниже цели.
@@ -378,10 +413,18 @@ function swapForFiber(
 
   if (!candidates.length) return;
   candidates.sort((a, b) => b.gain - a.gain);
-  // чередуем только среди тех, кто и так доводит клетчатку до цели; если таких нет — лучший
+  /*
+   * Чередуем среди тех, кто доводит клетчатку до цели; если таких нет — среди лучших.
+   *
+   * Ширина выбора была четыре, и этого не хватало: при двух приёмах в день цель
+   * в 30 г клетчатки одной заменой недостижима в принципе, ветка «лучших» работает
+   * каждый день и ставила одни и те же блюда — замер показал три разных обеда на неделю
+   * при девятнадцати подходящих. Отсюда и жалоба «каждый день одно и то же».
+   * Номер прохода добавлен в сдвиг, чтобы вторая замена не била в то же место.
+   */
   const enough = candidates.filter(c => day.totals.fiber + c.gain >= targets.fiberGTarget);
-  const top = (enough.length ? enough : candidates).slice(0, 4);
-  const chosen = top[offset % top.length]!;
+  const top = (enough.length ? enough : candidates).slice(0, MIN_CHOICES);
+  const chosen = top[(offset + pass) % top.length]!;
   const target = day.meals[chosen.index]!;
   day.meals[chosen.index] = { ...target, recipe: chosen.recipe, servings: chosen.servings };
   touched.add(chosen.index);
@@ -402,7 +445,7 @@ function swapForProtein(
 ): void {
   if (day.totals.protein >= targets.proteinGTarget * 0.85) return;
 
-  let best: { index: number; recipe: Recipe; servings: number; gain: number } | null = null;
+  const candidates: { index: number; recipe: Recipe; servings: number; gain: number }[] = [];
   day.meals.forEach((meal, index) => {
     if (mains[meal.recipe.meal_type as MealType] === undefined) return;   // сладкое не трогаем
     const kcalShare = meal.recipe.kcal * meal.servings;
@@ -410,17 +453,27 @@ function swapForProtein(
       if (candidate.meal_type !== meal.recipe.meal_type || candidate.id === meal.recipe.id) continue;
       const servings = Math.max(0.5, +(kcalShare / candidate.kcal).toFixed(1));
       if (servings > FIT_MAX) continue;
+      if (candidate.kcal * servings > kcalShare * 1.05) continue;   // замена не раздувает приём
       const gain = candidate.protein_g * servings - meal.recipe.protein_g * meal.servings;
       // клетчатку ради белка тоже не роняем: оба рычага нужны
       const fiberDrop = meal.recipe.fiber_g * meal.servings - candidate.fiber_g * servings;
-      if (gain > (best?.gain ?? 0) && fiberDrop <= 3) {
-        best = { index, recipe: candidate, servings, gain };
-      }
+      if (gain > 0 && fiberDrop <= 3) candidates.push({ index, recipe: candidate, servings, gain });
     }
   });
 
-  if (!best) return;
-  const chosen: { index: number; recipe: Recipe; servings: number } = best;
+  if (!candidates.length) return;
+  /*
+   * Чередуем по дням, а не берём каждый раз строго лучшее.
+   *
+   * Строгий максимум и был причиной жалобы «блюда каждый день почти одни и те же»:
+   * при двух-трёх приёмах белка нужно много, добор срабатывает почти каждый день
+   * и всегда подставляет ОДНО И ТО ЖЕ самое белковое блюдо. Замер: три разных обеда
+   * на неделю. Берём из нескольких лучших тот, что приходится на этот день, —
+   * белок добирается так же, а меню перестаёт повторяться.
+   */
+  candidates.sort((a, b) => b.gain - a.gain);
+  const top = candidates.slice(0, MIN_CHOICES);
+  const chosen = top[offset % top.length]!;
   const target = day.meals[chosen.index]!;
   day.meals[chosen.index] = { ...target, recipe: chosen.recipe, servings: chosen.servings };
   recomputeTotals(day);
