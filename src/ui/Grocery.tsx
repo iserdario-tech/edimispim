@@ -4,11 +4,22 @@ import { SHOPS, DEFAULT_SHOP_ID, shopById, searchUrl } from "../food/shops.js";
 import { planPurchase, type BuyLine, type Pantry } from "../food/packaging.js";
 import { PRICES_SOURCE, PRICES_DATE, costOf } from "../food/prices.js";
 import { hintFor } from "../food/ingredients.js";
+import { isLiquid, mlOf } from "../food/nutrients.js";
 import { tap } from "./haptics.js";
 import { IconThumb } from "./Icons.js";
 import { readLS, writeLS, SHOP_KEY } from "./localStore.js";
 
 const pantryKey = (name: string, unit: string): string => `${name.toLowerCase().trim()}|${unit}`;
+
+/**
+ * Количество так, как его называют у полки: полтора литра молока, а не 1500 мл.
+ * Граммы выше килограмма тоже читаются хуже — «1.2 кг» понятнее «1200 г».
+ */
+export function amountRU(qty: number, unit: string): string {
+  if (unit === "мл" && qty >= 1000) return `${+(qty / 1000).toFixed(qty % 1000 === 0 ? 0 : 1)} л`;
+  if (unit === "г" && qty >= 1000) return `${+(qty / 1000).toFixed(qty % 1000 === 0 ? 0 : 1)} кг`;
+  return `${+qty.toFixed(1)} ${unit}`;
+}
 
 /** Всегда новой вкладкой: список покупок не должен исчезать из-под рук. */
 const linkTarget = { target: "_blank", rel: "noopener noreferrer" } as const;
@@ -89,7 +100,9 @@ export function GroceryBlock({ grocery, pantry, onPantry, dayLabels }: {
   const row = (line: BuyLine, checked: boolean) => {
     const href = itemLink(line.name, shopId);
     const hint = hintFor(line.name);   // «творог мягкий» без пояснения у прилавка бесполезен
-    const amount = line.packs > 0 ? `${line.packs} × ${line.packSize} ${line.unit}` : `${line.toBuy} ${line.unit}`;
+    const amount = line.packs > 0
+      ? `${line.packs} × ${amountRU(line.packSize, line.unit)}`
+      : amountRU(line.toBuy, line.unit);
     return (
       <li key={line.name + line.unit} className={checked ? "buy-row done" : "buy-row"}>
         <label className="buy-check">
@@ -105,7 +118,7 @@ export function GroceryBlock({ grocery, pantry, onPantry, dayLabels }: {
         <span className="small muted buy-qty">
           {checked ? "есть" : amount}
           {!checked && showsLeftover(line) && (
-            <span className="left-note">останется {line.leftover} {line.unit}</span>
+            <span className="left-note">останется {amountRU(line.leftover, line.unit)}</span>
           )}
         </span>
       </li>
@@ -182,9 +195,13 @@ export function MealIngredients({ meal, rating, onRate }: {
 }) {
   const shopId = readLS(SHOP_KEY, DEFAULT_SHOP_ID);
   const shop = shopById(shopId);
-  const ings = (meal.recipe.ingredients ?? []).map(i => ({
-    name: i.name, qty: +(i.qty * meal.servings).toFixed(1), unit: i.unit,
-  }));
+  // жидкости показываем объёмом и здесь: «100 мл молока» привычнее, чем «103 г»
+  const ings = (meal.recipe.ingredients ?? []).map(i => {
+    const qty = i.qty * meal.servings;
+    return isLiquid(i.name)
+      ? { name: i.name, qty: +mlOf(i.name, qty, i.unit).toFixed(1), unit: "мл" }
+      : { name: i.name, qty: +qty.toFixed(1), unit: i.unit };
+  });
 
   const steps = meal.recipe.steps ?? [];
   if (!ings.length && !steps.length) return <div className="meal-ings small muted">Рецепт не указан.</div>;
@@ -220,7 +237,7 @@ export function MealIngredients({ meal, rating, onRate }: {
                   <a className="shop-link" href={href} target="_blank" rel="noopener noreferrer">
                     {i.name}<span className="shop-go" aria-hidden="true">→</span>
                   </a>
-                  <span className="small muted">{i.qty} {i.unit}</span>
+                  <span className="small muted">{amountRU(i.qty, i.unit)}</span>
                 </li>
               );
             })}
