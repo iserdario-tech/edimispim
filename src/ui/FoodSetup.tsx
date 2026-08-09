@@ -24,6 +24,26 @@ const ALLERGENS = [
 export const RARE_INGREDIENTS = ["гочжан", "мисо", "харисса", "тахини", "кимчи", "сироп топинамбура"];
 
 /**
+ * Границы полей — те же, что стоят у самих `input`, но проверенные ПЕРЕД расчётом.
+ *
+ * Атрибуты `min`/`max` браузер рисует, но ввести мимо них не мешает: очищенное поле
+ * даёт ноль, буква — NaN. Ноль проходил дальше молча и давал цель «0 г белка в день»
+ * и калораж −544, который защита потом подпирала до 1500 — то есть меню собиралось
+ * по цифрам, не имеющим отношения к человеку. NaN давал в интерфейсе «null ккал».
+ */
+const BOUNDS = {
+  age: [18, 90], heightCm: [130, 220], weightKg: [35, 250], goalWeightKg: [35, 250],
+} as const;
+const RU: Record<keyof typeof BOUNDS, string> = {
+  age: "возраст", heightCm: "рост", weightKg: "вес сейчас", goalWeightKg: "цель по весу",
+};
+export function checkProfile(v: Record<keyof typeof BOUNDS, number>): string[] {
+  return (Object.keys(BOUNDS) as (keyof typeof BOUNDS)[])
+    .filter(k => !Number.isFinite(v[k]) || v[k] < BOUNDS[k][0] || v[k] > BOUNDS[k][1])
+    .map(k => `${RU[k]} — от ${BOUNDS[k][0]} до ${BOUNDS[k][1]}`);
+}
+
+/**
  * Короткая форма про еду. Отдельно от онбординга сна: приложение полезно и без неё
  * (ведёт сон), а меню появляется, когда человек готов её заполнить.
  */
@@ -64,6 +84,8 @@ export function FoodSetup({ initial, onDone, onCancel }: {
 
   const toggle = (list: string[], set: (v: string[]) => void, key: string) =>
     set(list.includes(key) ? list.filter(x => x !== key) : [...list, key]);
+
+  const problems = checkProfile({ age, heightCm, weightKg, goalWeightKg });
 
   return (
     <main className="wrap">
@@ -258,8 +280,15 @@ export function FoodSetup({ initial, onDone, onCancel }: {
         )}
       </section>
 
+      {problems.length > 0 && (
+        <p className="note-warn small">
+          Проверь данные о себе: {problems.join("; ")}. Пока они не заполнены, посчитать
+          норму калорий и белка не по чему.
+        </p>
+      )}
+
       <div style={{ display: "flex", gap: 12, marginTop: 18, flexWrap: "wrap" }}>
-        <button className="chip on" onClick={() => onDone({
+        <button className="chip on" disabled={problems.length > 0} onClick={() => onDone({
           profile: { sex, age, heightCm, weightKg, goalWeightKg, activity },
           constraints: {
             allergens: allergens as never, cookware, budget, cuisines: [],
