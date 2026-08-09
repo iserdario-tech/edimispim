@@ -235,6 +235,32 @@ export const NUTRIENTS: Record<string, Nutrients> = {
 };
 
 /** Средний вес штуки, г — для продуктов, которые в рецептах считают поштучно. */
+/**
+ * Плотность жидкостей, г/мл — справочные величины.
+ *
+ * Нужна двум разным вещам сразу. Во-первых, жидкости человек покупает объёмом: молоко
+ * в литрах, масло в бутылках, а не на вес, и список покупок должен говорить на языке
+ * прилавка. Во-вторых — и это важнее — `gramsOf` до сих пор считал миллилитры граммами
+ * один к одному. Для молока ошибка 3%, а для соевого соуса 20%, и она уходила прямо
+ * в калории блюда.
+ *
+ * Продукт в этом списке = «продаётся объёмом». Мёд, сметана и творог сюда не входят:
+ * они хоть и текут, но лежат на полке в граммах.
+ */
+export const DENSITY: Record<string, number> = {
+  "молоко": 1.03, "кефир": 1.03,
+  "сливки 10%": 1.01, "сливки 20%": 1.0,
+  "кокосовое молоко": 0.98,
+  "соевый соус": 1.2, "рыбный соус": 1.2,
+  "масло растительное": 0.92, "масло оливковое": 0.92, "масло кунжутное": 0.92,
+  "бальзамический уксус": 1.1, "рисовый уксус": 1.01,
+  "кленовый сироп": 1.33, "сироп топинамбура": 1.35,
+};
+
+/** Продаётся объёмом — значит и показывать надо объёмом. */
+export const isLiquid = (name: string): boolean =>
+  DENSITY[name.toLowerCase().trim()] !== undefined;
+
 export const PIECE_GRAMS: Record<string, number> = {
   "яйца": 60,
   "лаваш": 90,
@@ -243,10 +269,19 @@ export const PIECE_GRAMS: Record<string, number> = {
 const nutrientsFor = (name: string): Nutrients | undefined =>
   NUTRIENTS[name.toLowerCase().trim()];
 
-/** Вес позиции в граммах: штуки переводятся по среднему весу. */
+/** Вес позиции в граммах: штуки — по среднему весу, миллилитры — по плотности. */
 export function gramsOf(name: string, qty: number, unit: string): number {
-  if (unit !== "шт") return qty;
-  return qty * (PIECE_GRAMS[name.toLowerCase().trim()] ?? 60);
+  const key = name.toLowerCase().trim();
+  if (unit === "шт") return qty * (PIECE_GRAMS[key] ?? 60);
+  if (unit === "мл") return qty * (DENSITY[key] ?? 1);
+  return qty;
+}
+
+/** Объём позиции в миллилитрах. Для жидкости, записанной весом, — обратный пересчёт. */
+export function mlOf(name: string, qty: number, unit: string): number {
+  if (unit === "мл") return qty;
+  const density = DENSITY[name.toLowerCase().trim()] ?? 1;
+  return gramsOf(name, qty, unit) / density;
 }
 
 /**

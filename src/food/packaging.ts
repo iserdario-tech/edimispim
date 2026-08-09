@@ -10,6 +10,8 @@
  * а живёт в «кладовке» и вычитается из следующей закупки.
  */
 
+import { isLiquid, mlOf } from "./nutrients";
+
 export interface Pack {
   /** Размер стандартной упаковки в тех же единицах, что и в рецепте. */
   size: number;
@@ -77,6 +79,9 @@ const PACKS: Record<string, Pack> = {
   "мёд": { size: 250 },
   "арахисовая паста": { size: 300 },
   "соевый соус": { size: 200 },
+  // жидкости — в миллилитрах: 900 мл самый частый формат бутылки в выдаче магазина
+  "молоко": { size: 900, perishDays: 7 },
+  "кефир": { size: 900, perishDays: 7 },
   "паста гочжан": { size: 200 },
   "паста мисо": { size: 300 },
   "харисса": { size: 100 },
@@ -135,7 +140,18 @@ export interface BuyLine {
 
 export type Pantry = Record<string, number>;   // «имя|единица» → остаток
 
-const keyOf = (name: string, unit: string): string => `${name.toLowerCase().trim()}|${unit}`;
+/**
+ * Ключ кладовки. Жидкости всегда в миллилитрах, чем бы они ни были записаны в рецепте.
+ *
+ * Иначе кладовка и рецепт говорят на разных языках: покупки кладут туда «масло оливковое|мл»,
+ * а рецепт спрашивает «масло оливковое|г» — и приложение считает, что дома пусто.
+ */
+const keyOf = (name: string, unit: string): string =>
+  `${name.toLowerCase().trim()}|${isLiquid(name) ? "мл" : unit}`;
+
+/** Количество в той единице, в которой оно лежит в кладовке. */
+const stockQty = (name: string, qty: number, unit: string): number =>
+  isLiquid(name) ? mlOf(name, qty, unit) : qty;
 
 /**
  * Расчёт закупки с учётом того, что уже лежит дома.
@@ -201,7 +217,7 @@ export function coverageOf(
   const short: { name: string; gap: number }[] = [];
   for (const i of ingredients) {
     if (isStaple(i.name)) continue;
-    const qty = i.qty * servings;
+    const qty = stockQty(i.name, i.qty * servings, i.unit);
     if (qty <= 0) continue;
     const athome = Math.min(pantry[keyOf(i.name, i.unit)] ?? 0, qty);
     need += qty;
