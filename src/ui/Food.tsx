@@ -216,7 +216,8 @@ export function Food({ profile, food, ratings, onRate, onSetupFood }: {
       </section>
 
       <Fridge pantry={pantry} onPantry={savePantry} pool={plan.pool} />
-      <GroceryBlock grocery={plan.grocery} pantry={pantry} onPantry={savePantry} />
+      <GroceryBlock grocery={plan.grocery} pantry={pantry} onPantry={savePantry}
+        dayLabels={plan.days.map(({ date }, i) => dayLabel(date, i))} />
     </main>
   );
 }

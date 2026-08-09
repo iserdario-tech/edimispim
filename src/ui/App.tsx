@@ -63,12 +63,23 @@ export function App() {
   // откуда пришли на вложенный экран — туда и вернём, а не на первый раздел
   const [returnTab, setReturnTab] = useState<Tab>("today");
   const [migrationNote, setMigrationNote] = useState("");
+  /**
+   * Не удалось записать на диск.
+   *
+   * `saveState` умеет отвечать «не вышло» — место кончилось или Safari в приватном режиме
+   * запрещает запись вовсе. Отвечать-то он отвечал, но ответ никто не читал: человек
+   * отмечал ночь, видел «Сохранено ✓» и терял данные при следующем запуске. Молча терять
+   * чужие данные нельзя, поэтому теперь об этом говорится прямо.
+   */
+  const [saveFailed, setSaveFailed] = useState(false);
+  const persist = (next: StoredState): void => { setSaveFailed(!saveState(next)); };
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (state) return;
     const picked = pickUpOldApps();
-    if (picked.weights.length || picked.food) setMigrationNote(picked.notesRU.join(" "));
+    // ночи сна — самое ценное из перенесённого, и заметку они заслуживают наравне с весом
+    if (picked.weights.length || picked.history.length || picked.food) setMigrationNote(picked.notesRU.join(" "));
   }, [state]);
 
   const overlay = editing || editingFood;
@@ -94,14 +105,22 @@ export function App() {
     if (history.state?.overlay) history.back();
   };
 
-  const update = (next: StoredState) => { saveState(next); setState(next); };
+  const update = (next: StoredState) => { persist(next); setState(next); };
 
   const saveLog = (log: DayLog) => {
     setState((prev) => {
       if (!prev) return prev;
-      const history = [...prev.history.filter((h) => h.date !== log.date), log].slice(-180);
+      /*
+       * Порядок здесь не косметика: ровность режима берёт `history.slice(-7)`, то есть
+       * последние семь ЭЛЕМЕНТОВ массива, считая их последними семью ночами. Пока отмечают
+       * только сегодняшний день, порядок совпадает сам собой, но перенос из старого
+       * приложения и восстановление из копии такой гарантии не дают.
+       */
+      const history = [...prev.history.filter((h) => h.date !== log.date), log]
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .slice(-180);
       const next = { ...prev, history };
-      saveState(next);
+      persist(next);
       return next;
     });
   };
@@ -118,7 +137,7 @@ export function App() {
       const kept = Object.keys(all).sort().slice(-180);
       const eaten = Object.fromEntries(kept.map(d => [d, all[d]!]));
       const next = { ...prev, eaten };
-      saveState(next);
+      persist(next);
       return next;
     });
   };
@@ -137,7 +156,7 @@ export function App() {
       if (ratings[id] === value) delete ratings[id];
       else ratings[id] = value;
       const next = { ...prev, ratings };
-      saveState(next);
+      persist(next);
       return next;
     });
   };
@@ -153,7 +172,7 @@ export function App() {
       const rest = (prev.cheatDays ?? []).filter(d => d !== date);
       const cheatDays = (on ? [...rest, date] : rest).sort().slice(-180);
       const next = { ...prev, cheatDays };
-      saveState(next);
+      persist(next);
       return next;
     });
   };
@@ -165,7 +184,7 @@ export function App() {
       const weights = [...(prev.weights ?? []).filter(w => w.date !== date), { date, kg }]
         .sort((a, b) => a.date.localeCompare(b.date));
       const next = { ...prev, weights };
-      saveState(next);
+      persist(next);
       return next;
     });
   };
@@ -227,6 +246,15 @@ export function App() {
 
   return (
     <>
+      {saveFailed && (
+        <div className="wrap" style={{ paddingBottom: 0 }}>
+          <p className="note-warn small">
+            Не удалось сохранить данные на этом устройстве: закончилось место или браузер
+            работает в приватном режиме. Всё, что видно на экране, пропадёт при перезапуске —
+            сделай копию через «Профиль → Сохранить копию».
+          </p>
+        </div>
+      )}
       {migrationNote && tab === "today" && (
         <div className="wrap" style={{ paddingBottom: 0 }}>
           <p className="muted small">📦 {migrationNote}</p>
