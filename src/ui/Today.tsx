@@ -4,7 +4,7 @@ import { planDay, parseHM, sleepDurationMin, streakDays } from "../index.js";
 import { toPlanView } from "./viewModel.js";
 import { loadDayDraft, saveDayDraft, targetsFor, type FoodSettings } from "./storage.js";
 import { enableNotifications, syncPushContext } from "./notifications.js";
-import { filterRecipes, generateAdaptedDay, expectedBedMin, diagnosePool, targetsForToday, prefersFamiliar } from "../food/index.js";
+import { filterRecipes, generateAdaptedDay, expectedBedMin, diagnosePool, targetsForToday, prefersFamiliar, scheduleFor } from "../food/index.js";
 import type { Recipe, Slot } from "../food/types.js";
 import { eatenTotals, type DayEaten, type MealMark } from "../food/eaten.js";
 import recipesJson from "../food/data/recipes.json";
@@ -108,11 +108,20 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
     });
     if (!pool.length) return null;
     const diagnosis = diagnosePool(pool, food.mealCount);
+    const opts = {
+      rhythm: { wakeMin: parseHM(wokeHM), bedMin }, mealCount: food.mealCount,
+      familiar: prefersFamiliar(ramp),
+      liked: rated.filter(([, v]) => v === 1).map(([id]) => id),
+    };
+    /*
+     * День берётся из того же календарного плана, что и вкладка «Еда»: раньше здесь
+     * номером дня служил день недели, а там — индекс в семидневке, и один и тот же
+     * четверг показывал на двух экранах разную еду.
+     */
+    const planned = scheduleFor(today, pool, iso => targetsForToday(base, food.startISO, iso, food.pace).targets, () => opts);
     const day = generateAdaptedDay(
       safe, pool,
-      { rhythm: { wakeMin: parseHM(wokeHM), bedMin }, mealCount: food.mealCount,
-        offset: new Date(today).getDay(), familiar: prefersFamiliar(ramp),
-        liked: rated.filter(([, v]) => v === 1).map(([id]) => id) },
+      { ...opts, offset: planned.offset, avoid: planned.avoid },
       { sleptMin, targetSleepMin: profile.targetSleepMin, quality },
     );
     return { day, safe, diagnosis, ramp };
