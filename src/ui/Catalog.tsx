@@ -2,6 +2,18 @@ import React, { useMemo, useState } from "react";
 import type { Recipe, MealType } from "../food/types.js";
 import { MealIngredients } from "./Grocery.js";
 import { IconChevron } from "./Icons.js";
+import treatsJson from "../food/data/treats.json";
+
+/**
+ * Покупное сладкое: то, что не готовят, а покупают.
+ *
+ * Файл лежал в проекте с первой волны и не показывался нигде. А случай он закрывает
+ * живой: вечером хочется сладкого, а печь творожное печенье сил нет. Отдельный фильтр,
+ * потому что это не рецепты — у них нет ни состава, ни шагов, только честная порция
+ * и калории, которые вписываются в дневную норму.
+ */
+interface Treat { name: string; portion: string; kcal: number; note: string }
+const TREATS = treatsJson as Treat[];
 
 /**
  * Каталог: все блюда, какие есть в приложении.
@@ -15,13 +27,16 @@ import { IconChevron } from "./Icons.js";
  * они на то же самое: «нравится» ставится чаще, «не нравится» исчезает из меню совсем.
  */
 
-const TYPES: { id: MealType | "all"; ru: string }[] = [
+type Filter = MealType | "all" | "treats";
+
+const TYPES: { id: Filter; ru: string }[] = [
   { id: "all", ru: "Все" },
   { id: "breakfast", ru: "Завтраки" },
   { id: "lunch", ru: "Обеды" },
   { id: "dinner", ru: "Ужины" },
   { id: "snack", ru: "Перекусы" },
   { id: "dessert", ru: "Сладкое" },
+  { id: "treats", ru: "Без готовки" },
 ];
 
 /** Сколько блюд показываем сразу. Три сотни строк разом телефон рисует заметно дольше. */
@@ -53,11 +68,19 @@ export function Catalog({ recipes, ratings, onRate }: {
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [type, setType] = useState<MealType | "all">("all");
+  const [type, setType] = useState<Filter>("all");
   const [shown, setShown] = useState(PAGE);
   const [openDish, setOpenDish] = useState<string | null>(null);
 
-  const found = useMemo(() => searchRecipes(recipes, query, type), [recipes, query, type]);
+  const found = useMemo(
+    () => (type === "treats" ? [] : searchRecipes(recipes, query, type)),
+    [recipes, query, type],
+  );
+  const treats = useMemo(() => {
+    if (type !== "treats") return [];
+    const q = query.trim().toLowerCase();
+    return TREATS.filter(t => !q || (t.name + " " + t.note).toLowerCase().includes(q));
+  }, [type, query]);
 
   const reset = (next: () => void) => { next(); setShown(PAGE); setOpenDish(null); };
 
@@ -91,10 +114,26 @@ export function Catalog({ recipes, ratings, onRate }: {
           </div>
 
           <p className="small muted" style={{ marginTop: 0 }}>
-            {found.length === 0
-              ? "Ничего не нашлось. Попробуй другое слово — ищется и по составу."
-              : `Найдено: ${found.length}`}
+            {type === "treats"
+              ? "Когда готовить нет сил: покупное сладкое с честной порцией. Одна штука вписывается в норму дня, пачка — нет."
+              : found.length === 0
+                ? "Ничего не нашлось. Попробуй другое слово — ищется и по составу."
+                : `Найдено: ${found.length}`}
           </p>
+
+          {type === "treats" && (
+            <ul className="day-meals">
+              {treats.map(t => (
+                <li key={t.name} className="meal-row catalog-row">
+                  <span className="meal-main">
+                    <b>{t.name}</b>
+                    <span className="small muted meal-meta">{t.portion} · {t.kcal} ккал</span>
+                    <span className="small muted">{t.note}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
 
           <ul className="day-meals">
             {found.slice(0, shown).map(r => {
