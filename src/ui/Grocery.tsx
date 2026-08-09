@@ -105,7 +105,7 @@ export function GroceryBlock({ grocery, pantry, onPantry, dayLabels }: {
         <span className="small muted buy-qty">
           {checked ? "есть" : amount}
           {!checked && showsLeftover(line) && (
-            <span className="left-note"> · останется {line.leftover} {line.unit}</span>
+            <span className="left-note">останется {line.leftover} {line.unit}</span>
           )}
         </span>
       </li>
