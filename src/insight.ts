@@ -23,7 +23,7 @@ export function weeklyInsight(history: DayLog[], todayISO: string, targetSleepMi
   const daysLogged = last7.length;
   const withBed = last7.filter(h => h.bedHM);
   const alcoholNights = last7.filter(h => h.hadAlcohol).length;
-  const reg = regularityScore(history);
+  const reg = regularityScore(history, todayISO);   // карточка обещает неделю — значит и считаем неделю
   const summaryRU = daysLogged < 2
     ? "Отмечайся каждое утро — через пару дней покажу тренд по сну."
     : alcoholNights >= 3
