@@ -14,7 +14,8 @@ export {
   type RampPace, type RampState,
 } from "./rampin";
 export {
-  planBlock, planWindow, scheduleFor, dayNumber, isoOfDay, type ScheduledDay,
+  planBlock, planWindow, scheduleFor, applySwaps, dayNumber, isoOfDay,
+  type ScheduledDay, type DaySwaps,
 } from "./schedule";
 export { buildGroceryList } from "./grocery";
 export type * from "./types";

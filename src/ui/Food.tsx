@@ -4,7 +4,7 @@ import { parseHM, fmtHM } from "../index.js";
 import { targetsFor, type FoodSettings } from "./storage.js";
 import {
   buildGroceryList, expectedBedMin, planWindow,
-  filterRecipes, swapDish, swapOptions, swapTo, targetsForToday, prefersFamiliar,
+  filterRecipes, swapDish, swapOptions, swapTo, applySwaps, targetsForToday, prefersFamiliar,
 } from "../food/index.js";
 import type { Recipe } from "../food/types.js";
 import recipesJson from "../food/data/recipes.json";
@@ -43,11 +43,14 @@ const dayLabel = (iso: string, offset: number): string => {
  * Apple про это говорит прямо: ограничивать число одновременно видимых контролов,
  * второстепенное убирать вглубь, частые действия держать под рукой.
  */
-export function Food({ profile, food, ratings, onRate, onSetupFood }: {
+export function Food({ profile, food, ratings, onRate, swaps, onSwap, onSetupFood }: {
   profile: Profile;
   food?: FoodSettings;
   ratings?: Record<string, 1 | -1>;
   onRate?: (id: string, value: 1 | -1) => void;
+  /** Ручные замены по датам — их накладывают поверх календарного плана. */
+  swaps?: Record<string, Record<string, string>>;
+  onSwap?: (date: string, slot: string, recipeId: string) => void;
   onSetupFood: () => void;
 }) {
   const [openDays, setOpenDays] = useState<Set<number>>(() => new Set([0]));
@@ -88,11 +91,16 @@ export function Food({ profile, food, ratings, onRate, onSetupFood }: {
         rhythm: { wakeMin: parseHM(profile.anchorWakeHM), bedMin },
         mealCount: food.mealCount, familiar: prefersFamiliar(rampOf(iso).ramp), liked,
       }),
-    ).map(s => ({ date: s.iso, day: s.day, targets: s.targets, ramp: rampOf(s.iso).ramp }));
+    ).map(s => {
+      // ручные замены накладываются последними: иначе при каждом открытии экрана
+      // возвращалось бы то, что планировщик выбрал сам
+      applySwaps(s.day, swaps?.[s.iso], pool, s.targets, food.mealCount);
+      return { date: s.iso, day: s.day, targets: s.targets, ramp: rampOf(s.iso).ramp };
+    });
     const week = days.map(d => d.day);
     const todayRamp = targetsForToday(safe, food.startISO, today, food.pace);
     return { days, week, grocery: buildGroceryList(week), safe, pool, ramp: todayRamp.ramp };
-  }, [food, profile, today, ratings]);
+  }, [food, profile, today, ratings, swaps]);
 
   const toggleDay = (i: number) => setOpenDays(prev => {
     const next = new Set(prev);
@@ -110,7 +118,13 @@ export function Food({ profile, food, ratings, onRate, onSetupFood }: {
   const swapOne = (dayIdx: number, index: number) => {
     if (!plan || !food) return;
     const d = plan.days[dayIdx];
-    if (d && swapDish(d.day, index, d.targets, plan.pool, food.mealCount, pantry)) setRev(r => r + 1);
+    if (!d) return;
+    const slot = d.day.meals[index]?.slot;
+    if (swapDish(d.day, index, d.targets, plan.pool, food.mealCount, pantry)) {
+      const now = d.day.meals.find(m => m.slot === slot);
+      if (now && slot) onSwap?.(d.date, slot, now.recipe.id);
+      setRev(r => r + 1);
+    }
   };
   /** Варианты замены для конкретного приёма — их показывает список под блюдом. */
   const optionsFor = (dayIdx: number, index: number) => {
@@ -122,7 +136,9 @@ export function Food({ profile, food, ratings, onRate, onSetupFood }: {
     const d = plan?.days[dayIdx];
     if (!d || !food) return;
     tap();
+    const slot = d.day.meals[index]?.slot;
     swapTo(d.day, index, recipe, d.targets, food.mealCount);
+    if (slot) onSwap?.(d.date, slot, recipe.id);
     setSwapping(null);
     setRev(r => r + 1);
   };
@@ -133,7 +149,12 @@ export function Food({ profile, food, ratings, onRate, onSetupFood }: {
     if (!d) return;
     let changed = false;
     for (let i = 0; i < d.day.meals.length; i++) {
-      if (swapDish(d.day, i, d.targets, plan.pool, food.mealCount, pantry)) changed = true;
+      const slot = d.day.meals[i]?.slot;
+      if (swapDish(d.day, i, d.targets, plan.pool, food.mealCount, pantry)) {
+        const now = d.day.meals.find(m => m.slot === slot);
+        if (now && slot) onSwap?.(d.date, slot, now.recipe.id);
+        changed = true;
+      }
     }
     if (changed) setRev(r => r + 1);
   };
@@ -198,7 +219,11 @@ export function Food({ profile, food, ratings, onRate, onSetupFood }: {
                   показывать одно и то же дважды и переносить строку на вторую строчку.
                   Остаётся то, чего в шапке нет. */}
               <div className="day-summary small muted">
-                Клетчатка {day.totals.fiber} г из 30
+                {/* «40 г из 30» читалось как ошибка. Норма закрыта — так и говорим,
+                    а «из 30» остаётся только пока до неё не дотянули. */}
+                {day.totals.fiber >= 30
+                  ? <>Клетчатка {day.totals.fiber} г · норма закрыта</>
+                  : <>Клетчатка {day.totals.fiber} г из 30</>}
                 {ramp.active && <> · вход в режим, день {ramp.day} из {ramp.total}</>}
               </div>
               <ul className="day-meals">
