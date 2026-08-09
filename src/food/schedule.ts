@@ -1,5 +1,5 @@
-import { generateDay, type DayOptions } from "./planner";
-import type { Day, Recipe, Targets } from "./types";
+import { generateDay, swapTo, type DayOptions } from "./planner";
+import type { Day, MealCount, Recipe, Targets } from "./types";
 
 /**
  * Меню, привязанное к календарю, а не к позиции в списке.
@@ -27,6 +27,28 @@ const MS_DAY = 86_400_000;
 /** Номер дня от эпохи. Дата разбирается как UTC — иначе номер зависел бы от часового пояса. */
 export const dayNumber = (iso: string): number => Math.floor(Date.parse(iso + "T00:00:00Z") / MS_DAY);
 export const isoOfDay = (n: number): string => new Date(n * MS_DAY).toISOString().slice(0, 10);
+
+/** Ручные замены: приём → id рецепта. */
+export type DaySwaps = Record<string, string>;
+
+/**
+ * Наложить ручные замены на собранный день.
+ *
+ * Календарный план даёт одно и то же меню на дату — а поверх него человек мог поменять
+ * блюдо руками. Замены хранятся отдельно и применяются последними, иначе при каждом
+ * открытии экрана возвращалось бы то, что планировщик выбрал сам.
+ */
+export function applySwaps(
+  day: Day, swaps: DaySwaps | undefined, pool: Recipe[], targets: Targets, count: MealCount,
+): void {
+  for (const [slot, id] of Object.entries(swaps ?? {})) {
+    const index = day.meals.findIndex(m => m.slot === slot);
+    const recipe = pool.find(r => r.id === id);
+    // блюдо могло исчезнуть из набора (например, его скрыли «пальцем вниз») — тогда
+    // остаётся то, что выбрал планировщик: это честнее, чем пустой приём
+    if (index >= 0 && recipe) swapTo(day, index, recipe, targets, count);
+  }
+}
 
 export interface ScheduledDay {
   iso: string;

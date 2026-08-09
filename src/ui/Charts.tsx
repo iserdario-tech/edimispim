@@ -65,3 +65,50 @@ export function WeightChart({ weights, goal }: {
     </svg>
   );
 }
+
+/**
+ * Неделя еды: семь столбиков «сколько приёмов дня отмечено съеденными».
+ *
+ * Зачем именно столбики, а не цифра. Цифра «4 из 7» отвечает на вопрос «сколько», но не
+ * показывает форму недели: разваливается ли она к выходным, был ли провал в середине.
+ * Семь столбиков читаются одним взглядом и не требуют подписи к каждому.
+ *
+ * Честность важнее красоты: неотмеченный день — это НЕ ноль, а отсутствие данных, и
+ * рисуется он пустой рамкой, а не пустым местом. Читмил помечен отдельно: человек объявил
+ * его сам, и провалом он не считается (`X28`).
+ */
+export function WeekFoodBars({ days }: {
+  days: { iso: string; label: string; share: number | null; followed?: boolean; cheat?: boolean }[];
+}) {
+  const W = 260, H = 56, gap = 6;
+  const bw = (W - gap * (days.length - 1)) / days.length;
+  const top = 4, bottom = H - 14;          // снизу оставлено место под буквы дней
+
+  return (
+    <svg className="week-bars" viewBox={`0 0 ${W} ${H}`} role="img"
+      aria-label={`Еда за неделю: отмечено ${days.filter(d => d.share != null).length} дней из ${days.length}`}>
+      {days.map((d, i) => {
+        const x = i * (bw + gap);
+        const full = bottom - top;
+        const h = d.share == null ? 0 : Math.max(3, full * d.share);
+        return (
+          <g key={d.iso}>
+            {/* рамка дня — она же «данных нет» */}
+            <rect x={x} y={top} width={bw} height={full} rx={3}
+              fill="none" stroke="currentColor" strokeOpacity={0.18} strokeWidth={1} />
+            {d.cheat ? (
+              // читмил: день закрашен наполовину и приглушённо — он запланирован, а не провален
+              <rect x={x} y={bottom - full / 2} width={bw} height={full / 2} rx={3}
+                fill="currentColor" fillOpacity={0.25} />
+            ) : h > 0 && (
+              <rect x={x} y={bottom - h} width={bw} height={h} rx={3}
+                fill="currentColor" fillOpacity={d.followed ? 0.95 : 0.45} />
+            )}
+            <text x={x + bw / 2} y={H - 3} textAnchor="middle"
+              fontSize={8} fill="currentColor" fillOpacity={0.5}>{d.label}</text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}

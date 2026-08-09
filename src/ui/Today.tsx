@@ -4,14 +4,17 @@ import { planDay, parseHM, sleepDurationMin, streakDays } from "../index.js";
 import { toPlanView } from "./viewModel.js";
 import { loadDayDraft, saveDayDraft, targetsFor, type FoodSettings } from "./storage.js";
 import { enableNotifications, syncPushContext } from "./notifications.js";
-import { filterRecipes, generateAdaptedDay, expectedBedMin, diagnosePool, targetsForToday, prefersFamiliar, scheduleFor } from "../food/index.js";
+import { filterRecipes, generateAdaptedDay, expectedBedMin, diagnosePool, targetsForToday, prefersFamiliar, scheduleFor, applySwaps } from "../food/index.js";
 import type { Recipe, Slot } from "../food/types.js";
 import { eatenTotals, type DayEaten, type MealMark } from "../food/eaten.js";
+import { plusDaysISO } from "../today-date.js";
 import recipesJson from "../food/data/recipes.json";
 import { mealRows, mergeTimeline } from "./mealRows.js";
 import { tap } from "./haptics.js";
 import { explain } from "../explain.js";
 import { toDayRecords } from "./dayRecords.js";
+import { WeekFoodBars } from "./Charts.js";
+import { followedPlan } from "../food/eaten.js";
 import { localDateISO, localMinutes } from "../today-date.js";
 import { useNow } from "./useNow.js";
 
@@ -30,7 +33,7 @@ function crunchStr(hm: string): string {
 const todayLabel = (d: Date): string =>
   d.toLocaleDateString("ru-RU", { day: "numeric", month: "long", weekday: "long" });
 
-export function Today({ profile, history, screener, onLog, food, weights, eaten, ratings, cheatDays, onMarkMeal, onCheatDay, onSetupFood }: {
+export function Today({ profile, history, screener, onLog, food, weights, eaten, ratings, cheatDays, swaps, onMarkMeal, onCheatDay, onSetupFood }: {
   profile: Profile;
   history: DayLog[];
   screener?: ScreenerResult | null;
@@ -42,6 +45,9 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
   /** Дни, которые человек сам объявил читмилом. Хранятся в истории, а не в контексте суток:
    *  день должен остаться помеченным и завтра, иначе статистика посчитает его срывом. */
   cheatDays?: string[];
+  /** Ручные замены блюд по датам — накладываются поверх календарного плана,
+   *  иначе «Сегодня» показывало бы не то, что человек выбрал на экране «Еда». */
+  swaps?: Record<string, Record<string, string>>;
   onMarkMeal?: (date: string, slot: Slot, mark: MealMark, planned: number) => void;
   onCheatDay?: (date: string, on: boolean) => void;
   onSetupFood?: () => void;
@@ -124,8 +130,10 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
       { ...opts, offset: planned.offset, avoid: planned.avoid },
       { sleptMin, targetSleepMin: profile.targetSleepMin, quality },
     );
+    // то, что человек поменял руками на экране «Еда», должно стоять и здесь
+    applySwaps(day, swaps?.[today], pool, safe, food.mealCount);
     return { day, safe, diagnosis, ramp };
-  }, [food, isCheat, wokeHM, bedMin, today, sleptMin, profile.targetSleepMin, quality, ratings]);
+  }, [food, isCheat, wokeHM, bedMin, today, sleptMin, profile.targetSleepMin, quality, ratings, swaps]);
 
   const rows = useMemo(() => {
     if (!foodDay) return view.rows;
@@ -143,6 +151,31 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
     tap();
     onMarkMeal(today, slot, mark, foodDay.day.meals.length);
   };
+
+  /**
+   * Неделя еды для графика: последние семь дней, включая сегодня.
+   *
+   * Доля — это отмеченные «съел» приёмы к запланированным. Дни без отметок остаются
+   * пустыми: отсутствие данных и ноль съеденного — разные вещи, и рисовать их одинаково
+   * значило бы обвинять человека в том, чего он не делал.
+   */
+  const foodWeek = useMemo(() => {
+    const DOW = ["вс", "пн", "вт", "ср", "чт", "пт", "сб"];
+    return [...Array(7)].map((_, i) => {
+      const iso = plusDaysISO(today, i - 6);
+      const e = eaten?.[iso];
+      const ate = e ? Object.values(e.marks).filter(m => m === "ate").length : 0;
+      const share = e?.planned ? Math.min(1, ate / e.planned) : null;
+      return {
+        iso,
+        label: DOW[new Date(iso + "T12:00:00Z").getUTCDay()] ?? "",
+        share,
+        followed: followedPlan(e) === true,
+        cheat: cheatDays?.includes(iso) ?? false,
+      };
+    });
+  }, [eaten, cheatDays, today]);
+  const weekMarked = foodWeek.filter(d => d.share != null || d.cheat).length;
 
   const explanation = useMemo(() => {
     const days = toDayRecords(history, weights ?? [], eaten ?? {}, cheatDays ?? []);
@@ -257,6 +290,19 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
           <b>Еда пока не подключена</b> — приложение ведёт только сон.{" "}
           {onSetupFood && <button className="linkbtn" onClick={onSetupFood}>Добавить меню под свой сон →</button>}
         </div>
+      )}
+
+      {/* Неделя одним взглядом: форму недели цифра «4 из 7» не показывает.
+          Появляется только когда есть что показывать. */}
+      {food && !isCheat && weekMarked > 0 && (
+        <section className="card">
+          <h3 className="card-h">Неделя по еде</h3>
+          <WeekFoodBars days={foodWeek} />
+          <p className="small muted" style={{ margin: "6px 0 0" }}>
+            Отмечено дней: {weekMarked} из 7. Высота — сколько приёмов дня съедено по плану;
+            пустая рамка значит, что день не отмечался.
+          </p>
+        </section>
       )}
 
       </div>

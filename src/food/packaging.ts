@@ -136,6 +136,8 @@ export interface BuyLine {
   loose: boolean;
   staple: boolean;
   perishDays?: number;   // через сколько дней остаток обычно портится
+  /** Отдел магазина. Нужен списку покупок, чтобы не гонять человека по залу кругами. */
+  category?: string;
 }
 
 export type Pantry = Record<string, number>;   // «имя|единица» → остаток
@@ -158,7 +160,7 @@ const stockQty = (name: string, qty: number, unit: string): number =>
  * Округление вверх до целой упаковки — потому что полпачки в магазине не продают.
  */
 export function planPurchase(
-  items: { name: string; unit: string; qty: number }[],
+  items: { name: string; unit: string; qty: number; category?: string }[],
   pantry: Pantry = {},
 ): BuyLine[] {
   return items.map(it => {
@@ -180,6 +182,7 @@ export function planPurchase(
       packSize: pack.size, packs, buyAmount,
       leftover: Math.max(0, leftover),
       loose: !!pack.loose, staple,
+      ...(it.category ? { category: it.category } : {}),
       ...(pack.perishDays !== undefined ? { perishDays: pack.perishDays } : {}),
     };
   });
