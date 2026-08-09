@@ -41,3 +41,38 @@ describe("buildGroceryList", () => {
     expect(g.items.find(i => i.name === "фасоль консервированная")!.perishable).toBe(false);
   });
 });
+
+/**
+ * Один продукт — одна строка в списке.
+ *
+ * Ключом строки было «имя + единица», и продукт, записанный в разных рецептах по-разному,
+ * попадал в список дважды: «молоко 150 г» и следом «молоко 21 мл». Так вело себя семь
+ * продуктов набора. У полки это выглядело как две разные покупки.
+ */
+describe("смешанные единицы", () => {
+  const meal = (name: string, qty: number, unit: string) => ({
+    recipe: { id: name + unit, name, meal_type: "lunch" as const, kcal: 100, protein_g: 5, fiber_g: 1,
+      ingredients: [{ name, qty, unit, category: "молочное" }] },
+    servings: 1, timeMin: 0, slot: "lunch" as const,
+  });
+
+  it("миллилитры и граммы одного продукта сливаются в одну строку", () => {
+    const g = buildGroceryList([{ meals: [meal("молоко", 150, "г"), meal("молоко", 200, "мл")] }]);
+    const milk = g.items.filter(i => i.name === "молоко");
+    expect(milk).toHaveLength(1);
+    expect(milk[0]!.qty).toBe(350);
+  });
+
+  it("штуки переводятся в граммы, когда тот же продукт где-то записан весом", () => {
+    const g = buildGroceryList([{ meals: [meal("банан", 100, "г"), meal("банан", 1, "шт")] }]);
+    const banana = g.items.filter(i => i.name === "банан");
+    expect(banana).toHaveLength(1);
+    expect(banana[0]!.unit).toBe("г");
+    expect(banana[0]!.qty).toBeGreaterThan(100);
+  });
+
+  it("продукт с одной единицей остаётся в ней: «2 шт» понятнее, чем «120 г»", () => {
+    const g = buildGroceryList([{ meals: [meal("яйца", 2, "шт")] }]);
+    expect(g.items.find(i => i.name === "яйца")!.unit).toBe("шт");
+  });
+});
