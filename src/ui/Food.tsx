@@ -3,12 +3,12 @@ import type { Profile } from "../index.js";
 import { parseHM, fmtHM } from "../index.js";
 import { targetsFor, type FoodSettings } from "./storage.js";
 import {
-  generateDay, buildGroceryList, expectedBedMin,
+  buildGroceryList, expectedBedMin, planWindow,
   filterRecipes, swapDish, targetsForToday, prefersFamiliar,
 } from "../food/index.js";
 import type { Recipe } from "../food/types.js";
 import recipesJson from "../food/data/recipes.json";
-import { localDateISO, plusDaysISO } from "../today-date.js";
+import { localDateISO } from "../today-date.js";
 import { GroceryBlock, MealIngredients } from "./Grocery.js";
 import { Fridge } from "./Fridge.js";
 import { readLS, writeLS, PANTRY_KEY } from "./localStore.js";
@@ -72,15 +72,19 @@ export function Food({ profile, food, ratings, onRate, onSetupFood }: {
       bannedIds: rated.filter(([, v]) => v === -1).map(([id]) => id),
     });
     const liked = rated.filter(([, v]) => v === 1).map(([id]) => id);
-    const days = Array.from({ length: 7 }, (_, d) => {
-      const date = plusDaysISO(today, d);
-      const { targets, ramp } = targetsForToday(safe, food.startISO, date, food.pace);
-      const day = generateDay(targets, pool, {
+    /*
+     * Меню берётся из календарного плана, а не собирается заново от края экрана.
+     * Иначе «завтра» назавтра становилось «днём номер ноль» и подменялось другим блюдом,
+     * а вкладка «Сегодня» показывала своё, третье. Теперь дата определяет меню однозначно.
+     */
+    const rampOf = (iso: string) => targetsForToday(safe, food.startISO, iso, food.pace);
+    const days = planWindow(today, 7, pool,
+      iso => rampOf(iso).targets,
+      iso => ({
         rhythm: { wakeMin: parseHM(profile.anchorWakeHM), bedMin },
-        mealCount: food.mealCount, offset: d, familiar: prefersFamiliar(ramp), liked,
-      });
-      return { date, day, targets, ramp };
-    });
+        mealCount: food.mealCount, familiar: prefersFamiliar(rampOf(iso).ramp), liked,
+      }),
+    ).map(s => ({ date: s.iso, day: s.day, targets: s.targets, ramp: rampOf(s.iso).ramp }));
     const week = days.map(d => d.day);
     const todayRamp = targetsForToday(safe, food.startISO, today, food.pace);
     return { days, week, grocery: buildGroceryList(week), safe, pool, ramp: todayRamp.ramp };
@@ -212,7 +216,8 @@ export function Food({ profile, food, ratings, onRate, onSetupFood }: {
       </section>
 
       <Fridge pantry={pantry} onPantry={savePantry} pool={plan.pool} />
-      <GroceryBlock grocery={plan.grocery} pantry={pantry} onPantry={savePantry} />
+      <GroceryBlock grocery={plan.grocery} pantry={pantry} onPantry={savePantry}
+        dayLabels={plan.days.map(({ date }, i) => dayLabel(date, i))} />
     </main>
   );
 }

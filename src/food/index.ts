@@ -13,6 +13,9 @@ export {
   rampIn, targetsForToday, prefersFamiliar, RAMP_DAYS, DEFAULT_PACE,
   type RampPace, type RampState,
 } from "./rampin";
+export {
+  planBlock, planWindow, scheduleFor, dayNumber, isoOfDay, type ScheduledDay,
+} from "./schedule";
 export { buildGroceryList } from "./grocery";
 export type * from "./types";
 export { diagnosePool, type PoolDiagnosis } from "./diagnose";

@@ -170,7 +170,9 @@ export function Progress({ profile, history, food, weights, eaten, cheatDays, on
         <h3 className="card-h">Как прошла неделя</h3>
         <div className="week-stats small">
           <span>Ночей отмечено: {insight.daysLogged}/7</span>
-          {insight.daysLogged >= 2 && <span>Регулярность: {insight.regularity}/100</span>}
+          {/* Условие именно на саму цифру: ниже четырёх ночей регулярность не считается
+              вовсе, а показ по числу отмеченных дней выводил на экран «Регулярность: null/100». */}
+          {insight.regularity != null && <span>Регулярность: {insight.regularity}/100</span>}
           {insight.avgSleepMin != null && <span>Средний сон: {(insight.avgSleepMin / 60).toFixed(1)} ч</span>}
           {insight.avgQuality != null && <span>Качество: {insight.avgQuality}/5</span>}
         </div>

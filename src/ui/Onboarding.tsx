@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import type { Profile, ScreenerResult, ScreenerAnswers, Chronotype } from "../index.js";
 import { runScreener } from "../index.js";
-import { buildProfile, formFromProfile, type OnboardingForm } from "./onboardingModel.js";
+import { buildProfile, formFromProfile, isValidTime, type OnboardingForm } from "./onboardingModel.js";
 
 const emptyScreener: ScreenerAnswers = {
   loudSnoringWithPauses: false, daytimeSleepyDespiteEnoughSleep: false,
@@ -102,7 +102,15 @@ export function Onboarding({ initial, onDone, onRestore }: {
       <label className="chk"><input type="checkbox" checked={scr.selfHarmThoughts}
         onChange={e=>setS({ selfHarmThoughts: e.target.checked })} /> Есть мысли причинить себе вред</label>
 
-      <button className="primary" onClick={() => onDone(buildProfile(form), runScreener(scr))}>
+      {/* Пустое поле времени — не мелочь: на нём приложение падало прямо по этой кнопке */}
+      {(!isValidTime(form.wakeHM) || !isValidTime(form.bedHM)) && (
+        <p className="note-warn small">
+          Заполни время подъёма и отбоя — от них считается весь план дня.
+        </p>
+      )}
+      <button className="primary"
+        disabled={!isValidTime(form.wakeHM) || !isValidTime(form.bedHM)}
+        onClick={() => onDone(buildProfile(form), runScreener(scr))}>
         Построить план
       </button>
       <p className="disclaimer">«edim & spim» — не медицинское приложение. При нарушениях сна или питания обратись к врачу.</p>
