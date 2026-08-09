@@ -72,13 +72,17 @@ export function Food({ profile, food, ratings, onRate, onSetupFood }: {
       bannedIds: rated.filter(([, v]) => v === -1).map(([id]) => id),
     });
     const liked = rated.filter(([, v]) => v === 1).map(([id]) => id);
+    // неделя помнит, что уже стояло в предыдущих днях, — иначе меню повторяется
+    const used: string[] = [];
     const days = Array.from({ length: 7 }, (_, d) => {
       const date = plusDaysISO(today, d);
       const { targets, ramp } = targetsForToday(safe, food.startISO, date, food.pace);
       const day = generateDay(targets, pool, {
         rhythm: { wakeMin: parseHM(profile.anchorWakeHM), bedMin },
         mealCount: food.mealCount, offset: d, familiar: prefersFamiliar(ramp), liked,
+        avoid: [...used],
       });
+      for (const m of day.meals) used.push(m.recipe.id);
       return { date, day, targets, ramp };
     });
     const week = days.map(d => d.day);
