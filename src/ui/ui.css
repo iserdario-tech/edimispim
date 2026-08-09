@@ -91,6 +91,9 @@ button.primary {
   transition: transform 120ms ease, background 120ms ease;
 }
 button.primary:active { transform: scale(.98); background: var(--accent-press); }
+/* недоступная кнопка не должна отзываться на нажатие — иначе она выглядит рабочей */
+button.primary:disabled { opacity: .38; }
+button.primary:disabled:active { transform: none; background: var(--accent); }
 
 /* ─── Чипы выбора ──────────────────────────────────────────────────── */
 .chips { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin: var(--sp-2) 0; }
