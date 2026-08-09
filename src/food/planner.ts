@@ -359,8 +359,8 @@ export function generateDay(targets: Targets, pool: Recipe[], opts: DayOptions):
    * замены тянут набор к овощному, и в замере плотность падала НИЖЕ обычного дня —
    * то есть механика входа в режим работала против себя же.
    */
-  swapForFiber(day, targets, pool, mains, offset, opts.roughNight || opts.familiar ? 1 : 2, opts.liked ?? []);
-  swapForProtein(day, targets, pool, mains, offset, opts.liked ?? []);
+  swapForFiber(day, targets, pool, mains, offset, opts.roughNight || opts.familiar ? 1 : 2, opts.liked ?? [], !!opts.roughNight);
+  swapForProtein(day, targets, pool, mains, offset, opts.liked ?? [], !!opts.roughNight);
   addProteinTopUp(day, targets);
   day.meals.sort((a, b) => a.timeMin - b.timeMin);
   if (opts.roughNight) day.simplified = true;
@@ -387,7 +387,7 @@ export function generateDay(targets: Targets, pool: Recipe[], opts: DayOptions):
  */
 function swapForFiber(
   day: Day, targets: Targets, pool: Recipe[], mains: Partial<Record<MealType, number>>,
-  offset = 0, maxPasses = 2, liked: string[] = [],
+  offset = 0, maxPasses = 2, liked: string[] = [], keepEasy = false,
 ): void {
   const touched = new Set<number>();
   for (let pass = 0; pass < maxPasses && day.totals.fiber < targets.fiberGTarget; pass++) {
@@ -409,6 +409,9 @@ function swapForFiber(
       // и не раздувает приём: порция обрезана снизу на 0.5, поэтому блюдо вдвое крупнее слота
       // всё равно вошло бы — и день вылезал за норму (замер: 1920 ккал при цели 1700)
       if (candidate.kcal * servings > kcalShare * 1.05) continue;
+      // в упрощённый день замена не имеет права добавить работы: обещание «сегодня готовки
+      // меньше» важнее пары граммов клетчатки (замер: 68 минут против 65 у обычного дня)
+      if (keepEasy && effortOf(candidate) > effortOf(meal.recipe)) continue;
       const gain = candidate.fiber_g * servings - meal.recipe.fiber_g * meal.servings;
       // белок не должен просесть ради клетчатки — это два разных рычага сытости.
       // На второй замене допуск нулевой: две уступки по 5 г подряд роняли день ниже цели.
@@ -450,7 +453,7 @@ function swapForFiber(
  */
 function swapForProtein(
   day: Day, targets: Targets, pool: Recipe[], mains: Partial<Record<MealType, number>>,
-  offset = 0, liked: string[] = [],
+  offset = 0, liked: string[] = [], keepEasy = false,
 ): void {
   if (day.totals.protein >= targets.proteinGTarget * 0.85) return;
 
@@ -464,6 +467,7 @@ function swapForProtein(
       const servings = Math.max(0.5, +(kcalShare / candidate.kcal).toFixed(1));
       if (servings > FIT_MAX) continue;
       if (candidate.kcal * servings > kcalShare * 1.05) continue;   // замена не раздувает приём
+      if (keepEasy && effortOf(candidate) > effortOf(meal.recipe)) continue;   // и не добавляет готовки
       const gain = candidate.protein_g * servings - meal.recipe.protein_g * meal.servings;
       // клетчатку ради белка тоже не роняем: оба рычага нужны
       const fiberDrop = meal.recipe.fiber_g * meal.servings - candidate.fiber_g * servings;
