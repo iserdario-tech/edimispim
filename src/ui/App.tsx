@@ -177,6 +177,24 @@ export function App() {
     });
   };
 
+  /**
+   * Ручная замена блюда. Хранится по дате и приёму: меню привязано к календарю,
+   * поэтому замена в четверг должна остаться заменой в четверг, а не «в первом дне списка».
+   */
+  const saveSwap = (date: string, slot: string, recipeId: string) => {
+    setState((prev) => {
+      if (!prev) return prev;
+      const all = { ...(prev.swaps ?? {}) };
+      all[date] = { ...(all[date] ?? {}), [slot]: recipeId };
+      // храним ровно столько же, сколько отметки: неделя вперёд и полгода назад — перебор
+      const kept = Object.keys(all).sort().slice(-30);
+      const swaps = Object.fromEntries(kept.map(d => [d, all[d]!]));
+      const next = { ...prev, swaps };
+      persist(next);
+      return next;
+    });
+  };
+
   const addWeight = (kg: number) => {
     setState((prev) => {
       if (!prev) return prev;
@@ -266,6 +284,7 @@ export function App() {
           profile={state.profile} history={state.history} screener={state.screener}
           onLog={saveLog} food={state.food} weights={state.weights}
           eaten={state.eaten} ratings={state.ratings} cheatDays={state.cheatDays}
+          swaps={state.swaps}
           onMarkMeal={markMeal} onCheatDay={setCheatDay}
           onSetupFood={() => openOverlay("food")}
         />
@@ -274,6 +293,7 @@ export function App() {
         <Food
           profile={state.profile} food={state.food}
           ratings={state.ratings} onRate={rateDish}
+          swaps={state.swaps} onSwap={saveSwap}
           onSetupFood={() => openOverlay("food")}
         />
       )}

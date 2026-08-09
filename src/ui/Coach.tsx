@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { BACKEND_URL } from "./notifications.js";
-import { IconSend } from "./Icons.js";
+import { IconSend, IconCoachBubble } from "./Icons.js";
 import { tap } from "./haptics.js";
 
 interface Turn { role: "user" | "assistant"; content: string }
@@ -24,13 +24,37 @@ export function Coach({ contextRU }: { contextRU: string }) {
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { try { localStorage.setItem(KEY, JSON.stringify(turns.slice(-12))); } catch { /* ignore */ } }, [turns]);
-  useEffect(() => { endRef.current?.scrollIntoView({ block: "nearest" }); }, [turns, streaming]);
+
+  /**
+   * Лента следует за ответом только пока человек внизу.
+   *
+   * Раньше прокрутка дёргалась на КАЖДЫЙ кусок ответа: `streaming` меняется десятки раз
+   * в секунду, и каждый раз страницу силой тянуло вниз. Стоило отлистать вверх, чтобы
+   * прочитать начало длинного ответа, — и текст выдёргивало обратно. Со стороны это
+   * выглядит так, будто экран живёт своей жизнью.
+   *
+   * Теперь работает правило любого мессенджера: внизу — держимся низа, отлистал вверх —
+   * тебя больше не трогают, пока сам не вернёшься или не отправишь вопрос.
+   */
+  const stick = useRef(true);
+  useEffect(() => {
+    const onScroll = () => {
+      const gap = document.documentElement.scrollHeight - window.scrollY - window.innerHeight;
+      stick.current = gap < 120;
+    };
+    addEventListener("scroll", onScroll, { passive: true });
+    return () => removeEventListener("scroll", onScroll);
+  }, []);
+  useEffect(() => {
+    if (stick.current) endRef.current?.scrollIntoView({ block: "end", behavior: "auto" });
+  }, [turns, streaming]);
 
   const send = async (text: string) => {
     const q = text.trim();
     if (!q || busy) return;
     tap();
     const next: Turn[] = [...turns, { role: "user", content: q }];
+    stick.current = true;   // свой вопрос человек хочет видеть — возвращаемся к низу
     setTurns(next); setDraft(""); setErr(""); setStreaming(""); setBusy(true);
     try {
       const res = await fetch(BACKEND_URL + "/coach", {
@@ -79,18 +103,32 @@ export function Coach({ contextRU }: { contextRU: string }) {
         {err && <div className="small" style={{ color: "var(--danger)" }}>{err}</div>}
         <div ref={endRef} />
 
-        {/* Пустой чат — это не «ошибка отсутствия сообщений», а приглашение начать.
-            Раньше подсказки жались к верху, а между ними и полем ввода зияло
-            полэкрана пустоты: экран выглядел недоделанным. Теперь они стоят там,
-            где человек и смотрит, — над полем, у большого пальца. */}
+        {/* Пустой чат — приглашение начать, а не «нет сообщений».
+            Сначала подсказки жались к верху и под ними зияла треть экрана; потом я
+            прижал их к полю ввода — и пустота переехала наверх. Правильно по HIG иначе:
+            пустое состояние стоит В ЦЕНТРЕ свободного места, а не у одного из краёв. */}
         {turns.length === 0 && !busy && (
           <div className="coach-empty">
-            <p className="small muted">Спроси что угодно про сон, еду и режим. Например:</p>
+            <div className="coach-empty-mark" aria-hidden="true"><IconCoachBubble /></div>
+            <p className="coach-empty-title">Спроси что угодно про сон, еду и режим</p>
+            <p className="small muted">
+              Коуч видит твой режим и меню, отвечает по научной базе и не заменяет врача.
+            </p>
             <div className="chips">
               {HINTS.map((h) => (
                 <button key={h} className="chip" onClick={() => send(h)}>{h}</button>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Кнопка стоит НАД полем ввода: под ним лежит полоса фона, которая закрывает
+            щель до панели вкладок, — и всё, что оказывалось ниже, пропадало из виду. */}
+        {turns.length > 0 && (
+          <div className="coach-clear">
+            <button className="linkbtn small" onClick={() => { setTurns([]); setErr(""); }}>
+              Очистить переписку
+            </button>
           </div>
         )}
 
@@ -104,9 +142,6 @@ export function Coach({ contextRU }: { contextRU: string }) {
             <IconSend />
           </button>
         </form>
-        {turns.length > 0 && (
-          <button className="linkbtn small" onClick={() => { setTurns([]); setErr(""); }}>Очистить переписку</button>
-        )}
       </div>
     </div>
   );

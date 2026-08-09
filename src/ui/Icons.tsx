@@ -65,6 +65,17 @@ export const IconCoach = (p: IconProps = {}) => (
   <svg {...svg(p)}><path d="M21 12a8 8 0 0 1-8 8H4l2-3a8 8 0 1 1 15-5Z" /></svg>
 );
 
+/** Крупный пузырь для пустого чата — тот же силуэт, что у вкладки, но самостоятельный знак. */
+export const IconCoachBubble = () => (
+  <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor"
+    strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M21 12a8 8 0 0 1-8 8H4l2-3a8 8 0 1 1 15-5Z" />
+    <circle cx="9" cy="12" r=".9" fill="currentColor" stroke="none" />
+    <circle cx="13" cy="12" r=".9" fill="currentColor" stroke="none" />
+    <circle cx="17" cy="12" r=".9" fill="currentColor" stroke="none" />
+  </svg>
+);
+
 /** Я: человек. */
 export const IconProfile = (p: IconProps = {}) => (
   <svg {...svg(p)}><circle cx="12" cy="8" r="4" /><path d="M4 20.5a8 8 0 0 1 16 0" /></svg>

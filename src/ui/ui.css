@@ -310,9 +310,26 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
 .coach-send:disabled { opacity: .38; cursor: default; transform: none; }
 .coach-send:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-/* Пустой чат: подсказки прижаты к полю ввода, а не к верху экрана. */
-.coach-empty { margin-top: auto; padding-top: var(--sp-4); }
-.coach-empty .chips { margin-bottom: 0; }
+/*
+ * Пустой чат: знак, фраза и подсказки стоят в центре свободного места.
+ *
+ * Держать их у верха или у нижнего края одинаково плохо: в первом случае под ними
+ * зияет треть экрана, во втором — над ними. По HIG пустое состояние центрируется
+ * в той области, которую оно объясняет.
+ */
+.coach-empty {
+  margin: auto 0; padding: var(--sp-6) 0;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  gap: var(--sp-2);
+}
+.coach-empty-mark {
+  display: grid; place-items: center; width: 76px; height: 76px;
+  border-radius: 50%; color: var(--accent); background: var(--accent-soft);
+  margin-bottom: var(--sp-1);
+}
+.coach-empty-title { margin: 0; font-size: var(--t-headline); font-weight: 600; }
+.coach-empty .small { margin: 0; max-width: 34ch; }
+.coach-empty .chips { justify-content: center; margin-bottom: 0; }
 
 .tips { margin: var(--sp-3) 0 var(--sp-1); border-top: var(--hairline) solid var(--separator); padding-top: var(--sp-3); }
 .tips summary { cursor: pointer; font-weight: 600; min-height: var(--tap); display: flex; align-items: center; }
@@ -518,6 +535,7 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
 .chat-screen .coach-empty { margin-top: auto; }
 .chat-screen .coach-empty + .coach-ask { margin-top: 0; }
 .chat-screen .bubble { max-width: 88%; }
+.coach-clear { display: flex; justify-content: center; padding-top: var(--sp-2); }
 
 /* Покупки: строка товара */
 .buy-line { display: grid; grid-template-columns: 1fr auto; gap: 2px var(--sp-3); align-items: baseline; }
@@ -750,3 +768,15 @@ input[type="range"] { min-height: var(--tap); }
 }
 .swap-option:hover, .swap-option:focus-visible { color: var(--accent); }
 .swap-option:active { transform: scale(.985); }
+
+/* Отделы магазина в списке покупок */
+.aisle { margin-top: var(--sp-3); }
+.aisle-head {
+  position: sticky; top: 0; z-index: 1;
+  padding: var(--sp-1) 0; margin-bottom: 2px;
+  background: var(--surface);
+  color: var(--fg-2); font-weight: 600; letter-spacing: .01em;
+}
+
+/* Неделя по еде: столбики на «Сегодня» */
+.week-bars { display: block; width: 100%; max-width: 320px; height: auto; margin-top: var(--sp-2); color: var(--accent); }
