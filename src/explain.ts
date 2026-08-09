@@ -111,7 +111,7 @@ export function explain(input: ExplainInput): Explanation {
   }
 
   // 5. Якорь: регулярность связана с результатом (D1, D2).
-  const reg = regularityScore(logs);
+  const reg = regularityScore(logs, today.date);   // фраза говорит «за неделю» — окно должно быть недельным
   if (reg !== null && reg < 60) {
     return {
       kind: "anchor",

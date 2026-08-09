@@ -25,8 +25,24 @@ function median(xs: number[]): number {
   return n % 2 ? s[mid]! : (s[mid - 1]! + s[mid]!) / 2;
 }
 
-export function regularityScore(history: DayLog[]): number | null {
-  const recent = history.slice(-7).map(h => parseHM(h.wokeHM));
+const DAY_MS = 86_400_000;
+
+/**
+ * `todayISO` — считать по последним семи ДНЯМ, а не по последним семи ЗАПИСЯМ.
+ *
+ * Разница видна, когда человек перестал отмечаться: семь записей позапрошлого месяца
+ * давали бодрую цифру под заголовком «как прошла неделя». Дату передают те, кто обещает
+ * человеку именно неделю — итоги и объяснение дня. Без даты поведение прежнее: оценка
+ * готовности смотрит на последние отметки вообще, когда бы они ни были.
+ */
+export function regularityScore(history: DayLog[], todayISO?: string): number | null {
+  const window = todayISO
+    ? history.filter(h => {
+        const ago = Math.round((Date.parse(todayISO) - Date.parse(h.date)) / DAY_MS);
+        return ago >= 0 && ago < 7;
+      })
+    : history.slice(-7);
+  const recent = window.map(h => parseHM(h.wokeHM));
   if (recent.length < MIN_NIGHTS_FOR_REGULARITY) return null;
   const med = median(recent);
   const mad = median(recent.map(x => Math.abs(x - med))); // медианное абс. отклонение (мин)
