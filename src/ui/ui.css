@@ -336,13 +336,22 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
 }
 .tab {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  /* без min-width ячейка грида не сжимается меньше своего текста: на крупном системном
+     шрифте подписи вылезали за свои ячейки и наезжали друг на друга («СегодняЕдаИтоги») */
+  min-width: 0;
   min-height: var(--tap); padding: var(--sp-1) 2px;
   background: none; border: 0; cursor: pointer; border-radius: var(--r-pill);
   color: var(--fg-2); font-size: var(--t-caption2); font-weight: 500;
   transition: color 160ms ease, background 160ms ease, transform 120ms ease;
 }
-/* пятая вкладка ужала ячейку: подпись не должна переносить слово «Сегодня» в две строки */
-.tab span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+/* пятая вкладка ужала ячейку: подпись не должна переносить слово «Сегодня» в две строки.
+   Размер подписи растёт с системным шрифтом, но не бесконечно: у Apple подпись вкладки
+   фиксированная, потому что пять ячеек физически не вмещают крупный текст. Иконка
+   остаётся полноразмерной, и на ощупь ничего не меняется. */
+.tab span {
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+  font-size: min(var(--t-caption2), 13px);
+}
 .tab:active { transform: scale(.94); }
 .tab.on { color: var(--accent); background: var(--accent-soft); font-weight: 600; }
 .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -363,10 +372,14 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
 /* ─── Неделя ───────────────────────────────────────────────────────── */
 .day-block { border-top: var(--hairline) solid var(--separator); break-inside: avoid; }
 .week-days { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 0 var(--sp-6); }
+/* Шапка дня переносится по строкам, а не сжимается: на крупном системном шрифте
+   «2212 ккал · белок 127 г» уже не помещается рядом с названием дня, и цифрам нужна
+   своя строка. Шеврон при этом остаётся прижатым к правому краю первой строки. */
 .day-head {
-  display: flex; width: 100%; align-items: center; gap: var(--sp-2); justify-content: space-between;
+  display: flex; width: 100%; align-items: center; gap: var(--sp-1) var(--sp-2); flex-wrap: wrap;
   min-height: 52px; background: none; border: 0; font: inherit; cursor: pointer; text-align: left;
 }
+.day-head .chev { margin-left: auto; }
 /* Шевроны и кнопки замены — единый набор иконок, а не символы из шрифта:
    ▾ и ↻ выглядели по-разному на iOS и Android и не совпадали по толщине с текстом */
 .day-head .chev, .card-h .chev { color: var(--fg-3); display: inline-flex; align-items: center; }
@@ -416,7 +429,9 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
   align-items: baseline; padding: var(--sp-1) 0;
   border-bottom: var(--hairline) solid var(--separator);
 }
-.fridge-name { min-width: 0; overflow-wrap: anywhere; }
+/* у названий продуктов та же история, но здесь разрыв внутри слова допустим:
+   строка «сыр адыгейский» ужимается до ширины колонки, а не ломается по буквам */
+.fridge-name { min-width: 0; overflow-wrap: break-word; }
 
 /* Оценка блюда в его карточке. «Не нравится» не красим в тревожный цвет:
    это выбор вкуса, а не ошибка. */
@@ -485,6 +500,14 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
 .chat-screen .coach-ask {
   position: sticky; bottom: calc(84px + env(safe-area-inset-bottom));
   background: var(--bg); padding: var(--sp-2) 0 var(--sp-1); margin-top: auto;
+}
+/* Поле ввода прилипает на высоте панели вкладок, и между ними оставалась щель,
+   сквозь которую проезжал текст ответа: выглядело так, будто поле наехало на чат.
+   Полоса фона закрывает зазор до самого низа. */
+.chat-screen .coach-ask::after {
+  content: ""; position: absolute; left: 0; right: 0; top: 100%;
+  height: calc(84px + env(safe-area-inset-bottom));
+  background: var(--bg); pointer-events: none;
 }
 /* Когда чат пуст, вниз уезжают подсказки, а поле ввода встаёт сразу под ними.
    Иначе `margin-top: auto` стоял у обоих, свободное место доставалось первому,
@@ -562,7 +585,10 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
 
 .buy-title, .ing-title { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .buy-hint { line-height: 1.3; color: var(--fg-2); font-size: var(--t-caption1); }
-.day-nums { color: var(--fg-2); font-size: var(--t-footnote); min-width: 0; overflow-wrap: anywhere; }
+/* Без `overflow-wrap: anywhere`: он разрешал разрыв в ЛЮБОМ месте, и на крупном
+   системном шрифте, когда места не хватало, «2212 ккал · белок 127 г» печаталось
+   столбиком по одной букве. Перенос теперь только по пробелам, как у людей. */
+.day-nums { color: var(--fg-2); font-size: var(--t-footnote); min-width: 0; }
 
 .rd { display: flex; gap: var(--sp-3); align-items: center; border-radius: var(--r-card); padding: var(--sp-4); margin-bottom: var(--sp-3); background: var(--surface); box-shadow: var(--shadow-1); }
 .rd-dot { width: 14px; height: 14px; border-radius: 50%; flex: 0 0 auto; }
