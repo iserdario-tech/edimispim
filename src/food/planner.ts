@@ -385,7 +385,14 @@ export function generateDay(targets: Targets, pool: Recipe[], opts: DayOptions):
    * замены тянут набор к овощному, и в замере плотность падала НИЖЕ обычного дня —
    * то есть механика входа в режим работала против себя же.
    */
-  swapForFiber(day, targets, pool, mains, offset, opts.roughNight || opts.familiar ? 1 : 2, opts.liked ?? [], !!opts.roughNight, opts.avoid ?? []);
+  /*
+   * Проходов добора четыре, а не два: замер на неделе дал прирост клетчатки примерно на
+   * седьмую часть, и разнообразие от этого не пострадало — оно защищено памятью недели,
+   * а не числом проходов. Упирается всё равно в контент: средняя клетчатка блюда в базе
+   * 4.3–4.8 г при цели 30 г в день, блюд с десятью граммами и выше — пятнадцать на 272.
+   * Пока их не станет больше, отдельные дни так и будут проседать до 13–15 г.
+   */
+  swapForFiber(day, targets, pool, mains, offset, opts.roughNight || opts.familiar ? 1 : 4, opts.liked ?? [], !!opts.roughNight, opts.avoid ?? []);
   swapForProtein(day, targets, pool, mains, offset, opts.liked ?? [], !!opts.roughNight, opts.avoid ?? []);
   addProteinTopUp(day, targets);
   day.meals.sort((a, b) => a.timeMin - b.timeMin);
