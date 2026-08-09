@@ -12,6 +12,7 @@ import type { MealCount, MealType, Recipe } from "./types.js";
 
 const RU: Record<MealType, string> = {
   breakfast: "завтраков", lunch: "обедов", dinner: "ужинов", dessert: "десертов",
+  snack: "перекусов",
 };
 
 /** Ниже этого числа вариантов слот повторяется за неделю почти каждый день. */
