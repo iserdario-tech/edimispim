@@ -53,6 +53,24 @@ describe("loadState устойчив к битым данным", () => {
     expect(st.history.map(h => h.date)).toEqual(["2026-07-01", "2026-07-03"]);
   });
 
+  /**
+   * Ровность режима берёт последние семь ЭЛЕМЕНТОВ истории, считая их последними семью
+   * ночами. Копия с другого устройства и перенос из старого приложения такого порядка
+   * не обещают, поэтому чтение приводит историю в порядок само.
+   */
+  it("история читается упорядоченной по дате", () => {
+    const shuffled = {
+      ...good,
+      history: [
+        { date: "2026-07-05", wokeHM: "07:10", quality: 4 },
+        { date: "2026-07-01", wokeHM: "06:40", quality: 3 },
+        { date: "2026-07-03", wokeHM: "06:55", quality: 5 },
+      ],
+    };
+    const st = loadState(storeWith(JSON.stringify(shuffled)))!;
+    expect(st.history.map(h => h.date)).toEqual(["2026-07-01", "2026-07-03", "2026-07-05"]);
+  });
+
   it("после сохранения состояние читается обратно без потерь", () => {
     let saved = "";
     const store: StorageLike = { getItem: () => saved, setItem: (_k, v) => { saved = v; } };

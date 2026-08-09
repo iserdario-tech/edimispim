@@ -39,11 +39,14 @@ const itemLink = (name: string, shopId: string): string => searchUrl(shopById(sh
  * Отмеченное вычёркивается и само уходит в кладовку — остаток от упаковки учтётся
  * в следующей закупке, отдельной кнопки «закупился» для этого не нужно.
  */
-export function GroceryBlock({ grocery, pantry, onPantry }: {
+export function GroceryBlock({ grocery, pantry, onPantry, dayLabels }: {
   grocery: Grocery;
   /** Кладовка живёт на экране недели: её же читает замена блюда «из того, что дома». */
   pantry: Pantry;
   onPantry: (next: Pantry) => void;
+  /** Подписи дней — те же, что в меню выше («сегодня», «завтра», «вт»).
+   *  Без них покупки звали тот же день «День 3», и сопоставлять приходилось человеку. */
+  dayLabels?: string[];
 }) {
   const [shopId, setShopId] = useState(() => readLS(SHOP_KEY, DEFAULT_SHOP_ID));
   const [scope, setScope] = useState<"week" | number>("week");
@@ -51,7 +54,8 @@ export function GroceryBlock({ grocery, pantry, onPantry }: {
   const shop = shopById(shopId);
   const day = typeof scope === "number" ? grocery.byDay[scope] : null;
   const rawItems = day ? day.items : grocery.items;
-  const title = day ? `Покупки на день ${day.day}` : "Покупки на неделю";
+  const labelOf = (i: number): string => dayLabels?.[i] ?? `День ${i + 1}`;
+  const title = day ? `Покупки на ${labelOf(scope as number)}` : "Покупки на неделю";
 
   const lines = useMemo(() => planPurchase(rawItems, pantry), [rawItems, pantry]);
   const active = lines.filter(l => !l.staple && l.toBuy > 0);
@@ -123,7 +127,7 @@ export function GroceryBlock({ grocery, pantry, onPantry }: {
         <button className={scope === "week" ? "chip on" : "chip"} onClick={() => setScope("week")}>Вся неделя</button>
         {grocery.byDay.map((d, i) => (
           <button key={d.day} className={scope === i ? "chip on" : "chip"} onClick={() => setScope(i)}>
-            День {d.day}
+            {labelOf(i)}
           </button>
         ))}
       </div>

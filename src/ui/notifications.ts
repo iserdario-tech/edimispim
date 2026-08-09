@@ -70,10 +70,13 @@ export async function enableNotifications(profile: Profile, day?: PushDay): Prom
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC) as BufferSource,
     });
-    await fetch(BACKEND_URL + "/subscribe", {
+    const res = await fetch(BACKEND_URL + "/subscribe", {
       method: "POST", headers: { "content-type": "application/json" },
       body: JSON.stringify({ subscription: sub, profile, tzOffsetMin: -new Date().getTimezoneOffset(), ...(day ? { day } : {}) }),
     });
+    // Разрешение от браузера ещё не значит, что подписка дошла до сервера: раньше при
+    // упавшем сервере человек всё равно читал «Готово!» и ждал напоминаний, которых не будет.
+    if (!res.ok) return "Разрешение выдано, но сервер напоминаний не ответил. Попробуй ещё раз чуть позже.";
     return "Готово! Напоминания включены.";
   } catch {
     return "Не получилось включить напоминания. Попробуй ещё раз (на айфоне — открой приложение с иконки на «Домой»).";

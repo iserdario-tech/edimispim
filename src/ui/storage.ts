@@ -110,8 +110,15 @@ export function loadState(store: StorageLike = defaultStore()): StoredState | nu
   try {
     const parsed: unknown = JSON.parse(raw);
     if (!isValidState(parsed)) return null;
-    // отдельные записи истории тоже могут быть битыми — отсеиваем, а не роняем всё
-    return { ...parsed, history: parsed.history.filter(h => h && typeof h.wokeHM === "string") };
+    // отдельные записи истории тоже могут быть битыми — отсеиваем, а не роняем всё.
+    // Порядок восстанавливаем здесь же: ровность режима считает последние семь ЭЛЕМЕНТОВ
+    // массива, а копия и перенос из старого приложения сортировки не гарантируют.
+    return {
+      ...parsed,
+      history: parsed.history
+        .filter(h => h && typeof h.wokeHM === "string")
+        .sort((a, b) => a.date.localeCompare(b.date)),
+    };
   } catch { return null; }
 }
 export function saveDayDraft(d: DayDraft, store: StorageLike = defaultStore()): void {
