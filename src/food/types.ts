@@ -1,7 +1,14 @@
 export type Sex = "m" | "f";
 export type Activity = "low" | "medium" | "high";
 export type Budget = "small" | "medium" | "large";
-export type MealType = "breakfast" | "lunch" | "dinner" | "dessert";
+/**
+ * «Перекус» — отдельный тип, а не разновидность десерта.
+ *
+ * Пятиразовый день имеет два небольших приёма, и оба брались из десертов: человек
+ * получал сладкое дважды в день, причём почти всегда творожно-банановое. Утренний
+ * перекус может быть и солёным — яйца, хумус, сыр, рулетики из индейки.
+ */
+export type MealType = "breakfast" | "lunch" | "dinner" | "dessert" | "snack";
 export type Cuisine = "universal" | "mediterranean" | "asian" | "middleeast" | "slavic";
 export type Allergen = "milk" | "egg" | "fish" | "gluten" | "nuts" | "soy";
 export type Condition = "thyroid" | "pcos" | "psych_meds";

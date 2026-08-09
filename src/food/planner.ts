@@ -335,7 +335,7 @@ export function generateDay(targets: Targets, pool: Recipe[], opts: DayOptions):
   const scheme = SCHEMES[count];
   const byType = (t: MealType) => pool.filter(r => r.meal_type === t);
 
-  const hasDesserts = byType("dessert").length > 0;
+  const hasDesserts = byType("dessert").length + byType("snack").length > 0;
   const treatKcal = hasDesserts ? Math.round(targets.kcalTarget * scheme.treatShare) : 0;
   const mainTarget = targets.kcalTarget - treatKcal;
   const times = mealTimes(opts.rhythm, count, opts.roughNight);
@@ -357,6 +357,8 @@ export function generateDay(targets: Targets, pool: Recipe[], opts: DayOptions):
 
   if (treatKcal > 0) {
     const desserts = byType("dessert");
+    // утренний перекус может быть и несладким, вечерний десерт — нет
+    const snacks = [...byType("snack"), ...desserts];
     const perTreat = treatKcal / scheme.treatCount;
     const treatSlots: Slot[] = scheme.treatCount >= 2 ? ["dessert", "snack"] : ["dessert"];
     // при пяти приёмах сладких слотов два, и оба берут из одного пула: без этого списка
@@ -365,7 +367,7 @@ export function generateDay(targets: Targets, pool: Recipe[], opts: DayOptions):
     treatSlots.forEach((slot, i) => {
       // сладкое тоже подбирается по размеру порции: иначе в план попадает «десерт ×3.5»
       const fitDesserts = dropUsed(
-        preferLiked(fittingOptions(desserts, perTreat, opts.roughNight), opts.liked, offset),
+        preferLiked(fittingOptions(slot === "snack" ? snacks : desserts, perTreat, opts.roughNight), opts.liked, offset),
         [...(opts.avoid ?? []), ...taken],
       );
       const recipe = fitDesserts[(offset + i) % fitDesserts.length];

@@ -26,9 +26,9 @@ const week = (kcal: number, mealCount: MealCount) =>
 describe("разнообразие недели", () => {
   for (const kcal of [1750, 2300]) {
     for (const mealCount of [2, 3, 4, 5] as MealCount[]) {
-      it(`${kcal} ккал, ${mealCount} приёма: основные приёмы не повторяются за неделю`, () => {
+      it(`${kcal} ккал, ${mealCount} приёма: ни один приём не повторяется за неделю`, () => {
         const days = week(kcal, mealCount);
-        for (const slot of ["breakfast", "lunch", "dinner"] as const) {
+        for (const slot of ["breakfast", "lunch", "dinner", "snack", "dessert"] as const) {
           const used = days.flatMap(d => d.meals.filter(m => m.slot === slot).map(m => m.recipe.id));
           if (!used.length) continue;
           expect(new Set(used).size, `${slot}: ${used.length} приёмов, разных ${new Set(used).size}`)
