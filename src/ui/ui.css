@@ -629,11 +629,39 @@ input[type="range"] { min-height: var(--tap); }
 .wrap { animation: screen-in 220ms ease-out both; }
 .reveal { animation: reveal-in 180ms ease-out both; }
 
-/* Отклик на нажатие: кнопка чуть проседает и возвращается. Размер меняется
-   трансформацией, поэтому соседние элементы не двигаются. */
+/*
+ * Отклик на нажатие: кнопка проседает мгновенно и возвращается с лёгким перелётом.
+ *
+ * Тактильного отклика на айфоне не будет: Vibration API Safari не поддерживает,
+ * а обходной путь через `<input type="checkbox" switch>` Apple закрыла в iOS 26.5.
+ * Значит подтверждение нажатия остаётся только глазами — и тем важнее, чтобы оно
+ * было живым. Вниз элемент идёт быстро (90 мс), обратно — с пружиной: так палец
+ * чувствует ответ, а не наблюдает анимацию.
+ */
+:root { --spring: cubic-bezier(.34, 1.56, .64, 1); }
+
 .chip:active, .seg-item:active, .eat-btn:active, .rate-btn:active, .swap-btn:active,
-.w-save:active, .day-head:active { transform: scale(.97); }
-.chip, .seg-item, .eat-btn, .rate-btn, .swap-btn, .w-save, .day-head { transition: transform 120ms ease; }
+.w-save:active, .day-head:active, .meal-name:active, .row-btn:active,
+.buy-check:active, .linkbtn:active { transform: scale(.96); }
+.chip, .seg-item, .eat-btn, .rate-btn, .swap-btn, .w-save, .day-head, .meal-name,
+.row-btn, .buy-check, .linkbtn { transition: transform 260ms var(--spring); }
+.chip:active, .seg-item:active, .eat-btn:active, .rate-btn:active, .swap-btn:active,
+.w-save:active, .day-head:active, .meal-name:active, .row-btn:active,
+.buy-check:active, .linkbtn:active { transition-duration: 90ms; transition-timing-function: ease-out; }
+
+/*
+ * Подтверждение выбора: отмеченное коротко «клюёт» и встаёт на место.
+ *
+ * Это замена вибрации, а не украшение: когда отклика в пальце нет, глаз должен
+ * увидеть, что нажатие засчитано. Анимация играет один раз и только при включении.
+ */
+@keyframes pop-in {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.14); }
+  100% { transform: scale(1); }
+}
+.eat-btn.on, .rate-btn.on, .chip.on, .tab.on > svg { animation: pop-in 260ms var(--spring); }
+.buy-row input[type="checkbox"]:checked { animation: pop-in 240ms var(--spring); }
 
 /* Системная настройка «меньше движения» — старше любых наших решений. */
 @media (prefers-reduced-motion: reduce) {

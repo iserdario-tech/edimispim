@@ -1,10 +1,11 @@
 import React, { useMemo, useState } from "react";
 import type { Pantry } from "../food/packaging.js";
 import { coverageOf } from "../food/packaging.js";
-import { NUTRIENTS } from "../food/nutrients.js";
+import { NUTRIENTS, isLiquid } from "../food/nutrients.js";
 import { hintFor } from "../food/ingredients.js";
 import type { Recipe } from "../food/types.js";
 import { tap } from "./haptics.js";
+import { amountRU } from "./Grocery.js";
 
 /**
  * Холодильник: что есть дома и сколько.
@@ -17,9 +18,10 @@ import { tap } from "./haptics.js";
  * а замена блюда в меню сначала предлагает то, что готовится без похода в магазин.
  */
 
-/** Единица по умолчанию. Штучное (яйца, банан) считается штуками, остальное — граммами. */
+/** Единица по умолчанию: штучное — штуками, жидкое — миллилитрами, остальное — граммами. */
 const PIECE = /яйц|банан|хлеб|лаваш|тортилья|перец болгарский|авокадо|огурец|помидор/i;
-const defaultUnit = (name: string): string => (PIECE.test(name) ? "шт" : "г");
+const defaultUnit = (name: string): string =>
+  PIECE.test(name) ? "шт" : isLiquid(name) ? "мл" : "г";
 
 const key = (name: string, unit: string): string => `${name.toLowerCase().trim()}|${unit}`;
 const parseKey = (k: string): { name: string; unit: string } => {
@@ -125,7 +127,7 @@ export function Fridge({ pantry, onPantry, pool }: {
                       {it.name}
                       {hint && <span className="small muted"> · {hint.what}</span>}
                     </span>
-                    <span className="small muted">{+it.qty.toFixed(1)} {it.unit}</span>
+                    <span className="small muted">{amountRU(it.qty, it.unit)}</span>
                     <button className="linkbtn small" aria-label={`Убрать ${it.name}`}
                       onClick={() => remove(it.key)}>убрать</button>
                   </li>
