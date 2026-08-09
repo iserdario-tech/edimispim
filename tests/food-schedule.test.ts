@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { planWindow, scheduleFor, isoOfDay, dayNumber } from "../src/food/schedule";
+import { planWindow, scheduleFor, isoOfDay, dayNumber, applySwaps } from "../src/food/schedule";
 import { filterRecipes } from "../src/food/planner";
 import recipesJson from "../src/food/data/recipes.json";
 import type { Recipe, SafeTargets } from "../src/food/types";
@@ -63,5 +63,40 @@ describe("меню привязано к календарю", () => {
         expect(new Set(ids).size).toBe(ids.length);
       }
     }
+  });
+});
+
+/**
+ * Замена руками должна пережить перезагрузку: раньше она жила только в памяти вкладки,
+ * и стоило обновить страницу — возвращалось блюдо, выбранное планировщиком.
+ */
+describe("ручные замены поверх плана", () => {
+  const day = () => planWindow("2026-08-09", 1, pool, targetsOf, optsOf)[0]!;
+
+  it("сохранённая замена встаёт на своё место", () => {
+    const d = day();
+    const slot = d.day.meals[0]!.slot;
+    const other = pool.find(r => r.meal_type === d.day.meals[0]!.recipe.meal_type
+      && r.id !== d.day.meals[0]!.recipe.id)!;
+    applySwaps(d.day, { [slot]: other.id }, pool, d.targets, 4);
+    expect(d.day.meals.find(m => m.slot === slot)!.recipe.id).toBe(other.id);
+  });
+
+  it("исчезнувшее из набора блюдо не оставляет приём пустым", () => {
+    const d = day();
+    const slot = d.day.meals[0]!.slot;
+    const before = d.day.meals.find(m => m.slot === slot)!.recipe.id;
+    applySwaps(d.day, { [slot]: "такого-рецепта-нет" }, pool, d.targets, 4);
+    expect(d.day.meals.find(m => m.slot === slot)!.recipe.id).toBe(before);
+  });
+
+  it("день пересчитывается под новую еду", () => {
+    const d = day();
+    const slot = d.day.meals[0]!.slot;
+    const other = pool.filter(r => r.meal_type === d.day.meals[0]!.recipe.meal_type)
+      .sort((a, b) => b.kcal - a.kcal)[0]!;
+    applySwaps(d.day, { [slot]: other.id }, pool, d.targets, 4);
+    const sum = d.day.meals.reduce((s, m) => s + Math.round(m.recipe.kcal * m.servings), 0);
+    expect(d.day.totals.kcal).toBe(sum);
   });
 });

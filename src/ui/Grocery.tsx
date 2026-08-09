@@ -36,6 +36,28 @@ const showsLeftover = (line: BuyLine): boolean =>
   line.perishDays !== undefined && line.perishDays <= 14 &&
   line.leftover >= line.need * 0.25;
 
+/**
+ * Отделы магазина в порядке обхода зала.
+ *
+ * Список на семьдесят восемь позиций — это стена, по которой человек ходит кругами:
+ * творог в начале, кефир в середине, сыр в конце. Порядок здесь бытовой, а не
+ * алфавитный: сначала овощи и мясо (тележка внизу тяжёлым), потом молочное и яйца,
+ * потом сухое, хлеб в конце — чтобы не смялся.
+ */
+const AISLES: { id: string; ru: string; match: string[] }[] = [
+  { id: "veg",    ru: "Овощи и фрукты", match: ["овощи/фрукты"] },
+  { id: "meat",   ru: "Мясо и рыба",    match: ["мясо/рыба", "полуфабрикаты"] },
+  { id: "dairy",  ru: "Молочное и яйца", match: ["молочное", "яйца"] },
+  { id: "grain",  ru: "Крупы и бобовые", match: ["крупы", "бобовые"] },
+  { id: "canned", ru: "Консервы и соусы", match: ["консервы", "соусы", "масла"] },
+  { id: "misc",   ru: "Бакалея, орехи, специи", match: ["бакалея", "орехи", "орехи/семена", "специи"] },
+  { id: "bread",  ru: "Хлеб", match: ["хлеб"] },
+];
+const OTHER = { id: "other", ru: "Остальное" };
+
+const aisleOf = (category?: string): { id: string; ru: string } =>
+  AISLES.find(a => a.match.includes(category ?? "")) ?? OTHER;
+
 /** Ссылка на поиск товара в выбранном сервисе. */
 const itemLink = (name: string, shopId: string): string => searchUrl(shopById(shopId), name);
 
@@ -77,6 +99,20 @@ export function GroceryBlock({ grocery, pantry, onPantry, dayLabels }: {
     () => lines.filter(l => !l.staple && l.toBuy > 0 && costOf(l.name, l.toBuy, l.unit) === null),
     [lines],
   );
+
+  /** Строки, разложенные по отделам зала; пустые отделы не показываем. */
+  const byAisle = useMemo(() => {
+    const groups = new Map<string, { id: string; ru: string; items: BuyLine[] }>();
+    for (const l of lines) {
+      if (l.staple) continue;
+      const a = aisleOf(l.category);
+      const g = groups.get(a.id) ?? { ...a, items: [] };
+      g.items.push(l);
+      groups.set(a.id, g);
+    }
+    const order = [...AISLES.map(a => a.id), OTHER.id];
+    return [...groups.values()].sort((x, y) => order.indexOf(x.id) - order.indexOf(y.id));
+  }, [lines]);
 
   const chooseShop = (id: string) => { setShopId(id); writeLS(SHOP_KEY, id); };
 
@@ -152,9 +188,14 @@ export function GroceryBlock({ grocery, pantry, onPantry, dayLabels }: {
       {/* Строка остаётся на своём месте: раньше отмеченное сразу улетало вниз,
           и список прыгал под пальцем — легко потерять, где ты был. Отмеченное
           вычёркивается, но не двигается. */}
-      <ul className="buy-list">
-        {lines.filter(l => !l.staple).map(l => row(l, l.toBuy === 0))}
-      </ul>
+      {byAisle.map(({ id, ru, items }) => (
+        <div key={id} className="aisle">
+          <div className="aisle-head small">{ru}<span className="muted"> · {items.length}</span></div>
+          <ul className="buy-list">
+            {items.map(l => row(l, l.toBuy === 0))}
+          </ul>
+        </div>
+      ))}
 
       <div className="buy-foot small muted">
         <span>Взято {done.length} из {active.length + done.length}</span>
