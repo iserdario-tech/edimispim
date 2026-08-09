@@ -289,7 +289,7 @@ const easiest = (options: Recipe[]): Recipe[] =>
 const denser = (options: Recipe[]): Recipe[] => {
   if (options.length <= MIN_CHOICES) return options;
   const sorted = [...options].sort((a, b) => (b.energy_density ?? 0) - (a.energy_density ?? 0));
-  // половина набора, но никогда не меньше недельной нормы разнообразия
+  // половина набора, но не меньше недельной нормы разнообразия
   return sorted.slice(0, Math.max(MIN_CHOICES, Math.ceil(sorted.length / 2)));
 };
 
@@ -354,7 +354,12 @@ export function generateDay(targets: Targets, pool: Recipe[], opts: DayOptions):
 
   const day: Day = { meals, totals: { kcal: 0, protein: 0, fiber: 0 } };
   recomputeTotals(day);
-  swapForFiber(day, targets, pool, mains, offset, opts.roughNight ? 1 : 2, opts.liked ?? []);
+  /*
+   * Вторая замена ради клетчатки отменяется, когда день собран «привычной» едой:
+   * замены тянут набор к овощному, и в замере плотность падала НИЖЕ обычного дня —
+   * то есть механика входа в режим работала против себя же.
+   */
+  swapForFiber(day, targets, pool, mains, offset, opts.roughNight || opts.familiar ? 1 : 2, opts.liked ?? []);
   swapForProtein(day, targets, pool, mains, offset, opts.liked ?? []);
   addProteinTopUp(day, targets);
   day.meals.sort((a, b) => a.timeMin - b.timeMin);
