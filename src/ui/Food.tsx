@@ -11,6 +11,7 @@ import recipesJson from "../food/data/recipes.json";
 import { localDateISO } from "../today-date.js";
 import { GroceryBlock, MealIngredients } from "./Grocery.js";
 import { Fridge } from "./Fridge.js";
+import { Catalog } from "./Catalog.js";
 import { readLS, writeLS, PANTRY_KEY } from "./localStore.js";
 import type { Pantry } from "../food/packaging.js";
 import { IconChevron, IconSwap } from "./Icons.js";
@@ -218,6 +219,10 @@ export function Food({ profile, food, ratings, onRate, onSetupFood }: {
       <Fridge pantry={pantry} onPantry={savePantry} pool={plan.pool} />
       <GroceryBlock grocery={plan.grocery} pantry={pantry} onPantry={savePantry}
         dayLabels={plan.days.map(({ date }, i) => dayLabel(date, i))} />
+      {/* Каталог стоит последним: он не для каждого дня, а для «когда захочется полистать».
+          Показываем ВЕСЬ набор, а не отфильтрованный под ограничения, — иначе человек не
+          поймёт, почему блюдо, которое он ищет, не находится. */}
+      <Catalog recipes={RECIPES} ratings={ratings} onRate={onRate} />
     </main>
   );
 }

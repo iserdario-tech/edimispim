@@ -1,5 +1,6 @@
 import type { Day, Grocery, GroceryItem, Ingredient, Meal } from "./types";
 import { costOf } from "./prices";
+import { gramsOf } from "./nutrients";
 
 // свежие категории — скоропорт; консервы/заморозка/сушёное хранятся долго
 const FRESH = new Set(["мясо/рыба", "молочное", "яйца", "овощи/фрукты"]);
@@ -10,10 +11,40 @@ function isPerishable(ing: Ingredient): boolean {
   return FRESH.has(ing.category);
 }
 
-function aggregate(meals: Meal[]): GroceryItem[] {
-  const map = new Map<string, GroceryItem>();
+/**
+ * Единицы одного продукта, приведённые к одной.
+ *
+ * Ключом строки покупки было «имя + единица», и продукт, записанный в разных рецептах
+ * по-разному, попадал в список ДВАЖДЫ: «молоко 150 г» и следом «молоко 21 мл». Так вышло
+ * у семи продуктов — молоко, кефир, соевый соус, кокосовое молоко, банан, лаваш, яичные
+ * белки. Человек у полки видел две строки одного и того же и не понимал, сколько брать.
+ *
+ * Разнобой лечится в граммах: миллилитры для наших жидкостей равны граммам, а штуки
+ * переводит `gramsOf` по среднему весу. Продукты, записанные единообразно, не трогаем —
+ * «2 шт яиц» человеку понятнее, чем «120 г».
+ */
+function unitsByName(meals: Meal[]): Map<string, Set<string>> {
+  const units = new Map<string, Set<string>>();
   for (const m of meals) {
     for (const ing of m.recipe.ingredients ?? []) {
+      const name = ing.name.toLowerCase().trim();
+      const set = units.get(name) ?? new Set<string>();
+      set.add(ing.unit);
+      units.set(name, set);
+    }
+  }
+  return units;
+}
+
+function aggregate(meals: Meal[]): GroceryItem[] {
+  const map = new Map<string, GroceryItem>();
+  const mixed = unitsByName(meals);
+  for (const m of meals) {
+    for (const ing0 of m.recipe.ingredients ?? []) {
+      const many = (mixed.get(ing0.name.toLowerCase().trim())?.size ?? 1) > 1;
+      const ing = many
+        ? { ...ing0, qty: gramsOf(ing0.name, ing0.qty, ing0.unit), unit: "г" }
+        : ing0;
       // канонизация имени → без дублей «яйцо/яйца»
       const key = (ing.name + "|" + ing.unit).toLowerCase().trim();
       const prev = map.get(key) ?? {
