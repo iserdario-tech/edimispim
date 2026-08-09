@@ -8,7 +8,11 @@ interface Turn { role: "user" | "assistant"; content: string }
 const HINTS = ["Почему я разбитый?", "Как продержаться сегодня?", "Спал 5 часов — что делать?"];
 const KEY = "edimispim.coach.v1";
 const loadTurns = (): Turn[] => {
-  try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch { return []; }
+  // в хранилище может лежать что угодно: одного `JSON.parse` мало — не массив уронит отрисовку
+  try {
+    const v: unknown = JSON.parse(localStorage.getItem(KEY) || "[]");
+    return Array.isArray(v) ? v.filter(t => t && typeof t.content === "string") : [];
+  } catch { return []; }
 };
 
 export function Coach({ contextRU }: { contextRU: string }) {
@@ -71,7 +75,8 @@ export function Coach({ contextRU }: { contextRU: string }) {
           <div key={i} className={t.role === "user" ? "bubble me" : "bubble coachmsg"}>{t.content.replace(/\*\*/g, "")}</div>
         ))}
         {busy && <div className="bubble coachmsg">{streaming ? streaming.replace(/\*\*/g, "") : <span className="muted">Думаю…</span>}</div>}
-        {err && <div className="small" style={{ color: "#f85149" }}>{err}</div>}
+        {/* цвет ошибки — из палитры приложения: захардкоженный не знал про тёмную тему */}
+        {err && <div className="small" style={{ color: "var(--danger)" }}>{err}</div>}
         <div ref={endRef} />
 
         {/* Пустой чат — это не «ошибка отсутствия сообщений», а приглашение начать.

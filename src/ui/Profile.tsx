@@ -52,7 +52,8 @@ export function Profile({ food, screener, ratings, onRate, onEditSleep, onEditFo
         <button className="row-btn" onClick={onEditFood}>
           <span>Еда</span>
           <span className="small muted">
-            {food ? `${food.mealCount} приёма в день, аллергии, бюджет →` : "не заполнено →"}
+            {/* «5 приёма» — не по-русски; после четырёх счётное слово меняется */}
+            {food ? `${food.mealCount} ${food.mealCount < 5 ? "приёма" : "приёмов"} в день, аллергии, бюджет →` : "не заполнено →"}
           </span>
         </button>
       </section>
