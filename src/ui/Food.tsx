@@ -4,7 +4,7 @@ import { parseHM, fmtHM } from "../index.js";
 import { targetsFor, type FoodSettings } from "./storage.js";
 import {
   buildGroceryList, expectedBedMin, planWindow,
-  filterRecipes, swapDish, targetsForToday, prefersFamiliar,
+  filterRecipes, swapDish, swapOptions, swapTo, targetsForToday, prefersFamiliar,
 } from "../food/index.js";
 import type { Recipe } from "../food/types.js";
 import recipesJson from "../food/data/recipes.json";
@@ -15,6 +15,7 @@ import { Catalog } from "./Catalog.js";
 import { readLS, writeLS, PANTRY_KEY } from "./localStore.js";
 import type { Pantry } from "../food/packaging.js";
 import { IconChevron, IconSwap } from "./Icons.js";
+import { tap } from "./haptics.js";
 
 const RECIPES = recipesJson as Recipe[];
 /**
@@ -51,6 +52,8 @@ export function Food({ profile, food, ratings, onRate, onSetupFood }: {
 }) {
   const [openDays, setOpenDays] = useState<Set<number>>(() => new Set([0]));
   const [openMeal, setOpenMeal] = useState<string | null>(null);
+  // какой приём сейчас выбирает замену: «день-приём», чтобы список был ровно у одной строки
+  const [swapping, setSwapping] = useState<string | null>(null);
   const [rev, setRev] = useState(0);          // счётчик замен — заставляет перерисовать план
   // кладовка нужна двум местам сразу: списку покупок и замене блюда, поэтому живёт здесь
   const [pantry, setPantry] = useState<Pantry>(() => readLS<Pantry>(PANTRY_KEY, {}));
@@ -109,6 +112,20 @@ export function Food({ profile, food, ratings, onRate, onSetupFood }: {
     const d = plan.days[dayIdx];
     if (d && swapDish(d.day, index, d.targets, plan.pool, food.mealCount, pantry)) setRev(r => r + 1);
   };
+  /** Варианты замены для конкретного приёма — их показывает список под блюдом. */
+  const optionsFor = (dayIdx: number, index: number) => {
+    const d = plan?.days[dayIdx];
+    if (!d || !food) return [];
+    return swapOptions(d.day, index, d.targets, plan!.pool, food.mealCount, pantry);
+  };
+  const chooseSwap = (dayIdx: number, index: number, recipe: Recipe) => {
+    const d = plan?.days[dayIdx];
+    if (!d || !food) return;
+    tap();
+    swapTo(d.day, index, recipe, d.targets, food.mealCount);
+    setSwapping(null);
+    setRev(r => r + 1);
+  };
   /** Заменить все блюда дня разом — когда день целиком не нравится. */
   const swapWholeDay = (dayIdx: number) => {
     if (!plan || !food) return;
@@ -165,7 +182,9 @@ export function Food({ profile, food, ratings, onRate, onSetupFood }: {
                 onClick={() => toggleDay(i)}>
                 <b>{dayLabel(date, i)}</b>
                 <span className="small muted day-nums">
-                  {day.totals.kcal} ккал · белок {day.totals.protein} г
+                  {/* неразрывные пробелы: иначе на узком месте «121» и «г» оказывались
+                      на разных строках, и подпись читалась как обрывок */}
+                  {day.totals.kcal} ккал · белок {day.totals.protein} г
                 </span>
                 <span className="chev"><IconChevron open={openDays.has(i)} /></span>
               </button>
@@ -201,7 +220,30 @@ export function Food({ profile, food, ratings, onRate, onSetupFood }: {
                       </span>
                       <button className="swap-btn" title="Заменить блюдо"
                         aria-label={`Заменить блюдо: ${m.recipe.name}`}
-                        onClick={() => swapOne(i, k)}><IconSwap /></button>
+                        aria-expanded={swapping === key}
+                        onClick={() => setSwapping(swapping === key ? null : key)}><IconSwap /></button>
+                      {/* Раньше кнопка молча подставляла следующий рецепт, и человек жал её
+                          раз за разом, пока не выпадет съедобное. Теперь видно, из чего выбор. */}
+                      {swapping === key && (
+                        <div className="swap-picker">
+                          <div className="small muted">Чем заменить:</div>
+                          <ul>
+                            {optionsFor(i, k).map(r => (
+                              <li key={r.id}>
+                                <button className="swap-option" onClick={() => chooseSwap(i, k, r)}>
+                                  <span>{r.name}</span>
+                                  <span className="small muted">
+                                    {Math.round(r.kcal)} ккал{r.time_min ? ` · ${r.time_min} мин` : ""}
+                                  </span>
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                          <button className="linkbtn small" onClick={() => { swapOne(i, k); setSwapping(null); }}>
+                            любое другое
+                          </button>
+                        </div>
+                      )}
                       {openMeal === key && (
                         <MealIngredients meal={m} rating={ratings?.[m.recipe.id]} onRate={onRate} />
                       )}

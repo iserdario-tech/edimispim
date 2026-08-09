@@ -372,14 +372,17 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
 /* ─── Неделя ───────────────────────────────────────────────────────── */
 .day-block { border-top: var(--hairline) solid var(--separator); break-inside: avoid; }
 .week-days { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 0 var(--sp-6); }
-/* Шапка дня переносится по строкам, а не сжимается: на крупном системном шрифте
-   «2212 ккал · белок 127 г» уже не помещается рядом с названием дня, и цифрам нужна
-   своя строка. Шеврон при этом остаётся прижатым к правому краю первой строки. */
+/* Шапка дня: название, цифры, шеврон — всегда в одну строку, а переносится ВНУТРИ
+   колонки с цифрами. Пробовал разрешить перенос всей шапке — на обычном шрифте шеврон
+   уезжал под цифры и столбец шевронов рассыпался. Цифрам достаточно `min-width: 0`:
+   тогда они ужимаются и переносят свой текст по словам, а шеврон остаётся на месте. */
 .day-head {
-  display: flex; width: 100%; align-items: center; gap: var(--sp-1) var(--sp-2); flex-wrap: wrap;
+  display: flex; width: 100%; align-items: center; gap: var(--sp-2); justify-content: space-between;
   min-height: 52px; background: none; border: 0; font: inherit; cursor: pointer; text-align: left;
 }
-.day-head .chev { margin-left: auto; }
+.day-head b { flex: 0 0 auto; }
+.day-head .day-nums { flex: 1 1 auto; }
+.day-head .chev { flex: 0 0 auto; }
 /* Шевроны и кнопки замены — единый набор иконок, а не символы из шрифта:
    ▾ и ↻ выглядели по-разному на iOS и Android и не совпадали по толщине с текстом */
 .day-head .chev, .card-h .chev { color: var(--fg-3); display: inline-flex; align-items: center; }
@@ -704,3 +707,18 @@ input[type="range"] { min-height: var(--tap); }
 .catalog-search:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
 /* строка каталога: без колонки времени и кнопки замены — только блюдо */
 .catalog-row { display: block; }
+
+/* Выбор замены: список вариантов прямо под блюдом */
+.swap-picker {
+  grid-column: 1 / -1; margin: var(--sp-1) 0 var(--sp-2);
+  padding: var(--sp-3); border-radius: var(--r-control); background: var(--surface-2);
+}
+.swap-picker ul { list-style: none; padding: 0; margin: var(--sp-1) 0 var(--sp-2); display: grid; gap: 2px; }
+.swap-option {
+  display: flex; flex-direction: column; gap: 1px; width: 100%;
+  min-height: var(--tap); padding: var(--sp-2) var(--sp-3);
+  background: var(--surface); border: 0; border-radius: var(--r-control);
+  color: inherit; text-align: left; cursor: pointer;
+}
+.swap-option:hover, .swap-option:focus-visible { color: var(--accent); }
+.swap-option:active { transform: scale(.985); }

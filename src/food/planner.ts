@@ -609,25 +609,49 @@ function pickReplacement(
  * человек вместо готовки заказывает доставку. Без кладовки поведение прежнее —
  * следующий рецепт по кругу, чтобы кнопка ↻ оставалась предсказуемой.
  */
-export function swapDish(
+/** Доля калорий, приходящаяся на этот приём. Одна формула для замены и для выбора вариантов. */
+function shareFor(meal: Meal, targets: Targets, count: MealCount): number {
+  const scheme = SCHEMES[count];
+  const treatKcal = Math.round(targets.kcalTarget * scheme.treatShare);
+  return meal.slot === "dessert" || meal.slot === "snack"
+    ? treatKcal / Math.max(1, scheme.treatCount)
+    : (targets.kcalTarget - treatKcal) * (scheme.mains[meal.recipe.meal_type] ?? 0.3);
+}
+
+/**
+ * Чем заменить блюдо: несколько подходящих вариантов, а не один вслепую.
+ *
+ * Кнопка ↻ подставляла следующий рецепт по кругу, и человек жал её раз за разом, пока
+ * не выпадет съедобное. Выбор из нескольких — та же механика, но решение принимает он.
+ *
+ * Порядок осмысленный: сначала то, что готовится из уже купленного (ходить в магазин
+ * ради одной замены — ровно та мелочь, из-за которой вместо готовки заказывают доставку),
+ * потом остальные подходящие по размеру порции.
+ */
+export function swapOptions(
   day: Day, mealIndex: number, targets: Targets, pool: Recipe[], count: MealCount = DEFAULT_MEAL_COUNT,
-  pantry?: Pantry,
+  pantry?: Pantry, limit = 4,
+): Recipe[] {
+  const meal = day.meals[mealIndex];
+  if (!meal) return [];
+  const others = pool.filter(r => r.meal_type === meal.recipe.meal_type && r.id !== meal.recipe.id);
+  if (!others.length) return [];
+
+  const share = shareFor(meal, targets, count);
+  const fit = fittingOptions(others, share);
+  const home = (r: Recipe) => (pantry ? homeShare(r, share, pantry) : 0);
+  return [...fit]
+    .sort((a, b) => home(b) - home(a))
+    .slice(0, limit);
+}
+
+/** Поставить выбранное блюдо на место приёма, пересчитав порцию под долю калорий. */
+export function swapTo(
+  day: Day, mealIndex: number, recipe: Recipe, targets: Targets, count: MealCount = DEFAULT_MEAL_COUNT,
 ): boolean {
   const meal = day.meals[mealIndex];
   if (!meal) return false;
-  const options = pool.filter(r => r.meal_type === meal.recipe.meal_type);
-  if (options.length < 2) return false;
-
-  const scheme = SCHEMES[count];
-  const isTreat = meal.slot === "dessert" || meal.slot === "snack";
-  const treatKcal = Math.round(targets.kcalTarget * scheme.treatShare);
-  const share = isTreat
-    ? treatKcal / Math.max(1, scheme.treatCount)
-    : (targets.kcalTarget - treatKcal) * (scheme.mains[meal.recipe.meal_type] ?? 0.3);
-
-  const recipe = pickReplacement(options, meal.recipe, share, pantry);
-  if (!recipe) return false;
-
+  const share = shareFor(meal, targets, count);
   day.meals[mealIndex] = {
     recipe,
     servings: Math.max(0.5, +(share / recipe.kcal).toFixed(1)),
@@ -637,4 +661,18 @@ export function swapDish(
   day.meals.sort((a, b) => a.timeMin - b.timeMin);
   recomputeTotals(day);
   return true;
+}
+
+export function swapDish(
+  day: Day, mealIndex: number, targets: Targets, pool: Recipe[], count: MealCount = DEFAULT_MEAL_COUNT,
+  pantry?: Pantry,
+): boolean {
+  const meal = day.meals[mealIndex];
+  if (!meal) return false;
+  const options = pool.filter(r => r.meal_type === meal.recipe.meal_type);
+  if (options.length < 2) return false;
+
+  const recipe = pickReplacement(options, meal.recipe, shareFor(meal, targets, count), pantry);
+  if (!recipe) return false;
+  return swapTo(day, mealIndex, recipe, targets, count);
 }
