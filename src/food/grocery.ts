@@ -1,6 +1,6 @@
 import type { Day, Grocery, GroceryItem, Ingredient, Meal } from "./types";
 import { costOf } from "./prices";
-import { gramsOf } from "./nutrients";
+import { gramsOf, mlOf, isLiquid } from "./nutrients";
 
 // свежие категории — скоропорт; консервы/заморозка/сушёное хранятся долго
 const FRESH = new Set(["мясо/рыба", "молочное", "яйца", "овощи/фрукты"]);
@@ -42,9 +42,12 @@ function aggregate(meals: Meal[]): GroceryItem[] {
   for (const m of meals) {
     for (const ing0 of m.recipe.ingredients ?? []) {
       const many = (mixed.get(ing0.name.toLowerCase().trim())?.size ?? 1) > 1;
-      const ing = many
-        ? { ...ing0, qty: gramsOf(ing0.name, ing0.qty, ing0.unit), unit: "г" }
-        : ing0;
+      // жидкость покупают объёмом: молоко в литрах, масло в бутылках — на вес его никто не берёт
+      const ing = isLiquid(ing0.name)
+        ? { ...ing0, qty: +mlOf(ing0.name, ing0.qty, ing0.unit).toFixed(1), unit: "мл" }
+        : many
+          ? { ...ing0, qty: gramsOf(ing0.name, ing0.qty, ing0.unit), unit: "г" }
+          : ing0;
       // канонизация имени → без дублей «яйцо/яйца»
       const key = (ing.name + "|" + ing.unit).toLowerCase().trim();
       const prev = map.get(key) ?? {
