@@ -19487,5 +19487,2251 @@
       "Хлеб подсуши и положи на него сыр — он подтает от тепла.",
       "Собери всё на одной тарелке."
     ]
+  },
+  {
+    "id": "p01",
+    "name": "Хумус с овощными палочками",
+    "meal_type": "snack",
+    "cuisine": "middleeast",
+    "kcal": 173,
+    "protein_g": 6.8,
+    "fiber_g": 6.4,
+    "energy_density": 1.2,
+    "cookware": [
+      "blender"
+    ],
+    "allergens": [
+      "sesame"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 10,
+    "source": "https://www.gastronom.ru/recipe/639/humus",
+    "ingredients": [
+      {
+        "name": "нут консервированный",
+        "qty": 66.7,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "паста тахини",
+        "qty": 6.7,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "масло оливковое",
+        "qty": 3,
+        "unit": "г",
+        "category": "масла"
+      },
+      {
+        "name": "лимон",
+        "qty": 6.7,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "чеснок",
+        "qty": 1.7,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "зира",
+        "qty": 0.5,
+        "unit": "г",
+        "category": "специи"
+      },
+      {
+        "name": "морковь",
+        "qty": 33.3,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "сельдерей",
+        "qty": 25,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Нут слей и промой, оставив пару ложек жидкости из банки — на ней хумус взбивается кремовым.",
+      "Пробей нут блендером с тахини, лимонным соком, чесноком и зирой до гладкости, подливая жидкость.",
+      "Влей масло тонкой струйкой и взбей ещё полминуты — паста станет светлее и воздушнее.",
+      "Морковь и сельдерей нарежь палочками и подавай к хумусу."
+    ]
+  },
+  {
+    "id": "p02",
+    "name": "Яйца, фаршированные тунцом",
+    "meal_type": "snack",
+    "cuisine": "universal",
+    "kcal": 130,
+    "protein_g": 13.8,
+    "fiber_g": 0.3,
+    "energy_density": 1.18,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [
+      "egg",
+      "fish"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 20,
+    "source": "https://www.gastronom.ru/recipe/64297/yajca-farshirovannye-tuncom",
+    "ingredients": [
+      {
+        "name": "яйца",
+        "qty": 1,
+        "unit": "шт",
+        "category": "яйца"
+      },
+      {
+        "name": "тунец консервированный",
+        "qty": 25,
+        "unit": "г",
+        "category": "мясо/рыба"
+      },
+      {
+        "name": "натуральный йогурт",
+        "qty": 10,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "горчица дижонская",
+        "qty": 2.5,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "огурец солёный",
+        "qty": 10,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "укроп",
+        "qty": 2.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Вари яйца не больше десяти минут: дольше — и желток возьмётся серым налётом.",
+      "Разрежь остывшие яйца пополам, выбери желтки.",
+      "Разомни желтки с тунцом, йогуртом и горчицей, добавь мелко рубленый солёный огурец и укроп.",
+      "Наполни половинки начинкой. Есть в тот же день: такая закуска не хранится."
+    ]
+  },
+  {
+    "id": "p03",
+    "name": "Рулетики из индейки с сыром и курагой",
+    "meal_type": "snack",
+    "cuisine": "universal",
+    "kcal": 217,
+    "protein_g": 23.6,
+    "fiber_g": 1.1,
+    "energy_density": 1.52,
+    "cookware": [
+      "oven"
+    ],
+    "allergens": [
+      "milk"
+    ],
+    "tags": [],
+    "difficulty": 2,
+    "time_min": 35,
+    "source": "https://www.gastronom.ru/recipe/30194/ruletiki-iz-indejki-s-syrom-i-kuragoj",
+    "ingredients": [
+      {
+        "name": "индейка филе",
+        "qty": 100,
+        "unit": "г",
+        "category": "мясо/рыба"
+      },
+      {
+        "name": "сыр творожный",
+        "qty": 24,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "курага",
+        "qty": 14,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "зелень",
+        "qty": 3,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "масло оливковое",
+        "qty": 2,
+        "unit": "г",
+        "category": "масла"
+      }
+    ],
+    "steps": [
+      "Филе нарежь пластами поперёк волокон и отбей до половины сантиметра.",
+      "Намажь каждый пласт творожным сыром, разложи полоски кураги и зелень.",
+      "Сверни рулетиками, закрепи зубочисткой, смажь маслом.",
+      "Запекай при 190 °C 25 минут. Хороши и холодными — можно взять с собой."
+    ]
+  },
+  {
+    "id": "p04",
+    "name": "Жареный нут со специями",
+    "meal_type": "snack",
+    "cuisine": "middleeast",
+    "kcal": 180,
+    "protein_g": 7.6,
+    "fiber_g": 7.2,
+    "energy_density": 1.67,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 25,
+    "source": "https://www.gastronom.ru/recipe/60769/zharenyj-nut-na-skovorode-so-speciyami",
+    "ingredients": [
+      {
+        "name": "нут консервированный",
+        "qty": 100,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "масло оливковое",
+        "qty": 5,
+        "unit": "г",
+        "category": "масла"
+      },
+      {
+        "name": "паприка",
+        "qty": 1.3,
+        "unit": "г",
+        "category": "специи"
+      },
+      {
+        "name": "зира",
+        "qty": 0.8,
+        "unit": "г",
+        "category": "специи"
+      },
+      {
+        "name": "карри порошок",
+        "qty": 0.8,
+        "unit": "г",
+        "category": "специи"
+      }
+    ],
+    "steps": [
+      "Нут слей и обсуши на бумажном полотенце в два-три слоя — от этого зависит, будет ли хруст.",
+      "Разогрей сковороду с маслом на среднем огне, смешай специи в мисочке.",
+      "Всыпь нут и жарь под крышкой около двадцати минут на небольшом огне.",
+      "Готовый нут потрескивает, как попкорн: корочка снаружи, мягкая середина. Посыпь специями горячим."
+    ]
+  },
+  {
+    "id": "p05",
+    "name": "Гуакамоле с овощными палочками",
+    "meal_type": "snack",
+    "cuisine": "mexican",
+    "kcal": 150,
+    "protein_g": 2.8,
+    "fiber_g": 7.2,
+    "energy_density": 0.79,
+    "cookware": [],
+    "allergens": [],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 10,
+    "source": "https://www.gastronom.ru/recipe/52736/guakamole",
+    "ingredients": [
+      {
+        "name": "авокадо",
+        "qty": 75,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "лимон",
+        "qty": 7.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "красный лук",
+        "qty": 10,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "помидор",
+        "qty": 30,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "кинза",
+        "qty": 3.8,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "перец чили",
+        "qty": 1.3,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "морковь",
+        "qty": 37.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "сельдерей",
+        "qty": 25,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Мякоть авокадо выбери ложкой в миску и разомни вилкой — гуакамоле не должен быть однородным.",
+      "Сразу полей лимонным соком, иначе потемнеет.",
+      "Добавь мелко рубленый красный лук, помидор без семян, кинзу и чили, посоли.",
+      "Нарежь морковь и сельдерей палочками — ими и черпать."
+    ]
+  },
+  {
+    "id": "p06",
+    "name": "Тост с авокадо, лососем и яйцом",
+    "meal_type": "snack",
+    "cuisine": "universal",
+    "kcal": 262,
+    "protein_g": 15.2,
+    "fiber_g": 5,
+    "energy_density": 1.73,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [
+      "egg",
+      "fish",
+      "gluten"
+    ],
+    "tags": [],
+    "difficulty": 2,
+    "time_min": 20,
+    "source": "https://www.gastronom.ru/recipe/54209/tost-s-avokado-lososem-i-jajcom-pashot",
+    "ingredients": [
+      {
+        "name": "цельнозерновой хлеб",
+        "qty": 30,
+        "unit": "г",
+        "category": "хлеб"
+      },
+      {
+        "name": "авокадо",
+        "qty": 40,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "лосось слабосолёный",
+        "qty": 30,
+        "unit": "г",
+        "category": "мясо/рыба"
+      },
+      {
+        "name": "яйца",
+        "qty": 0.7,
+        "unit": "шт",
+        "category": "яйца"
+      },
+      {
+        "name": "лимон",
+        "qty": 6.7,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "зелень",
+        "qty": 3.3,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Подсуши хлеб в тостере до хруста.",
+      "Мякоть авокадо разомни с лимонным соком и солью, намажь на тосты.",
+      "Свари яйца-пашот: вода едва дрожит, никакого кипения, три минуты.",
+      "Выложи на тост лосось, сверху яйцо, поперчи и посыпь зеленью."
+    ]
+  },
+  {
+    "id": "p07",
+    "name": "Шоколадный смузи с арахисовой пастой",
+    "meal_type": "snack",
+    "cuisine": "universal",
+    "kcal": 198,
+    "protein_g": 7.4,
+    "fiber_g": 2.8,
+    "energy_density": 1.07,
+    "cookware": [
+      "blender"
+    ],
+    "allergens": [
+      "milk",
+      "nuts"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 5,
+    "source": "https://www.gastronom.ru/recipe/21934/shokoladnyj-smuzi-s-orehovoj-pastoj",
+    "ingredients": [
+      {
+        "name": "банан",
+        "qty": 66.7,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "молоко",
+        "qty": 100,
+        "unit": "мл",
+        "category": "молочное"
+      },
+      {
+        "name": "арахисовая паста",
+        "qty": 10,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "какао-порошок",
+        "qty": 3.3,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "мёд",
+        "qty": 5,
+        "unit": "г",
+        "category": "бакалея"
+      }
+    ],
+    "steps": [
+      "Сложи в блендер банан, молоко, арахисовую пасту, какао и мёд.",
+      "Взбивай на максимуме минуту — до полной гладкости и воздушности.",
+      "Ложка ореховой пасты превращает смузи из напитка в перекус, который держит до обеда."
+    ]
+  },
+  {
+    "id": "p08",
+    "name": "Бутерброды с творожным сыром и красной рыбой",
+    "meal_type": "snack",
+    "cuisine": "universal",
+    "kcal": 174,
+    "protein_g": 9.2,
+    "fiber_g": 2.2,
+    "energy_density": 1.78,
+    "cookware": [],
+    "allergens": [
+      "fish",
+      "milk",
+      "gluten"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 10,
+    "source": "https://www.gastronom.ru/recipe/59303/buterbrody-s-tvorozhnym-syrom-i-krasnoj-ryboj",
+    "ingredients": [
+      {
+        "name": "цельнозерновой хлеб",
+        "qty": 30,
+        "unit": "г",
+        "category": "хлеб"
+      },
+      {
+        "name": "сыр творожный",
+        "qty": 20,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "лосось слабосолёный",
+        "qty": 25,
+        "unit": "г",
+        "category": "мясо/рыба"
+      },
+      {
+        "name": "огурец",
+        "qty": 20,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "укроп",
+        "qty": 2.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Подсуши хлеб и дай остыть — на горячем сыр растечётся.",
+      "Намажь творожным сыром с укропом.",
+      "Сверху разложи ломтики рыбы и тонкие ленты огурца, свёрнутые рожком."
+    ]
+  },
+  {
+    "id": "p09",
+    "name": "Куриные наггетсы в духовке",
+    "meal_type": "snack",
+    "cuisine": "universal",
+    "kcal": 205,
+    "protein_g": 26.8,
+    "fiber_g": 0.9,
+    "energy_density": 1.58,
+    "cookware": [
+      "oven"
+    ],
+    "allergens": [
+      "egg",
+      "gluten"
+    ],
+    "tags": [],
+    "difficulty": 2,
+    "time_min": 35,
+    "source": "https://www.gastronom.ru/recipe/23468/kurinye-naggetsy-v-duhovke",
+    "ingredients": [
+      {
+        "name": "куриное филе",
+        "qty": 100,
+        "unit": "г",
+        "category": "мясо/рыба"
+      },
+      {
+        "name": "яйца",
+        "qty": 0.2,
+        "unit": "шт",
+        "category": "яйца"
+      },
+      {
+        "name": "сухари панировочные",
+        "qty": 14,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "паприка",
+        "qty": 1,
+        "unit": "г",
+        "category": "специи"
+      },
+      {
+        "name": "масло растительное",
+        "qty": 2.4,
+        "unit": "г",
+        "category": "масла"
+      }
+    ],
+    "steps": [
+      "Нарежь филе кусками с половину спичечного коробка, посоли и поперчи.",
+      "Обмакни в яйцо, обваляй в сухарях с паприкой.",
+      "Разложи на пергаменте, сбрызни маслом.",
+      "Запекай при 200 °C до уверенной румяной корочки, около двадцати минут, один раз перевернув."
+    ]
+  },
+  {
+    "id": "p10",
+    "name": "Салат капрезе",
+    "meal_type": "snack",
+    "cuisine": "mediterranean",
+    "kcal": 173,
+    "protein_g": 11.8,
+    "fiber_g": 1.1,
+    "energy_density": 1.24,
+    "cookware": [],
+    "allergens": [
+      "milk"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 10,
+    "source": "https://www.gastronom.ru/recipe/11662/calat-kapreze",
+    "ingredients": [
+      {
+        "name": "моцарелла",
+        "qty": 50,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "помидор",
+        "qty": 80,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "масло оливковое",
+        "qty": 4,
+        "unit": "г",
+        "category": "масла"
+      },
+      {
+        "name": "бальзамический уксус",
+        "qty": 3,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "зелень",
+        "qty": 3,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Помидоры и моцареллу нарежь кружками одной толщины.",
+      "Выложи внахлёст, чередуя, и прослои листьями базилика.",
+      "Полей маслом и уксусом, посоли и поперчи прямо перед подачей."
+    ]
+  },
+  {
+    "id": "p11",
+    "name": "Яблочные и грушевые чипсы",
+    "meal_type": "snack",
+    "cuisine": "universal",
+    "kcal": 98,
+    "protein_g": 0.8,
+    "fiber_g": 5.4,
+    "energy_density": 0.56,
+    "cookware": [
+      "oven"
+    ],
+    "allergens": [],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 180,
+    "source": "https://www.gastronom.ru/recipe/25352/yablochnye-i-grushevye-chipsy",
+    "ingredients": [
+      {
+        "name": "яблоко",
+        "qty": 100,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "груша",
+        "qty": 75,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "корица",
+        "qty": 1.3,
+        "unit": "г",
+        "category": "специи"
+      }
+    ],
+    "steps": [
+      "Нарежь фрукты вместе с кожурой и сердцевиной ломтиками не толще трёх миллиметров.",
+      "Разложи в один слой на пергаменте, присыпь корицей.",
+      "Суши при 100 °C около трёх часов, один раз перевернув. Хранятся неделю в банке."
+    ]
+  },
+  {
+    "id": "p12",
+    "name": "Мини-омлеты с овощами в формочках",
+    "meal_type": "snack",
+    "cuisine": "universal",
+    "kcal": 206,
+    "protein_g": 15.8,
+    "fiber_g": 0.8,
+    "energy_density": 1.21,
+    "cookware": [
+      "oven"
+    ],
+    "allergens": [
+      "egg",
+      "milk"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 40,
+    "source": "https://www.gastronom.ru/recipe/56751/mini-omlety-s-bekonom",
+    "ingredients": [
+      {
+        "name": "яйца",
+        "qty": 1.5,
+        "unit": "шт",
+        "category": "яйца"
+      },
+      {
+        "name": "черри-томаты",
+        "qty": 37.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "шпинат",
+        "qty": 15,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "сыр твёрдый",
+        "qty": 12.5,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "молоко",
+        "qty": 15,
+        "unit": "мл",
+        "category": "молочное"
+      }
+    ],
+    "steps": [
+      "Взбей яйца с молоком, посоли.",
+      "Разложи по формочкам для маффинов черри, шпинат и тёртый сыр, залей яйцом на две трети.",
+      "Пеки на среднем уровне при 180 °C полчаса.",
+      "Формочки нужны с антипригарным покрытием, иначе омлет не достать."
+    ]
+  },
+  {
+    "id": "p13",
+    "name": "Смузи с бананом и яблоком",
+    "meal_type": "snack",
+    "cuisine": "universal",
+    "kcal": 166,
+    "protein_g": 5,
+    "fiber_g": 4.2,
+    "energy_density": 0.6,
+    "cookware": [
+      "blender"
+    ],
+    "allergens": [
+      "milk"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 5,
+    "source": "https://www.gastronom.ru/recipe/66032/smuzi-s-bananom-i-iablokom",
+    "ingredients": [
+      {
+        "name": "банан",
+        "qty": 75,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "яблоко",
+        "qty": 100,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "кефир",
+        "qty": 100,
+        "unit": "мл",
+        "category": "молочное"
+      },
+      {
+        "name": "корица",
+        "qty": 1,
+        "unit": "г",
+        "category": "специи"
+      }
+    ],
+    "steps": [
+      "Яблоко очисти от сердцевины и нарежь кубиком, банан наломай.",
+      "Пробей с кефиром и корицей до гладкости."
+    ]
+  },
+  {
+    "id": "p14",
+    "name": "Наггетсы из куриной грудки с пармезаном",
+    "meal_type": "snack",
+    "cuisine": "universal",
+    "kcal": 223,
+    "protein_g": 29.8,
+    "fiber_g": 0.4,
+    "energy_density": 1.67,
+    "cookware": [
+      "oven"
+    ],
+    "allergens": [
+      "egg",
+      "milk",
+      "gluten"
+    ],
+    "tags": [],
+    "difficulty": 2,
+    "time_min": 30,
+    "source": "https://www.gastronom.ru/recipe/42914/samye-sochnye-kurinye-naggetsy-s-parmezanom-i-timyanom",
+    "ingredients": [
+      {
+        "name": "куриное филе",
+        "qty": 100,
+        "unit": "г",
+        "category": "мясо/рыба"
+      },
+      {
+        "name": "пармезан",
+        "qty": 10,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "яйца",
+        "qty": 0.2,
+        "unit": "шт",
+        "category": "яйца"
+      },
+      {
+        "name": "сухари панировочные",
+        "qty": 10,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "масло оливковое",
+        "qty": 2,
+        "unit": "г",
+        "category": "масла"
+      }
+    ],
+    "steps": [
+      "Нарежь грудку небольшими кусками.",
+      "Смешай тёртый пармезан с сухарями и сушёным тимьяном.",
+      "Обмакивай куски в яйцо и обваливай в панировке.",
+      "Запекай при 200 °C пятнадцать минут — сыр в панировке даёт корочку и не даёт мясу пересохнуть."
+    ]
+  },
+  {
+    "id": "p15",
+    "name": "Творог с ягодами и мёдом",
+    "meal_type": "snack",
+    "cuisine": "universal",
+    "kcal": 247,
+    "protein_g": 26.5,
+    "fiber_g": 2.8,
+    "energy_density": 1.03,
+    "cookware": [],
+    "allergens": [
+      "milk"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 3,
+    "ingredients": [
+      {
+        "name": "творог 5%",
+        "qty": 150,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "ягоды замороженные",
+        "qty": 80,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "мёд",
+        "qty": 10,
+        "unit": "г",
+        "category": "бакалея"
+      }
+    ],
+    "steps": [
+      "Ягоды достань заранее — за полчаса они оттают и дадут сок.",
+      "Смешай с творогом, полей мёдом."
+    ]
+  },
+  {
+    "id": "p16",
+    "name": "Яблоко с арахисовой пастой",
+    "meal_type": "snack",
+    "cuisine": "universal",
+    "kcal": 184,
+    "protein_g": 4.5,
+    "fiber_g": 5.8,
+    "energy_density": 0.94,
+    "cookware": [],
+    "allergens": [
+      "nuts"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 2,
+    "ingredients": [
+      {
+        "name": "яблоко",
+        "qty": 180,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "арахисовая паста",
+        "qty": 15,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "корица",
+        "qty": 1,
+        "unit": "г",
+        "category": "специи"
+      }
+    ],
+    "steps": [
+      "Нарежь яблоко дольками.",
+      "Намажь пастой, присыпь корицей. Кислое яблоко тут лучше сладкого."
+    ]
+  },
+  {
+    "id": "p17",
+    "name": "Греческий йогурт с гранолой и черникой",
+    "meal_type": "snack",
+    "cuisine": "universal",
+    "kcal": 194,
+    "protein_g": 14.4,
+    "fiber_g": 2.6,
+    "energy_density": 1.02,
+    "cookware": [],
+    "allergens": [
+      "milk",
+      "gluten"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 3,
+    "ingredients": [
+      {
+        "name": "греческий йогурт",
+        "qty": 120,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "гранола",
+        "qty": 20,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "черника",
+        "qty": 50,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Выложи йогурт в стакан слоями с черникой.",
+      "Гранолу насыпь сверху перед самой едой, иначе размокнет."
+    ]
+  },
+  {
+    "id": "p18",
+    "name": "Хлебцы с творожным сыром и редисом",
+    "meal_type": "snack",
+    "cuisine": "universal",
+    "kcal": 202,
+    "protein_g": 5.3,
+    "fiber_g": 1.7,
+    "energy_density": 1.55,
+    "cookware": [],
+    "allergens": [
+      "milk",
+      "gluten"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 5,
+    "ingredients": [
+      {
+        "name": "хлебцы",
+        "qty": 20,
+        "unit": "г",
+        "category": "хлеб"
+      },
+      {
+        "name": "сыр творожный",
+        "qty": 45,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "редис",
+        "qty": 60,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "укроп",
+        "qty": 5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Намажь хлебцы творожным сыром.",
+      "Сверху — тонкие кружки редиса, укроп, крупная соль."
+    ]
+  },
+  {
+    "id": "p19",
+    "name": "Кефир с чиа и малиной",
+    "meal_type": "snack",
+    "cuisine": "universal",
+    "kcal": 184,
+    "protein_g": 10,
+    "fiber_g": 9.1,
+    "energy_density": 0.67,
+    "cookware": [],
+    "allergens": [
+      "milk"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 5,
+    "ingredients": [
+      {
+        "name": "кефир",
+        "qty": 200,
+        "unit": "мл",
+        "category": "молочное"
+      },
+      {
+        "name": "семена чиа",
+        "qty": 15,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "малина",
+        "qty": 60,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Размешай чиа в кефире и оставь на двадцать минут — семена набухнут, напиток загустеет.",
+      "Добавь малину."
+    ]
+  },
+  {
+    "id": "p20",
+    "name": "Тост с рикоттой и грушей",
+    "meal_type": "snack",
+    "cuisine": "universal",
+    "kcal": 211,
+    "protein_g": 8.3,
+    "fiber_g": 4.2,
+    "energy_density": 1.36,
+    "cookware": [],
+    "allergens": [
+      "milk",
+      "gluten"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 5,
+    "ingredients": [
+      {
+        "name": "цельнозерновой хлеб",
+        "qty": 30,
+        "unit": "г",
+        "category": "хлеб"
+      },
+      {
+        "name": "рикотта",
+        "qty": 50,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "груша",
+        "qty": 70,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "мёд",
+        "qty": 5,
+        "unit": "г",
+        "category": "бакалея"
+      }
+    ],
+    "steps": [
+      "Подсуши хлеб, намажь рикоттой.",
+      "Разложи тонкие ломтики груши, полей мёдом, поперчи чёрным перцем — с грушей он работает."
+    ]
+  },
+  {
+    "id": "p21",
+    "name": "Миндаль с курагой",
+    "meal_type": "snack",
+    "cuisine": "universal",
+    "kcal": 188,
+    "protein_g": 5.3,
+    "fiber_g": 4.7,
+    "energy_density": 3.76,
+    "cookware": [],
+    "allergens": [
+      "nuts"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 1,
+    "ingredients": [
+      {
+        "name": "миндаль",
+        "qty": 20,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "курага",
+        "qty": 30,
+        "unit": "г",
+        "category": "бакалея"
+      }
+    ],
+    "steps": [
+      "Отсыпь горсть заранее: из пачки орехи едят пока не кончатся."
+    ]
+  },
+  {
+    "id": "p22",
+    "name": "Ролл из лаваша с индейкой и огурцом",
+    "meal_type": "snack",
+    "cuisine": "universal",
+    "kcal": 218,
+    "protein_g": 17.9,
+    "fiber_g": 1.2,
+    "energy_density": 1.18,
+    "cookware": [],
+    "allergens": [
+      "milk",
+      "gluten"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 7,
+    "ingredients": [
+      {
+        "name": "лаваш",
+        "qty": 30,
+        "unit": "г",
+        "category": "хлеб"
+      },
+      {
+        "name": "сыр творожный",
+        "qty": 25,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "индейка филе",
+        "qty": 60,
+        "unit": "г",
+        "category": "мясо/рыба"
+      },
+      {
+        "name": "огурец",
+        "qty": 50,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "салат листовой",
+        "qty": 20,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Намажь лаваш творожным сыром.",
+      "Выложи варёную индейку, огурец соломкой и лист салата, сверни плотным рулетом.",
+      "Разрежь наискось. Держится в контейнере полдня."
+    ]
+  },
+  {
+    "id": "l208",
+    "name": "Чили кон карне с фасолью",
+    "meal_type": "lunch",
+    "cuisine": "mexican",
+    "kcal": 586,
+    "protein_g": 41,
+    "fiber_g": 12.3,
+    "energy_density": 1.57,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [],
+    "tags": [],
+    "difficulty": 2,
+    "time_min": 60,
+    "source": "https://www.gastronom.ru/recipe/22750/chili-kon-karne",
+    "ingredients": [
+      {
+        "name": "фарш говяжий",
+        "qty": 125,
+        "unit": "г",
+        "category": "мясо/рыба"
+      },
+      {
+        "name": "фасоль красная",
+        "qty": 60,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "томаты консервированные",
+        "qty": 100,
+        "unit": "г",
+        "category": "консервы"
+      },
+      {
+        "name": "лук",
+        "qty": 37.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "перец болгарский",
+        "qty": 37.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "чеснок",
+        "qty": 3.8,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "перец чили",
+        "qty": 2.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "зира",
+        "qty": 1.3,
+        "unit": "г",
+        "category": "специи"
+      },
+      {
+        "name": "паприка",
+        "qty": 1.3,
+        "unit": "г",
+        "category": "специи"
+      },
+      {
+        "name": "масло растительное",
+        "qty": 5,
+        "unit": "г",
+        "category": "масла"
+      }
+    ],
+    "steps": [
+      "Фасоль замочи на ночь и отвари до мягкости, воду слей.",
+      "Обжарь лук с чесноком и чили, добавь фарш и разбивай комки, пока не подрумянится.",
+      "Всыпь зиру и паприку, прогрей полминуты — специи должны отдать масло.",
+      "Влей томаты, добавь перец и фасоль, туши на слабом огне сорок минут.",
+      "Чили тем вкуснее, чем дольше стоит: на следующий день лучше, чем в день готовки."
+    ]
+  },
+  {
+    "id": "l209",
+    "name": "Лобио из красной фасоли",
+    "meal_type": "lunch",
+    "cuisine": "middleeast",
+    "kcal": 457,
+    "protein_g": 22.3,
+    "fiber_g": 14.2,
+    "energy_density": 2.81,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [
+      "nuts"
+    ],
+    "tags": [],
+    "difficulty": 2,
+    "time_min": 90,
+    "source": "https://www.gastronom.ru/recipe/27384/lobio-iz-krasnoj-fasoli",
+    "ingredients": [
+      {
+        "name": "фасоль красная",
+        "qty": 75,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "лук",
+        "qty": 50,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "грецкие орехи",
+        "qty": 20,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "чеснок",
+        "qty": 3.8,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "кинза",
+        "qty": 7.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "паприка",
+        "qty": 1.3,
+        "unit": "г",
+        "category": "специи"
+      },
+      {
+        "name": "масло растительное",
+        "qty": 5,
+        "unit": "г",
+        "category": "масла"
+      }
+    ],
+    "steps": [
+      "Замоченную с вечера фасоль отвари до мягкости, отвар не выливай.",
+      "Обжарь лук до золотистого.",
+      "Орехи с чесноком и солью растолки в пасту — это и есть вкус лобио.",
+      "Разомни часть фасоли толкушкой, смешай с луком, ореховой пастой и половником отвара.",
+      "Прогрей пять минут, засыпь кинзой и дай постоять под крышкой."
+    ]
+  },
+  {
+    "id": "d210",
+    "name": "Индийский дал из красной чечевицы",
+    "meal_type": "dinner",
+    "cuisine": "asian",
+    "kcal": 325,
+    "protein_g": 19.6,
+    "fiber_g": 10.4,
+    "energy_density": 1.78,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 40,
+    "source": "https://www.gastronom.ru/recipe/16911/indijskij-chechevichnyj-dal",
+    "ingredients": [
+      {
+        "name": "чечевица красная",
+        "qty": 75,
+        "unit": "г",
+        "category": "крупы"
+      },
+      {
+        "name": "лук",
+        "qty": 37.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "чеснок",
+        "qty": 3.8,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "имбирь",
+        "qty": 3.8,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "карри порошок",
+        "qty": 2,
+        "unit": "г",
+        "category": "специи"
+      },
+      {
+        "name": "томаты",
+        "qty": 50,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "кинза",
+        "qty": 5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "масло растительное",
+        "qty": 5,
+        "unit": "г",
+        "category": "масла"
+      }
+    ],
+    "steps": [
+      "Чечевицу промой и вари в полутора литрах воды с чесноком и имбирём двадцать минут.",
+      "Отдельно обжарь лук с карри до сильного аромата.",
+      "Добавь помидоры, дай им осесть, и переложи всё в чечевицу.",
+      "Разомни половину чечевицы — дал должен быть густым, а не супом. Засыпь кинзой."
+    ]
+  },
+  {
+    "id": "d211",
+    "name": "Карри из чечевицы с баклажанами",
+    "meal_type": "dinner",
+    "cuisine": "asian",
+    "kcal": 411,
+    "protein_g": 18.5,
+    "fiber_g": 12.7,
+    "energy_density": 1.53,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [],
+    "tags": [],
+    "difficulty": 2,
+    "time_min": 50,
+    "source": "https://www.gastronom.ru/recipe/48638/karri-iz-chechevicy-s-baklazhanami",
+    "ingredients": [
+      {
+        "name": "чечевица красная",
+        "qty": 62.5,
+        "unit": "г",
+        "category": "крупы"
+      },
+      {
+        "name": "баклажан",
+        "qty": 100,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "кокосовое молоко",
+        "qty": 50,
+        "unit": "мл",
+        "category": "бакалея"
+      },
+      {
+        "name": "лук",
+        "qty": 37.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "карри порошок",
+        "qty": 2.5,
+        "unit": "г",
+        "category": "специи"
+      },
+      {
+        "name": "чеснок",
+        "qty": 2.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "томатная паста",
+        "qty": 7.5,
+        "unit": "г",
+        "category": "консервы"
+      },
+      {
+        "name": "масло растительное",
+        "qty": 6.3,
+        "unit": "г",
+        "category": "масла"
+      }
+    ],
+    "steps": [
+      "Баклажаны нарежь кубиком, посоли и дай постоять десять минут, потом обжарь до румяности.",
+      "Обжарь лук с чесноком и карри.",
+      "Всыпь чечевицу, влей воду вровень и вари пятнадцать минут.",
+      "Добавь баклажаны, кокосовое молоко и томатную пасту, туши ещё десять минут."
+    ]
+  },
+  {
+    "id": "l212",
+    "name": "Минестроне с белой фасолью",
+    "meal_type": "lunch",
+    "cuisine": "mediterranean",
+    "kcal": 298,
+    "protein_g": 10.4,
+    "fiber_g": 10.1,
+    "energy_density": 0.8,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [],
+    "tags": [],
+    "difficulty": 2,
+    "time_min": 60,
+    "source": "https://www.gastronom.ru/recipe/3537/minestrone-po-genuezski-s-beloj-fasolyu",
+    "ingredients": [
+      {
+        "name": "фасоль консервированная",
+        "qty": 100,
+        "unit": "г",
+        "category": "консервы"
+      },
+      {
+        "name": "морковь",
+        "qty": 37.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "сельдерей",
+        "qty": 37.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "кабачок",
+        "qty": 50,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "картофель",
+        "qty": 50,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "лук",
+        "qty": 30,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "томаты консервированные",
+        "qty": 50,
+        "unit": "г",
+        "category": "консервы"
+      },
+      {
+        "name": "соус песто",
+        "qty": 10,
+        "unit": "г",
+        "category": "соусы"
+      },
+      {
+        "name": "масло оливковое",
+        "qty": 6.3,
+        "unit": "г",
+        "category": "масла"
+      }
+    ],
+    "steps": [
+      "Нарежь все овощи кубиком одного размера — в минестроне это важнее, чем кажется.",
+      "Потоми лук, морковь и сельдерей на оливковом масле десять минут, не давая румяниться.",
+      "Добавь картофель, кабачок и томаты, залей водой и вари двадцать минут.",
+      "В конце брось фасоль, прогрей и сними с огня.",
+      "Ложку песто кладут в тарелку, а не в кастрюлю: от кипения он теряет запах."
+    ]
+  },
+  {
+    "id": "l213",
+    "name": "Минестроне с перловкой и фрикадельками",
+    "meal_type": "lunch",
+    "cuisine": "mediterranean",
+    "kcal": 420,
+    "protein_g": 19.4,
+    "fiber_g": 6.5,
+    "energy_density": 1.33,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [],
+    "tags": [],
+    "difficulty": 2,
+    "time_min": 70,
+    "source": "https://www.gastronom.ru/recipe/46032/sytnyj-ovoshchnoj-minestrone-s-perlovkoj-i-frikadelkami",
+    "ingredients": [
+      {
+        "name": "фарш смешанный",
+        "qty": 75,
+        "unit": "г",
+        "category": "мясо/рыба"
+      },
+      {
+        "name": "перловка",
+        "qty": 37.5,
+        "unit": "г",
+        "category": "крупы"
+      },
+      {
+        "name": "морковь",
+        "qty": 37.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "сельдерей",
+        "qty": 30,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "капуста",
+        "qty": 50,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "томаты консервированные",
+        "qty": 50,
+        "unit": "г",
+        "category": "консервы"
+      },
+      {
+        "name": "лук",
+        "qty": 30,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "масло оливковое",
+        "qty": 5,
+        "unit": "г",
+        "category": "масла"
+      }
+    ],
+    "steps": [
+      "Перловку замочи заранее и отвари до готовности отдельно — иначе суп станет мутным.",
+      "Скатай из фарша мелкие фрикадельки.",
+      "Потоми лук, морковь и сельдерей, добавь капусту и томаты, залей водой.",
+      "Через пятнадцать минут опусти фрикадельки, вари ещё десять и добавь перловку."
+    ]
+  },
+  {
+    "id": "l214",
+    "name": "Итальянский суп минестроне",
+    "meal_type": "lunch",
+    "cuisine": "mediterranean",
+    "kcal": 267,
+    "protein_g": 12.2,
+    "fiber_g": 8.8,
+    "energy_density": 0.82,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 45,
+    "source": "https://www.gastronom.ru/recipe/43474/italyanskij-sup-minestrone",
+    "ingredients": [
+      {
+        "name": "нут консервированный",
+        "qty": 75,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "морковь",
+        "qty": 37.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "кабачок",
+        "qty": 50,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "стручковая фасоль",
+        "qty": 37.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "томаты консервированные",
+        "qty": 75,
+        "unit": "г",
+        "category": "консервы"
+      },
+      {
+        "name": "лук",
+        "qty": 30,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "чеснок",
+        "qty": 2.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "пармезан",
+        "qty": 10,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "масло оливковое",
+        "qty": 6.3,
+        "unit": "г",
+        "category": "масла"
+      }
+    ],
+    "steps": [
+      "Овощи нарежь мелким кубиком.",
+      "Потоми лук с чесноком, добавь морковь и кабачок, через пять минут — томаты.",
+      "Залей водой, вари пятнадцать минут, добавь стручковую фасоль и нут.",
+      "Суп должен быть густым — «чтобы ложка стояла». Пармезан натри в тарелку."
+    ]
+  },
+  {
+    "id": "d215",
+    "name": "Фалафель с овощами",
+    "meal_type": "dinner",
+    "cuisine": "middleeast",
+    "kcal": 299,
+    "protein_g": 12,
+    "fiber_g": 10.1,
+    "energy_density": 1.06,
+    "cookware": [
+      "stove",
+      "blender"
+    ],
+    "allergens": [],
+    "tags": [],
+    "difficulty": 2,
+    "time_min": 40,
+    "source": "https://www.gastronom.ru/recipe/2616/falafel",
+    "ingredients": [
+      {
+        "name": "нут консервированный",
+        "qty": 125,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "лук",
+        "qty": 25,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "чеснок",
+        "qty": 3.8,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "петрушка",
+        "qty": 10,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "зира",
+        "qty": 1.3,
+        "unit": "г",
+        "category": "специи"
+      },
+      {
+        "name": "мука",
+        "qty": 10,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "масло оливковое",
+        "qty": 7.5,
+        "unit": "г",
+        "category": "масла"
+      },
+      {
+        "name": "огурец",
+        "qty": 50,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "помидор",
+        "qty": 50,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Нут пробей блендером с луком, чесноком, петрушкой и зирой — до крупной крошки, а не в пасту.",
+      "Вмешай муку, посоли и дай постоять полчаса в холоде: масса станет лепиться.",
+      "Скатай шарики и обжарь на разогретом масле по полторы-две минуты с каждой стороны.",
+      "Подавай с салатом из огурца и помидора."
+    ]
+  },
+  {
+    "id": "l216",
+    "name": "Гороховый суп с копчёными рёбрышками",
+    "meal_type": "lunch",
+    "cuisine": "slavic",
+    "kcal": 590,
+    "protein_g": 31.6,
+    "fiber_g": 19.9,
+    "energy_density": 2.21,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [],
+    "tags": [],
+    "difficulty": 2,
+    "time_min": 90,
+    "source": "https://www.gastronom.ru/recipe/16247/gorohovyj-sup",
+    "ingredients": [
+      {
+        "name": "горох сухой",
+        "qty": 70,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "рёбра свиные",
+        "qty": 80,
+        "unit": "г",
+        "category": "мясо/рыба"
+      },
+      {
+        "name": "картофель",
+        "qty": 60,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "морковь",
+        "qty": 30,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "лук",
+        "qty": 24,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "лавровый лист",
+        "qty": 0.4,
+        "unit": "г",
+        "category": "специи"
+      },
+      {
+        "name": "масло растительное",
+        "qty": 3,
+        "unit": "г",
+        "category": "масла"
+      }
+    ],
+    "steps": [
+      "Горох замочи на несколько часов, лучше на ночь — иначе вариться будет вдвое дольше.",
+      "Отвари копчёные рёбрышки сорок минут, мясо сними с костей.",
+      "В бульон засыпь горох и вари до разваривания.",
+      "Добавь картофель и обжаренные лук с морковью, верни мясо, доведи до готовности."
+    ]
+  },
+  {
+    "id": "l217",
+    "name": "Гороховый суп с копчёными крылышками",
+    "meal_type": "lunch",
+    "cuisine": "slavic",
+    "kcal": 545,
+    "protein_g": 39.6,
+    "fiber_g": 21.1,
+    "energy_density": 1.84,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 70,
+    "source": "https://www.gastronom.ru/recipe/59908/gorohovyj-sup-s-kopchenymi-krylyshkami",
+    "ingredients": [
+      {
+        "name": "горох сухой",
+        "qty": 75,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "куриные крылья",
+        "qty": 100,
+        "unit": "г",
+        "category": "мясо/рыба"
+      },
+      {
+        "name": "картофель",
+        "qty": 62.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "морковь",
+        "qty": 30,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "лук",
+        "qty": 25,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "масло растительное",
+        "qty": 3.8,
+        "unit": "г",
+        "category": "масла"
+      }
+    ],
+    "steps": [
+      "Замоченный горох поставь вариться в двух литрах воды.",
+      "Через полчаса опусти копчёные крылышки — за характерный вкус «с дымком» отвечают они.",
+      "Добавь картофель и зажарку из лука с морковью.",
+      "Вари, пока горох не разойдётся в пюре."
+    ]
+  },
+  {
+    "id": "b218",
+    "name": "Классическая шакшука",
+    "meal_type": "breakfast",
+    "cuisine": "middleeast",
+    "kcal": 415,
+    "protein_g": 21.7,
+    "fiber_g": 6.7,
+    "energy_density": 0.81,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [
+      "egg"
+    ],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 25,
+    "source": "https://www.gastronom.ru/recipe/44355/jaichnica-shakshuka-klassicheskij-recept",
+    "ingredients": [
+      {
+        "name": "яйца",
+        "qty": 2,
+        "unit": "шт",
+        "category": "яйца"
+      },
+      {
+        "name": "томаты консервированные",
+        "qty": 200,
+        "unit": "г",
+        "category": "консервы"
+      },
+      {
+        "name": "перец болгарский",
+        "qty": 100,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "лук",
+        "qty": 60,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "чеснок",
+        "qty": 5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "паприка",
+        "qty": 2.5,
+        "unit": "г",
+        "category": "специи"
+      },
+      {
+        "name": "зира",
+        "qty": 1.5,
+        "unit": "г",
+        "category": "специи"
+      },
+      {
+        "name": "кинза",
+        "qty": 10,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "масло оливковое",
+        "qty": 10,
+        "unit": "г",
+        "category": "масла"
+      }
+    ],
+    "steps": [
+      "Обжарь лук с перцем до мягкости, добавь чеснок и специи.",
+      "Влей томаты и туши, пока соус не загустеет — минут десять.",
+      "Сделай ложкой углубления и вбей в них яйца.",
+      "Накрой крышкой и держи на слабом огне, пока белок не схватится, а желток останется жидким."
+    ]
+  },
+  {
+    "id": "b219",
+    "name": "Шакшука с фаршем",
+    "meal_type": "breakfast",
+    "cuisine": "middleeast",
+    "kcal": 479,
+    "protein_g": 32.3,
+    "fiber_g": 3.9,
+    "energy_density": 1.16,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [
+      "egg"
+    ],
+    "tags": [],
+    "difficulty": 2,
+    "time_min": 35,
+    "source": "https://www.gastronom.ru/recipe/58721/shakshuka-s-farshem",
+    "ingredients": [
+      {
+        "name": "яйца",
+        "qty": 1.3,
+        "unit": "шт",
+        "category": "яйца"
+      },
+      {
+        "name": "фарш говяжий",
+        "qty": 100,
+        "unit": "г",
+        "category": "мясо/рыба"
+      },
+      {
+        "name": "томаты консервированные",
+        "qty": 133.3,
+        "unit": "г",
+        "category": "консервы"
+      },
+      {
+        "name": "перец болгарский",
+        "qty": 50,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "лук",
+        "qty": 40,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "чеснок",
+        "qty": 3.3,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "паприка",
+        "qty": 1.7,
+        "unit": "г",
+        "category": "специи"
+      },
+      {
+        "name": "масло оливковое",
+        "qty": 6.7,
+        "unit": "г",
+        "category": "масла"
+      }
+    ],
+    "steps": [
+      "Обжарь фарш до румяности, вынь и в том же масле потоми лук с перцем.",
+      "Верни фарш, добавь чеснок, паприку и томаты, туши десять минут.",
+      "Вбей яйца в углубления и доведи под крышкой."
+    ]
+  },
+  {
+    "id": "d220",
+    "name": "Чили кон карне с говядиной",
+    "meal_type": "dinner",
+    "cuisine": "mexican",
+    "kcal": 517,
+    "protein_g": 48.4,
+    "fiber_g": 10.3,
+    "energy_density": 1.34,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [],
+    "tags": [],
+    "difficulty": 2,
+    "time_min": 100,
+    "source": "https://www.gastronom.ru/recipe/61666/chili-kon-karne-s-govyadinoj",
+    "ingredients": [
+      {
+        "name": "говядина нежирная",
+        "qty": 150,
+        "unit": "г",
+        "category": "мясо/рыба"
+      },
+      {
+        "name": "фасоль красная",
+        "qty": 50,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "томаты консервированные",
+        "qty": 100,
+        "unit": "г",
+        "category": "консервы"
+      },
+      {
+        "name": "лук",
+        "qty": 37.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "перец болгарский",
+        "qty": 37.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "чеснок",
+        "qty": 3.8,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "зира",
+        "qty": 1.3,
+        "unit": "г",
+        "category": "специи"
+      },
+      {
+        "name": "перец чили",
+        "qty": 2,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "масло растительное",
+        "qty": 5,
+        "unit": "г",
+        "category": "масла"
+      }
+    ],
+    "steps": [
+      "Говядину нарежь мелким кубиком и обжарь порциями на сильном огне до корочки.",
+      "Обжарь лук, перец, чеснок и чили, всыпь зиру.",
+      "Верни мясо, влей томаты и стакан воды, туши под крышкой полтора часа.",
+      "За двадцать минут до конца добавь отваренную фасоль."
+    ]
+  },
+  {
+    "id": "d221",
+    "name": "Быстрое карри из чечевицы",
+    "meal_type": "dinner",
+    "cuisine": "asian",
+    "kcal": 453,
+    "protein_g": 21.5,
+    "fiber_g": 12.6,
+    "energy_density": 1.83,
+    "cookware": [
+      "stove"
+    ],
+    "allergens": [],
+    "tags": [],
+    "difficulty": 1,
+    "time_min": 30,
+    "source": "https://www.gastronom.ru/recipe/22672/bystroe-karri-iz-chechevicy",
+    "ingredients": [
+      {
+        "name": "чечевица красная",
+        "qty": 75,
+        "unit": "г",
+        "category": "крупы"
+      },
+      {
+        "name": "кокосовое молоко",
+        "qty": 62.5,
+        "unit": "мл",
+        "category": "бакалея"
+      },
+      {
+        "name": "лук",
+        "qty": 37.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "морковь",
+        "qty": 37.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "карри порошок",
+        "qty": 2.5,
+        "unit": "г",
+        "category": "специи"
+      },
+      {
+        "name": "чеснок",
+        "qty": 2.5,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "шпинат",
+        "qty": 25,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "масло растительное",
+        "qty": 5,
+        "unit": "г",
+        "category": "масла"
+      }
+    ],
+    "steps": [
+      "Обжарь лук с морковью и чесноком, всыпь карри и прогрей полминуты.",
+      "Добавь чечевицу, залей водой вровень и вари пятнадцать минут.",
+      "Влей кокосовое молоко, брось шпинат и дай ему осесть."
+    ]
   }
 ]

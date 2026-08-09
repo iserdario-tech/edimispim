@@ -182,6 +182,16 @@ export interface DayOptions {
   roughNight?: boolean;         // после плохой ночи: сдвиг калоража вперёд + позднее сладкое
   familiar?: boolean;           // начало вхождения в дефицит: еда попривычнее (поплотнее)
   liked?: string[];             // id блюд с «пальцем вверх» — им отдаётся половина меню
+  /**
+   * Блюда, которые уже стоят в других днях недели.
+   *
+   * Раньше каждый день собирался независимо, и планировщик просто не знал, что вчера
+   * был тот же обед. Все косвенные приёмы (чередование по дню, ротация кандидатов)
+   * только маскировали это: замер на цели давал три разных обеда за неделю при шестидесяти
+   * одном подходящем блюде. Если после исключения выбирать не из чего — ограничение
+   * снимается: пустой приём хуже повтора.
+   */
+  avoid?: string[];
 }
 
 /**
@@ -302,6 +312,13 @@ const denser = (options: Recipe[]): Recipe[] => {
  * куда любимые тоже входят. Никакой случайности — план должен собираться одинаково
  * при каждом открытии экрана.
  */
+/** Убрать то, что уже стоит в других днях; если не остаётся ничего — вернуть как было. */
+function dropUsed(options: Recipe[], avoid: string[] | undefined): Recipe[] {
+  if (!avoid?.length) return options;
+  const fresh = options.filter(r => !avoid.includes(r.id));
+  return fresh.length ? fresh : options;
+}
+
 function preferLiked(options: Recipe[], liked: string[] | undefined, offset: number): Recipe[] {
   if (!liked?.length || offset % 2 !== 0) return options;
   const mine = options.filter(r => liked.includes(r.id));
@@ -318,7 +335,7 @@ export function generateDay(targets: Targets, pool: Recipe[], opts: DayOptions):
   const scheme = SCHEMES[count];
   const byType = (t: MealType) => pool.filter(r => r.meal_type === t);
 
-  const hasDesserts = byType("dessert").length > 0;
+  const hasDesserts = byType("dessert").length + byType("snack").length > 0;
   const treatKcal = hasDesserts ? Math.round(targets.kcalTarget * scheme.treatShare) : 0;
   const mainTarget = targets.kcalTarget - treatKcal;
   const times = mealTimes(opts.rhythm, count, opts.roughNight);
@@ -332,7 +349,7 @@ export function generateDay(targets: Targets, pool: Recipe[], opts: DayOptions):
     const good = proteinRich(fit, type, r => Math.max(0.5, +(slotKcal / r.kcal).toFixed(1)));
     // после плохой ночи простота важнее привычности: усилия сегодня взять неоткуда
     const narrowed = opts.roughNight ? easiest(good) : opts.familiar ? denser(good) : good;
-    const recipe = pickForDay(preferLiked(narrowed, opts.liked, offset), offset);
+    const recipe = pickForDay(dropUsed(preferLiked(narrowed, opts.liked, offset), opts.avoid), offset);
     if (!recipe) continue;
     const servings = Math.max(0.5, +(slotKcal / recipe.kcal).toFixed(1));
     meals.push({ recipe, servings, timeMin: times[type as Slot] ?? 0, slot: type });
@@ -340,13 +357,22 @@ export function generateDay(targets: Targets, pool: Recipe[], opts: DayOptions):
 
   if (treatKcal > 0) {
     const desserts = byType("dessert");
+    // утренний перекус может быть и несладким, вечерний десерт — нет
+    const snacks = [...byType("snack"), ...desserts];
     const perTreat = treatKcal / scheme.treatCount;
     const treatSlots: Slot[] = scheme.treatCount >= 2 ? ["dessert", "snack"] : ["dessert"];
+    // при пяти приёмах сладких слотов два, и оба берут из одного пула: без этого списка
+    // перекус и десерт одного дня могли оказаться одним и тем же блюдом
+    const taken: string[] = [];
     treatSlots.forEach((slot, i) => {
       // сладкое тоже подбирается по размеру порции: иначе в план попадает «десерт ×3.5»
-      const fitDesserts = preferLiked(fittingOptions(desserts, perTreat, opts.roughNight), opts.liked, offset);
+      const fitDesserts = dropUsed(
+        preferLiked(fittingOptions(slot === "snack" ? snacks : desserts, perTreat, opts.roughNight), opts.liked, offset),
+        [...(opts.avoid ?? []), ...taken],
+      );
       const recipe = fitDesserts[(offset + i) % fitDesserts.length];
       if (!recipe) return;
+      taken.push(recipe.id);
       const servings = Math.max(0.5, +(perTreat / recipe.kcal).toFixed(1));
       meals.push({ recipe, servings, timeMin: times[slot] ?? 0, slot });
     });
@@ -359,8 +385,15 @@ export function generateDay(targets: Targets, pool: Recipe[], opts: DayOptions):
    * замены тянут набор к овощному, и в замере плотность падала НИЖЕ обычного дня —
    * то есть механика входа в режим работала против себя же.
    */
-  swapForFiber(day, targets, pool, mains, offset, opts.roughNight || opts.familiar ? 1 : 2, opts.liked ?? [], !!opts.roughNight);
-  swapForProtein(day, targets, pool, mains, offset, opts.liked ?? [], !!opts.roughNight);
+  /*
+   * Проходов добора четыре, а не два: замер на неделе дал прирост клетчатки примерно на
+   * седьмую часть, и разнообразие от этого не пострадало — оно защищено памятью недели,
+   * а не числом проходов. Упирается всё равно в контент: средняя клетчатка блюда в базе
+   * 4.3–4.8 г при цели 30 г в день, блюд с десятью граммами и выше — пятнадцать на 272.
+   * Пока их не станет больше, отдельные дни так и будут проседать до 13–15 г.
+   */
+  swapForFiber(day, targets, pool, mains, offset, opts.roughNight || opts.familiar ? 1 : 4, opts.liked ?? [], !!opts.roughNight, opts.avoid ?? []);
+  swapForProtein(day, targets, pool, mains, offset, opts.liked ?? [], !!opts.roughNight, opts.avoid ?? []);
   addProteinTopUp(day, targets);
   day.meals.sort((a, b) => a.timeMin - b.timeMin);
   if (opts.roughNight) day.simplified = true;
@@ -387,7 +420,7 @@ export function generateDay(targets: Targets, pool: Recipe[], opts: DayOptions):
  */
 function swapForFiber(
   day: Day, targets: Targets, pool: Recipe[], mains: Partial<Record<MealType, number>>,
-  offset = 0, maxPasses = 2, liked: string[] = [], keepEasy = false,
+  offset = 0, maxPasses = 2, liked: string[] = [], keepEasy = false, avoid: string[] = [],
 ): void {
   const touched = new Set<number>();
   for (let pass = 0; pass < maxPasses && day.totals.fiber < targets.fiberGTarget; pass++) {
@@ -403,6 +436,7 @@ function swapForFiber(
     for (const candidate of pool) {
       if (candidate.meal_type !== meal.recipe.meal_type) continue;
       if (candidate.id === meal.recipe.id) continue;
+      if (avoid.includes(candidate.id)) continue;   // это блюдо уже есть в другом дне недели
       const servings = Math.max(0.5, +(kcalShare / candidate.kcal).toFixed(1));
       // порция остаётся порцией: иначе замена подсовывает «крем-суп ×3.4» — полтора литра супа
       if (servings > FIT_MAX) continue;
@@ -434,8 +468,19 @@ function swapForFiber(
    * Номер прохода добавлен в сдвиг, чтобы вторая замена не била в то же место.
    */
   const enough = candidates.filter(c => day.totals.fiber + c.gain >= targets.fiberGTarget);
-  const top = (enough.length ? enough : candidates).slice(0, MIN_CHOICES);
-  const chosen = top[(offset + pass) % top.length]!;
+  const pick = enough.length ? enough : candidates;
+  /*
+   * Чередуем не только блюдо, но и САМ ПРИЁМ, в который лезем.
+   *
+   * Раньше кандидаты просто сортировались по приросту клетчатки — и побеждал всегда обед,
+   * потому что он крупнее и даёт больший прирост. В итоге обед подменялся каждый день,
+   * и на цели выходило три разных обеда за неделю при шестидесяти одном подходящем блюде.
+   * Теперь день выбирает приём по кругу, а внутри него — лучшую замену.
+   */
+  const slots = [...new Set(pick.map(c => c.index))];
+  const slot = slots[(offset + pass) % slots.length]!;
+  const inSlot = pick.filter(c => c.index === slot);
+  const chosen = inSlot[Math.floor(offset / slots.length) % inSlot.length]!;
   const target = day.meals[chosen.index]!;
   day.meals[chosen.index] = { ...target, recipe: chosen.recipe, servings: chosen.servings };
   touched.add(chosen.index);
@@ -453,7 +498,7 @@ function swapForFiber(
  */
 function swapForProtein(
   day: Day, targets: Targets, pool: Recipe[], mains: Partial<Record<MealType, number>>,
-  offset = 0, liked: string[] = [], keepEasy = false,
+  offset = 0, liked: string[] = [], keepEasy = false, avoid: string[] = [],
 ): void {
   if (day.totals.protein >= targets.proteinGTarget * 0.85) return;
 
@@ -464,6 +509,7 @@ function swapForProtein(
     const kcalShare = meal.recipe.kcal * meal.servings;
     for (const candidate of pool) {
       if (candidate.meal_type !== meal.recipe.meal_type || candidate.id === meal.recipe.id) continue;
+      if (avoid.includes(candidate.id)) continue;                   // уже стоит в другом дне
       const servings = Math.max(0.5, +(kcalShare / candidate.kcal).toFixed(1));
       if (servings > FIT_MAX) continue;
       if (candidate.kcal * servings > kcalShare * 1.05) continue;   // замена не раздувает приём
@@ -519,7 +565,13 @@ export interface WeekOptions extends Omit<DayOptions, "offset"> {
 
 export function generateWeek(targets: Targets, recipes: Recipe[], opts: WeekOptions): Day[] {
   const pool = filterRecipes(recipes, opts.constraints ?? {});
-  return Array.from({ length: 7 }, (_, d) => generateDay(targets, pool, { ...opts, offset: d }));
+  // неделя помнит, что уже стояло: иначе дни собираются независимо и повторяются
+  const used: string[] = [];
+  return Array.from({ length: 7 }, (_, d) => {
+    const day = generateDay(targets, pool, { ...opts, offset: d, avoid: [...used] });
+    for (const m of day.meals) used.push(m.recipe.id);
+    return day;
+  });
 }
 
 /** Насколько блюдо собирается из домашних запасов — при пустой кладовке всегда 0. */

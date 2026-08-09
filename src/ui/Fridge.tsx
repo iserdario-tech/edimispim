@@ -30,6 +30,14 @@ const parseKey = (k: string): { name: string; unit: string } => {
 /** Справочник для подсказок ввода: те же продукты, из которых собраны рецепты. */
 const KNOWN = Object.keys(NUTRIENTS).sort((a, b) => a.localeCompare(b, "ru"));
 
+/** «1 позиция», «3 позиции», «11 позиций», «21 позиция» — по-русски, а не по числу меньше пяти. */
+const positionsRU = (n: number): string => {
+  const ten = n % 10, hundred = n % 100;
+  if (ten === 1 && hundred !== 11) return `${n} позиция`;
+  if (ten >= 2 && ten <= 4 && (hundred < 12 || hundred > 14)) return `${n} позиции`;
+  return `${n} позиций`;
+};
+
 export function Fridge({ pantry, onPantry, pool }: {
   pantry: Pantry;
   onPantry: (next: Pantry) => void;
@@ -77,7 +85,7 @@ export function Fridge({ pantry, onPantry, pool }: {
       <div className="menu-head">
         <h3 className="card-h" style={{ margin: 0 }}>Холодильник</h3>
         <button className="linkbtn small" onClick={() => setOpen(!open)}>
-          {open ? "свернуть" : items.length ? `${items.length} позиц${items.length < 5 ? "ии" : "ий"}` : "заполнить"}
+          {open ? "свернуть" : items.length ? positionsRU(items.length) : "заполнить"}
         </button>
       </div>
 

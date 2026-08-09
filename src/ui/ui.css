@@ -91,6 +91,9 @@ button.primary {
   transition: transform 120ms ease, background 120ms ease;
 }
 button.primary:active { transform: scale(.98); background: var(--accent-press); }
+/* недоступная кнопка не должна отзываться на нажатие — иначе она выглядит рабочей */
+button.primary:disabled { opacity: .38; }
+button.primary:disabled:active { transform: none; background: var(--accent); }
 
 /* ─── Чипы выбора ──────────────────────────────────────────────────── */
 .chips { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin: var(--sp-2) 0; }
@@ -459,8 +462,11 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
 /* Название блюда — строка списка iOS: текст слева, шеврон прижат к правому краю.
    Раньше шеврон стоял в потоке текста и прилипал к последнему слову («…с орехами ⌄»),
    а при переносе уезжал на новую строку — столбца из шевронов не получалось вовсе. */
+/* Выравнивание по центру, а не по верху: цель нажатия обязана быть 44 pt, и у блюда
+   с коротким названием («Тефтели говяжьи в подливе») под текстом оставалась дыра в
+   половину строки — калории отрывались от названия и висели сами по себе. */
 .meal-name {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: var(--sp-2);
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--sp-2);
   width: 100%; background: none; border: 0; padding: 0; font: inherit; color: inherit;
   text-align: left; cursor: pointer; min-height: var(--tap);
 }
