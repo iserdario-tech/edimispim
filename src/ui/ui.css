@@ -517,18 +517,47 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
 .chat-screen { display: flex; flex-direction: column; min-height: 100dvh; }
 .chat-screen .coach { flex: 1; display: flex; flex-direction: column; }
 .chat-screen .coach-body { flex: 1; display: flex; flex-direction: column; }
+/*
+ * Поле ввода закреплено у нижнего края, а не приклеено к потоку.
+ *
+ * Было `sticky`: элемент оставался частью прокручиваемой страницы и на длинной ленте
+ * заметно «ехал» за пальцем — свайпаешь снизу вверх, а поле ввода вместе с кнопкой
+ * отправки тянется следом и только потом догоняет своё место. На iOS это особенно
+ * видно из-за инерции и bounce-эффекта.
+ *
+ * `fixed` вынимает панель из прокрутки совсем: лента едет, панель стоит.
+ * `--kb` — высота экранной клавиатуры, её выставляет `useKeyboardInset`: у fixed-элемента
+ * в Safari нет своего способа узнать, что клавиатура закрыла нижнюю часть экрана.
+ */
 .chat-screen .coach-ask {
-  position: sticky; bottom: calc(84px + env(safe-area-inset-bottom));
-  background: var(--bg); padding: var(--sp-2) 0 var(--sp-1); margin-top: auto;
+  position: fixed; left: 0; right: 0;
+  bottom: calc(84px + env(safe-area-inset-bottom));
+  /* выше панели вкладок: она плавает на той же высоте и перекрывала поле */
+  z-index: 110;
+  /* Клавиатура двигает панель ОТДЕЛЬНЫМ сдвигом, а не слагаемым в `bottom`.
+     Причина простая: если значение почему-то окажется негодным, ломается вся строка
+     `bottom`, панель теряет привязку к низу и уезжает в конец документа — то есть
+     пропадает с экрана. Сломанный `transform` браузер просто не применит. */
+  transform: translateY(calc(-1 * var(--kb, 0px)));
+  background: var(--bg); padding: var(--sp-2) var(--sp-4) var(--sp-1);
+  margin: 0;
 }
-/* Поле ввода прилипает на высоте панели вкладок, и между ними оставалась щель,
-   сквозь которую проезжал текст ответа: выглядело так, будто поле наехало на чат.
-   Полоса фона закрывает зазор до самого низа. */
+/* Панель фиксирована по всей ширине окна, а содержимое экрана — колонка по центру:
+   выравниваем поле по той же колонке, иначе на планшете оно растянется во всю ширину. */
+.chat-screen .coach-ask > * { max-width: 560px; }
+.chat-screen .coach-ask {
+  display: flex; justify-content: center; gap: var(--sp-2); align-items: center;
+}
+.chat-screen .coach-ask input { max-width: calc(560px - 60px); }
+/* Полоса фона закрывает зазор между полем и панелью вкладок: сквозь него проезжал
+   текст ответа, и выглядело это как наезд поля на переписку. */
 .chat-screen .coach-ask::after {
   content: ""; position: absolute; left: 0; right: 0; top: 100%;
   height: calc(84px + env(safe-area-inset-bottom));
   background: var(--bg); pointer-events: none;
 }
+/* Место под фиксированную панель: без него последние сообщения уходили под неё. */
+.chat-screen .coach-body { padding-bottom: calc(var(--tap) + var(--sp-4)); }
 /* Когда чат пуст, вниз уезжают подсказки, а поле ввода встаёт сразу под ними.
    Иначе `margin-top: auto` стоял у обоих, свободное место доставалось первому,
    и между подсказками и полем зияла треть экрана. */
@@ -536,6 +565,8 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
 .chat-screen .coach-empty + .coach-ask { margin-top: 0; }
 .chat-screen .bubble { max-width: 88%; }
 .coach-clear { display: flex; justify-content: center; padding-top: var(--sp-2); }
+/* Пустой чат: подсказки не должны залезать под закреплённое поле ввода. */
+.chat-screen .coach-empty { padding-bottom: var(--sp-4); }
 
 /* Покупки: строка товара */
 .buy-line { display: grid; grid-template-columns: 1fr auto; gap: 2px var(--sp-3); align-items: baseline; }
@@ -636,9 +667,17 @@ input[type="range"] { min-height: var(--tap); }
    Раскрытие анимируем по opacity и transform, а не по height: анимация высоты
    заставляет браузер пересчитывать раскладку каждый кадр, и на длинном меню
    это видно глазом. */
+/*
+ * Появление экрана — только прозрачностью, без сдвига.
+ *
+ * Сдвиг был приятнее, но стоил слишком дорого: WebKit оставляет анимированному
+ * `transform` элементу собственный слой, и `position: fixed` внутри него отсчитывается
+ * не от окна, а от этого элемента. Закреплённое поле ввода в чате из-за этого уезжало
+ * в конец длинной страницы и пропадало с экрана совсем.
+ */
 @keyframes screen-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: none; }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 @keyframes reveal-in {
   from { opacity: 0; transform: translateY(-4px); }
