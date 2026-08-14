@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { BACKEND_URL } from "./notifications.js";
 import { IconSend, IconCoachBubble } from "./Icons.js";
 import { tap } from "./haptics.js";
+import { useKeyboardInset } from "./useKeyboardInset.js";
 
 interface Turn { role: "user" | "assistant"; content: string }
 
@@ -22,6 +23,7 @@ export function Coach({ contextRU }: { contextRU: string }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
+  useKeyboardInset();   // закреплённое поле ввода должно подниматься над клавиатурой
 
   useEffect(() => { try { localStorage.setItem(KEY, JSON.stringify(turns.slice(-12))); } catch { /* ignore */ } }, [turns]);
 
@@ -80,7 +82,28 @@ export function Coach({ contextRU }: { contextRU: string }) {
           if (!line.startsWith("data:")) continue;
           const payload = line.slice(5).trim();
           if (!payload || payload === "[DONE]") continue;
-          try { const j = JSON.parse(payload); if (j.response) { acc += j.response; setStreaming(acc); } } catch { /* пропускаем неполную строку */ }
+          try {
+            /*
+             * Кусок ответа берём из `delta.content`, а не из `response`.
+             *
+             * Оба поля несут один и тот же текст, но `response` теряет форматирование на
+             * числах: Cloudflare отдаёт числовой кусок JSON-числом, и ведущий пробел
+             * пропадает — выходило «ложись не позже чем за7-8 часов». В `delta.content`
+             * тот же кусок приходит строкой ' 7-8', с пробелом.
+             *
+             * Проверка на `undefined`, а не на истинность: пустая строка и ноль — обычные
+             * куски ответа, а не признак его конца.
+             */
+            const j = JSON.parse(payload) as {
+              response?: unknown;
+              choices?: { delta?: { content?: unknown } }[];
+            };
+            const piece = j.choices?.[0]?.delta?.content ?? j.response;
+            if (piece !== undefined && piece !== null) {
+              acc += String(piece);
+              setStreaming(acc);
+            }
+          } catch { /* пропускаем неполную строку */ }
         }
       }
       const reply = acc.trim();
