@@ -38,9 +38,18 @@ const RU: Record<keyof typeof BOUNDS, string> = {
   age: "возраст", heightCm: "рост", weightKg: "вес сейчас", goalWeightKg: "цель по весу",
 };
 export function checkProfile(v: Record<keyof typeof BOUNDS, number>): string[] {
-  return (Object.keys(BOUNDS) as (keyof typeof BOUNDS)[])
+  const out = (Object.keys(BOUNDS) as (keyof typeof BOUNDS)[])
     .filter(k => !Number.isFinite(v[k]) || v[k] < BOUNDS[k][0] || v[k] > BOUNDS[k][1])
     .map(k => `${RU[k]} — от ${BOUNDS[k][0]} до ${BOUNDS[k][1]}`);
+  /*
+   * Цель тяжелее текущего веса форма пропускала молча. Приложение ведёт к снижению —
+   * считает дефицит, темп и лестницу входа, — и на такой цели все эти цифры теряют
+   * смысл, а человек об этом не узнаёт.
+   */
+  if (Number.isFinite(v.weightKg) && Number.isFinite(v.goalWeightKg) && v.goalWeightKg >= v.weightKg) {
+    out.push("цель по весу должна быть меньше текущего: приложение ведёт к снижению");
+  }
+  return out;
 }
 
 /**

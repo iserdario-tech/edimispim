@@ -304,12 +304,15 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
 .bubble.me { background: var(--accent); color: var(--accent-ink); margin-left: auto; border-bottom-right-radius: 6px; }
 .bubble.coachmsg { background: var(--surface); box-shadow: var(--shadow-1); margin-right: 24px; border-bottom-left-radius: 6px; }
 .coach-ask { display: flex; gap: var(--sp-2); margin-top: var(--sp-3); align-items: center; }
-.coach-ask input {
-  flex: 1; min-width: 0; min-height: var(--tap); padding: 0 var(--sp-4);
-  border-radius: var(--r-pill); border: var(--hairline) solid var(--border);
+.coach-ask textarea {
+  flex: 1; min-width: 0; min-height: var(--tap); max-height: 120px;
+  padding: 11px var(--sp-4);
+  border-radius: 22px; border: var(--hairline) solid var(--border);
   background: var(--surface); color: var(--fg); font: inherit;
+  resize: none; overflow-y: auto; line-height: 1.3;
+  -webkit-appearance: none; appearance: none;
 }
-.coach-ask input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+.coach-ask textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
 /* Круглая кнопка отправки — как в системных полях ввода. Пока вопрос не написан,
    она приглушена, а не просто «серая»: видно, что действие ждёт текста. */
 .coach-send {
@@ -545,8 +548,10 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
   /* Ширина — как у колонки контента, и центрируется она сама: `left/right: 0` вместе
      с внутренними отступами давали ширину layout-вьюпорта, и на отзумленной или узкой
      странице круглая кнопка отправки уезжала за правый край экрана. */
+  /* Отсчёт от панели вкладок, а не «примерно 84 пикселя»: раньше зазор между полем
+     и меню зависел от того, угадана ли высота панели, и строки стояли вразнобой. */
   position: fixed; left: 50%; width: min(560px, calc(100% - 2 * var(--sp-4)));
-  bottom: calc(84px + env(safe-area-inset-bottom));
+  bottom: calc(var(--sp-3) + var(--tabbar-h) + var(--sp-2) + env(safe-area-inset-bottom));
   /* выше панели вкладок: она плавает на той же высоте и перекрывала поле */
   z-index: 110;
   transform: translateX(-50%);
@@ -554,14 +559,14 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
   margin: 0;
   display: flex; gap: var(--sp-2); align-items: center;
 }
-.chat-screen .coach-ask input { flex: 1; min-width: 0; }
+.chat-screen .coach-ask textarea { flex: 1; min-width: 0; }
 .chat-screen .coach-ask .coach-send { flex: 0 0 auto; }
 /* Полоса фона закрывает зазор между полем и панелью вкладок: сквозь него проезжал
    текст ответа, и выглядело это как наезд поля на переписку. Шире самой панели —
    иначе по бокам оставались просветы, в которых мелькал текст. */
 .chat-screen .coach-ask::after {
   content: ""; position: absolute; left: calc(-1 * var(--sp-4)); right: calc(-1 * var(--sp-4)); top: 100%;
-  height: calc(84px + env(safe-area-inset-bottom));
+  height: calc(var(--sp-3) + var(--tabbar-h) + var(--sp-2) + env(safe-area-inset-bottom));
   background: var(--bg); pointer-events: none;
 }
 /* Место под фиксированную панель: без него последние сообщения уходили под неё. */
@@ -575,11 +580,11 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
  * клавиатурой остаются висеть и отъедают полосу экрана. Переключать разделы посреди
  * набора текста всё равно никто не станет.
  */
-html:has(.coach-ask input:focus) .tabbar { display: none; }
-html:has(.coach-ask input:focus) .chat-screen .coach-ask {
+html:has(.coach-ask textarea:focus) .tabbar { display: none; }
+html:has(.coach-ask textarea:focus) .chat-screen .coach-ask {
   bottom: calc(var(--sp-2) + env(safe-area-inset-bottom));
 }
-html:has(.coach-ask input:focus) .chat-screen .coach-ask::after {
+html:has(.coach-ask textarea:focus) .chat-screen .coach-ask::after {
   height: calc(var(--sp-2) + env(safe-area-inset-bottom));
 }
 /* Когда чат пуст, вниз уезжают подсказки, а поле ввода встаёт сразу под ними.
