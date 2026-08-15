@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { BACKEND_URL } from "./notifications.js";
 import { IconSend, IconCoachBubble } from "./Icons.js";
 import { tap } from "./haptics.js";
-import { useKeyboardInset } from "./useKeyboardInset.js";
 
 interface Turn { role: "user" | "assistant"; content: string }
 
@@ -23,7 +22,6 @@ export function Coach({ contextRU }: { contextRU: string }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
-  useKeyboardInset();   // закреплённое поле ввода должно подниматься над клавиатурой
 
   useEffect(() => { try { localStorage.setItem(KEY, JSON.stringify(turns.slice(-12))); } catch { /* ignore */ } }, [turns]);
 
