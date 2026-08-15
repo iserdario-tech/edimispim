@@ -10,6 +10,10 @@ import type { MealCount, MealType, Recipe } from "./types.js";
  * что так и задумано.
  */
 
+/** «завтраков, обедов и ужинов» — а не «завтраков и обедов и ужинов». */
+const listRU = (items: string[]): string =>
+  items.length < 2 ? (items[0] ?? "") : `${items.slice(0, -1).join(", ")} и ${items[items.length - 1]}`;
+
 const RU: Record<MealType, string> = {
   breakfast: "завтраков", lunch: "обедов", dinner: "ужинов", dessert: "десертов",
   snack: "перекусов",
@@ -42,11 +46,11 @@ export function diagnosePool(pool: Recipe[], mealCount: MealCount): PoolDiagnosi
 
   let messageRU = "";
   if (missing.length) {
-    messageRU = `Под твои ограничения не осталось ${missing.map(t => RU[t]).join(" и ")}. ` +
+    messageRU = `Под твои ограничения не осталось ${listRU(missing.map(t => RU[t]))}. ` +
       "День соберётся неполным. Проверь список аллергий, нелюбимое и технику на кухне — " +
       "скорее всего что-то одно отсекает слишком много.";
   } else if (monotonous.length) {
-    const names = monotonous.map(t => RU[t]).join(" и ");
+    const names = listRU(monotonous.map(t => RU[t]));
     messageRU = `Вариантов ${names} осталось мало, поэтому за неделю они будут повторяться. ` +
       "Если надоест — ослабь одно из ограничений.";
   }

@@ -154,7 +154,21 @@ export function Coach({ contextRU }: { contextRU: string }) {
         )}
 
         <form className="coach-ask" onSubmit={(e) => { e.preventDefault(); send(draft); }}>
-          <input value={draft} onChange={(e) => setDraft(e.target.value)}
+          {/*
+            * Многострочное поле, а не однострочное: «ввод» на клавиатуре переносит строку,
+            * как в любом мессенджере, а отправляет только кнопка. Раньше Enter отправлял
+            * недописанный вопрос, и разбить мысль на две строки было нельзя.
+            *
+            * Высота растёт вместе с текстом до четырёх строк, дальше поле прокручивается
+            * внутри себя — иначе длинный вопрос выдавил бы с экрана саму переписку.
+            */}
+          <textarea value={draft} rows={1}
+            onChange={(e) => {
+              setDraft(e.target.value);
+              const el = e.currentTarget;
+              el.style.height = "auto";
+              el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+            }}
             placeholder="Напиши свой вопрос" aria-label="Вопрос коучу" />
           {/* Круглая кнопка со стрелкой вместо слова «Спросить»: так устроена отправка
               во всех системных приложениях, и подпись не отъедает ширину у поля. */}

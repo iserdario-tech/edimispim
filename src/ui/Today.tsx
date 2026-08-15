@@ -112,7 +112,9 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
       ...food.constraints,
       bannedIds: rated.filter(([, v]) => v === -1).map(([id]) => id),
     });
-    if (!pool.length) return null;
+    // Пустой набор — это НЕ «еда не подключена»: человек мог скрыть все блюда пальцем
+    // вниз или выставить взаимоисключающие ограничения. Возвращаем день без приёмов,
+    // чтобы экран показал разбор причины, а не предложил заполнить форму заново.
     const diagnosis = diagnosePool(pool, food.mealCount);
     const opts = {
       rhythm: { wakeMin: parseHM(wokeHM), bedMin }, mealCount: food.mealCount,
@@ -262,6 +264,16 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
             Недельный дефицит станет меньше — это всё, что произойдёт. День запланирован
             тобой, поэтому в статистике он не считается срывом.
           </p>
+        </div>
+      ) : foodDay && foodDay.day.meals.length === 0 ? (
+        /* Ни одного блюда: ограничения выели набор подчистую. Цифры «0 ккал» тут были бы
+           издевательством — человеку нужна причина и способ починить. */
+        <div className="day-totals small">
+          <b>Меню на сегодня не собралось.</b>
+          <p className="small note-warn" style={{ marginTop: 6 }}>{foodDay.diagnosis.messageRU}</p>
+          {onSetupFood && (
+            <button className="linkbtn" onClick={onSetupFood}>Поправить ограничения →</button>
+          )}
         </div>
       ) : foodDay ? (
         <div className="day-totals small">
