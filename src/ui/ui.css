@@ -75,8 +75,14 @@ a { color: var(--accent); }
 /* у time на iOS ещё и внутренние поля со своей шириной */
 .fld input[type="time"], .fld input[type="date"] {
   min-width: 0; text-align: left;
+  /* высота фиксированная: с `min-height` Safari растягивал поле почти вдвое */
+  height: var(--tap); padding-top: 0; padding-bottom: 0;
 }
-.fld input[type="time"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
+/* Значение внутри `time` — отдельный блок со своими отступами, и без выравнивания
+   по высоте поля оно прилипало к верхнему краю: цифры висели над пустотой. */
+.fld input[type="time"]::-webkit-date-and-time-value {
+  text-align: left; margin: 0; line-height: var(--tap); height: var(--tap);
+}
 .fld input::-webkit-calendar-picker-indicator { margin-left: auto; }
 .fld input:focus-visible, .fld select:focus-visible {
   outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent;
@@ -113,10 +119,14 @@ button.primary:disabled:active { transform: none; background: var(--accent); }
 /* ─── Сегментированный контрол ─────────────────────────────────────
    Один выбор из нескольких — как системный segmented control:
    общая подложка, выбранное поднято «таблеткой». */
+/* Подложка и кнопки — одна фигура: раньше выбранная «таблетка» была выше подложки
+   и вылезала за её край, потому что радиусы и высоты считались независимо. */
 .seg {
   display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
-  gap: 2px; padding: 2px; border-radius: var(--r-control);
+  gap: 2px; padding: 3px; border-radius: var(--r-control);
   background: var(--surface-2);
+  /* тень выбранного элемента не должна выходить наружу подложки */
+  overflow: hidden;
 }
 .seg-item {
   display: flex; align-items: center; justify-content: center;
@@ -129,6 +139,8 @@ button.primary:disabled:active { transform: none; background: var(--accent); }
   transition: background 140ms ease, box-shadow 140ms ease;
 }
 .seg-item.on { background: var(--surface); box-shadow: var(--shadow-1); font-weight: 600; }
+/* внутренний радиус меньше внешнего ровно на отступ — иначе углы «не садятся» */
+.seg-item { border-radius: calc(var(--r-control) - 3px); }
 .seg-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* Две равные кнопки в строку. Раньше стоял flex-wrap, и на телефоне «Сохранить копию»
@@ -292,12 +304,15 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
 .bubble.me { background: var(--accent); color: var(--accent-ink); margin-left: auto; border-bottom-right-radius: 6px; }
 .bubble.coachmsg { background: var(--surface); box-shadow: var(--shadow-1); margin-right: 24px; border-bottom-left-radius: 6px; }
 .coach-ask { display: flex; gap: var(--sp-2); margin-top: var(--sp-3); align-items: center; }
-.coach-ask input {
-  flex: 1; min-width: 0; min-height: var(--tap); padding: 0 var(--sp-4);
-  border-radius: var(--r-pill); border: var(--hairline) solid var(--border);
+.coach-ask textarea {
+  flex: 1; min-width: 0; min-height: var(--tap); max-height: 120px;
+  padding: 11px var(--sp-4);
+  border-radius: 22px; border: var(--hairline) solid var(--border);
   background: var(--surface); color: var(--fg); font: inherit;
+  resize: none; overflow-y: auto; line-height: 1.3;
+  -webkit-appearance: none; appearance: none;
 }
-.coach-ask input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+.coach-ask textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
 /* Круглая кнопка отправки — как в системных полях ввода. Пока вопрос не написан,
    она приглушена, а не просто «серая»: видно, что действие ждёт текста. */
 .coach-send {
@@ -530,34 +545,48 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
  * в Safari нет своего способа узнать, что клавиатура закрыла нижнюю часть экрана.
  */
 .chat-screen .coach-ask {
-  position: fixed; left: 0; right: 0;
-  bottom: calc(84px + env(safe-area-inset-bottom));
+  /* Ширина — как у колонки контента, и центрируется она сама: `left/right: 0` вместе
+     с внутренними отступами давали ширину layout-вьюпорта, и на отзумленной или узкой
+     странице круглая кнопка отправки уезжала за правый край экрана. */
+  /* Отсчёт от панели вкладок, а не «примерно 84 пикселя»: раньше зазор между полем
+     и меню зависел от того, угадана ли высота панели, и строки стояли вразнобой. */
+  position: fixed; left: 50%; width: min(560px, calc(100% - 2 * var(--sp-4)));
+  bottom: calc(var(--sp-3) + var(--tabbar-h) + var(--sp-2) + env(safe-area-inset-bottom));
   /* выше панели вкладок: она плавает на той же высоте и перекрывала поле */
   z-index: 110;
-  /* Клавиатура двигает панель ОТДЕЛЬНЫМ сдвигом, а не слагаемым в `bottom`.
-     Причина простая: если значение почему-то окажется негодным, ломается вся строка
-     `bottom`, панель теряет привязку к низу и уезжает в конец документа — то есть
-     пропадает с экрана. Сломанный `transform` браузер просто не применит. */
-  transform: translateY(calc(-1 * var(--kb, 0px)));
-  background: var(--bg); padding: var(--sp-2) var(--sp-4) var(--sp-1);
+  transform: translateX(-50%);
+  background: var(--bg); padding: var(--sp-2) 0 var(--sp-1);
   margin: 0;
+  display: flex; gap: var(--sp-2); align-items: center;
 }
-/* Панель фиксирована по всей ширине окна, а содержимое экрана — колонка по центру:
-   выравниваем поле по той же колонке, иначе на планшете оно растянется во всю ширину. */
-.chat-screen .coach-ask > * { max-width: 560px; }
-.chat-screen .coach-ask {
-  display: flex; justify-content: center; gap: var(--sp-2); align-items: center;
-}
-.chat-screen .coach-ask input { max-width: calc(560px - 60px); }
+.chat-screen .coach-ask textarea { flex: 1; min-width: 0; }
+.chat-screen .coach-ask .coach-send { flex: 0 0 auto; }
 /* Полоса фона закрывает зазор между полем и панелью вкладок: сквозь него проезжал
-   текст ответа, и выглядело это как наезд поля на переписку. */
+   текст ответа, и выглядело это как наезд поля на переписку. Шире самой панели —
+   иначе по бокам оставались просветы, в которых мелькал текст. */
 .chat-screen .coach-ask::after {
-  content: ""; position: absolute; left: 0; right: 0; top: 100%;
-  height: calc(84px + env(safe-area-inset-bottom));
+  content: ""; position: absolute; left: calc(-1 * var(--sp-4)); right: calc(-1 * var(--sp-4)); top: 100%;
+  height: calc(var(--sp-3) + var(--tabbar-h) + var(--sp-2) + env(safe-area-inset-bottom));
   background: var(--bg); pointer-events: none;
 }
 /* Место под фиксированную панель: без него последние сообщения уходили под неё. */
 .chat-screen .coach-body { padding-bottom: calc(var(--tap) + var(--sp-4)); }
+
+/*
+ * Пока в поле ввода стоит курсор, панель вкладок прячется, а поле садится ниже.
+ *
+ * Признак — сам фокус, а не вычисленная высота клавиатуры: Safari поднимает
+ * закреплённые элементы над клавиатурой сам, а вот вкладки между полем ввода и
+ * клавиатурой остаются висеть и отъедают полосу экрана. Переключать разделы посреди
+ * набора текста всё равно никто не станет.
+ */
+html:has(.coach-ask textarea:focus) .tabbar { display: none; }
+html:has(.coach-ask textarea:focus) .chat-screen .coach-ask {
+  bottom: calc(var(--sp-2) + env(safe-area-inset-bottom));
+}
+html:has(.coach-ask textarea:focus) .chat-screen .coach-ask::after {
+  height: calc(var(--sp-2) + env(safe-area-inset-bottom));
+}
 /* Когда чат пуст, вниз уезжают подсказки, а поле ввода встаёт сразу под ними.
    Иначе `margin-top: auto` стоял у обоих, свободное место доставалось первому,
    и между подсказками и полем зияла треть экрана. */
@@ -656,7 +685,26 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
   outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--sp-2);
 }
 
-input[type="range"] { min-height: var(--tap); }
+/*
+ * Ползунок «как спалось». Системный вид у него белый, и на светлой теме он
+ * растворялся в карточке: человек не видел, за что тянуть.
+ */
+input[type="range"] {
+  min-height: var(--tap); width: 100%;
+  accent-color: var(--accent);
+  -webkit-appearance: none; appearance: none; background: none;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px; border-radius: 3px; background: var(--surface-2);
+  box-shadow: inset 0 0 0 var(--hairline) var(--border);
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 28px; height: 28px; margin-top: -11px;
+  border-radius: 50%; background: var(--accent);
+  box-shadow: var(--shadow-1);
+}
+input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.08); }
 
 /* ═══ Движение ═══════════════════════════════════════════════════════
    Apple: анимация должна объяснять причину и следствие, а не украшать.
@@ -819,3 +867,14 @@ input[type="range"] { min-height: var(--tap); }
 
 /* Неделя по еде: столбики на «Сегодня» */
 .week-bars { display: block; width: 100%; max-width: 320px; height: auto; margin-top: var(--sp-2); color: var(--accent); }
+
+/* ─── Настройки дня: три группы вместо россыпи кнопок ───────────────── */
+.day-group { margin-top: var(--sp-4); }
+.day-group:first-child { margin-top: var(--sp-2); }
+.day-group-label { margin-bottom: var(--sp-2); font-weight: 600; }
+/* Переключатели дня — сетка одинаковых кнопок: они равнозначны, значит и выглядеть
+   должны одинаково. Разная ширина читалась как разная важность. */
+.chips-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); }
+.chips-grid .chip { justify-content: center; padding: 0 var(--sp-2); text-align: center; }
+/* Отдельные решения дня занимают строку целиком: они не часть набора галочек. */
+.chip.wide { display: flex; width: 100%; justify-content: center; margin-top: var(--sp-2); }

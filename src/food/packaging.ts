@@ -168,7 +168,13 @@ export function planPurchase(
     const pack = packOf(it.name);
     // Дома может лежать БОЛЬШЕ, чем нужно, — тогда лишнее остаётся лежать дальше,
     // а не исчезает из расчёта. Обрезать запас до потребности было ошибкой.
-    const haveAtHome = pantry[keyOf(it.name, it.unit)] ?? 0;
+    /*
+     * `Math.max(0, …)`: отрицательный остаток не должен УВЕЛИЧИВАТЬ закупку.
+     * Через холодильник минус не ввести, но данные приезжают ещё и файлом копии,
+     * а там может оказаться что угодно. При «-100 мл молока» список просил купить
+     * 600 мл вместо 500 — приложение честно вычитало минус.
+     */
+    const haveAtHome = Math.max(0, pantry[keyOf(it.name, it.unit)] ?? 0);
     const usedFromHome = Math.min(haveAtHome, it.qty);
     const toBuy = Math.max(0, +(it.qty - usedFromHome).toFixed(1));
 
