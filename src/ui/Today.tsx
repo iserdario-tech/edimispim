@@ -112,7 +112,9 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
       ...food.constraints,
       bannedIds: rated.filter(([, v]) => v === -1).map(([id]) => id),
     });
-    if (!pool.length) return null;
+    // Пустой набор — это НЕ «еда не подключена»: человек мог скрыть все блюда пальцем
+    // вниз или выставить взаимоисключающие ограничения. Возвращаем день без приёмов,
+    // чтобы экран показал разбор причины, а не предложил заполнить форму заново.
     const diagnosis = diagnosePool(pool, food.mealCount);
     const opts = {
       rhythm: { wakeMin: parseHM(wokeHM), bedMin }, mealCount: food.mealCount,
@@ -263,6 +265,16 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
             тобой, поэтому в статистике он не считается срывом.
           </p>
         </div>
+      ) : foodDay && foodDay.day.meals.length === 0 ? (
+        /* Ни одного блюда: ограничения выели набор подчистую. Цифры «0 ккал» тут были бы
+           издевательством — человеку нужна причина и способ починить. */
+        <div className="day-totals small">
+          <b>Меню на сегодня не собралось.</b>
+          <p className="small note-warn" style={{ marginTop: 6 }}>{foodDay.diagnosis.messageRU}</p>
+          {onSetupFood && (
+            <button className="linkbtn" onClick={onSetupFood}>Поправить ограничения →</button>
+          )}
+        </div>
       ) : foodDay ? (
         <div className="day-totals small">
           <b>День целиком:</b> {foodDay.day.totals.kcal} ккал · белок {foodDay.day.totals.protein} г ·
@@ -345,33 +357,53 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
       {/* Настройки дня нужны не каждый день — по умолчанию свёрнуты */}
       <details className="card">
         <summary className="card-h">Сегодня всё иначе?</summary>
+        {/*
+          * Три группы вместо россыпи кнопок разной ширины.
+          *
+          * Раньше здесь лежали восемь чипов подряд — «обычный день», «нельзя вздремнуть»,
+          * «читмил», «напоминания», — и глазу не за что было зацепиться: одинаковые с виду
+          * кнопки означали разное. Теперь видно устройство: каким сегодня день (выбор один
+          * из трёх), чего сегодня не будет (независимые переключатели), и отдельные решения.
+          */}
         <div className="tips-body">
-          <div className="chips">
-            <button className={mode === "normal" ? "chip on" : "chip"} onClick={() => setMode("normal")}>Обычный день</button>
-            <button className={mode === "crunch" ? "chip on" : "chip"} onClick={() => setMode("crunch")}>Работаю допоздна</button>
-            <button className={mode === "recovery" ? "chip on" : "chip"} onClick={() => setMode("recovery")}>Отсыпаюсь</button>
+          <div className="day-group">
+            <div className="day-group-label small muted">Каким сегодня будет день</div>
+            <div className="seg" role="group" aria-label="Каким сегодня будет день">
+              {([["normal", "Обычный"], ["crunch", "Допоздна"], ["recovery", "Отсыпаюсь"]] as const).map(([v, ru]) => (
+                <button key={v} className={mode === v ? "seg-item on" : "seg-item"}
+                  aria-pressed={mode === v} onClick={() => setMode(v)}>{ru}</button>
+              ))}
+            </div>
+            {mode === "crunch" && (
+              <label className="fld small">До скольких сегодня работаешь
+                <input type="time" value={crunchEndHM} onChange={e => setCrunchEndHM(e.target.value)} />
+              </label>
+            )}
           </div>
-          {mode === "crunch" && (
-            <label className="fld small">До скольких сегодня работаешь
-              <input type="time" value={crunchEndHM} onChange={e => setCrunchEndHM(e.target.value)} />
-            </label>
-          )}
-          <div className="chips">
-            <button className={toggles.napUnavailable ? "chip on" : "chip"} onClick={() => t("napUnavailable")}>Нельзя вздремнуть</button>
-            <button className={toggles.noBrightLight ? "chip on" : "chip"} onClick={() => t("noBrightLight")}>Нет дневного света</button>
-            <button className={toggles.noCaffeine ? "chip on" : "chip"} onClick={() => t("noCaffeine")}>Без кофеина</button>
-            <button className={toggles.hadAlcohol ? "chip on" : "chip"} onClick={() => t("hadAlcohol")}>🍷 Вчера был алкоголь</button>
+
+          <div className="day-group">
+            <div className="day-group-label small muted">Чего сегодня не будет</div>
+            <div className="chips-grid">
+              <button className={toggles.napUnavailable ? "chip on" : "chip"} onClick={() => t("napUnavailable")}>Не вздремнуть</button>
+              <button className={toggles.noBrightLight ? "chip on" : "chip"} onClick={() => t("noBrightLight")}>Нет света</button>
+              <button className={toggles.noCaffeine ? "chip on" : "chip"} onClick={() => t("noCaffeine")}>Без кофеина</button>
+              <button className={toggles.hadAlcohol ? "chip on" : "chip"} onClick={() => t("hadAlcohol")}>🍷 Был алкоголь</button>
+            </div>
+          </div>
+
+          <div className="day-group">
             {onCheatDay && (
-              <button className={isCheat ? "chip on" : "chip"}
+              <button className={isCheat ? "chip on wide" : "chip wide"}
                 onClick={() => { tap(); onCheatDay(today, !isCheat); }}>
                 🍕 Сегодня читмил
               </button>
             )}
+            <button className={notifOn ? "chip on wide" : "chip wide"}
+              onClick={async () => setNotifMsg(await enableNotifications(profile))}>
+              {notifOn ? "🔔 Напоминания включены" : "🔔 Включить напоминания"}
+            </button>
+            {notifMsg && <p className="muted small">{notifMsg}</p>}
           </div>
-          <button className={notifOn ? "chip on" : "chip"} onClick={async () => setNotifMsg(await enableNotifications(profile))}>
-            {notifOn ? "🔔 Напоминания включены" : "🔔 Включить напоминания"}
-          </button>
-          {notifMsg && <p className="muted small">{notifMsg}</p>}
         </div>
       </details>
 

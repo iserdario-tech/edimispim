@@ -169,7 +169,13 @@ export function Progress({ profile, history, food, weights, eaten, cheatDays, on
       <section className="card">
         <h3 className="card-h">Как прошла неделя</h3>
         <div className="week-stats small">
-          <span>Ночей отмечено: {insight.daysLogged}/7</span>
+          {/* Строку не прячем, даже когда ноль: цифра сама по себе непонятна, поэтому
+              при нуле она прямо говорит, что с этим делать. Скрыть было бы проще, но
+              тогда человек не поймёт, почему пусто и половина карточек не появляется. */}
+          <span>
+            Ночей отмечено: {insight.daysLogged}/7
+            {insight.daysLogged === 0 && " — отметь утром, как спалось"}
+          </span>
           {/* Регулярности здесь больше нет намеренно. Она стояла цифрой «N/100», а ниже
               на том же экране карточка «Ровность режима» показывала СВОЁ число из ста —
               и человеку оставалось гадать, какому верить. Ровность богаче: в ней и вердикт,
@@ -225,6 +231,20 @@ export function Progress({ profile, history, food, weights, eaten, cheatDays, on
             Записать
           </button>
         </div>
+        {/* Подтверждение записи. Раньше после нажатия «Записать» поле просто очищалось,
+            график до второго замера не появляется — и человек не понимал, сохранилось ли
+            вообще. Теперь последний замер виден всегда. */}
+        {weightSeries.length > 0 && (
+          <p className="small" style={{ marginTop: 6 }}>
+            Последний замер: <b>{weightSeries[weightSeries.length - 1]!.kg} кг</b>
+            {weightSeries[weightSeries.length - 1]!.date === today
+              ? " — сегодня"
+              : `, ${weightSeries[weightSeries.length - 1]!.date.split("-").reverse().join(".")}`}
+            {weightSeries.length === 1 && (
+              <span className="muted"> · со второго замера появится линия</span>
+            )}
+          </p>
+        )}
         <p className="small muted">Взвешивайся раз в неделю в одно время: одна цифра прыгает, линия за недели показывает правду.</p>
       </section>
 
