@@ -112,3 +112,44 @@ export function WeekFoodBars({ days }: {
     </svg>
   );
 }
+
+/**
+ * Кольца дня: калории, белок, клетчатка.
+ *
+ * Раньше итог дня был строкой мелкого серого текста — такой же, как объяснение под ним.
+ * Главная цифра дня выглядела сноской, и экран приходилось читать, а не смотреть.
+ * Кольцо показывает долю от нормы без единой цифры: видно с вытянутой руки, понятно
+ * без чтения, и три кольца рядом сразу говорят, чего сегодня не хватает.
+ *
+ * Перебор нормы не рисуется вторым витком: кольцо просто заполняется целиком. «Съел
+ * полторы нормы» — это не достижение, которое надо подчёркивать анимацией.
+ */
+export function DayRings({ rings }: {
+  rings: { label: string; value: number; goal: number; color: string }[];
+}) {
+  const R = 26, W = 6, C = 2 * Math.PI * R, box = (R + W) * 2;
+  return (
+    <div className="rings" role="img"
+      aria-label={rings.map(r => `${r.label}: ${Math.round(r.value)} из ${Math.round(r.goal)}`).join(", ")}>
+      {rings.map(r => {
+        const share = r.goal > 0 ? Math.min(1, r.value / r.goal) : 0;
+        return (
+          <div key={r.label} className="ring">
+            <svg viewBox={`0 0 ${box} ${box}`} aria-hidden="true">
+              <circle cx={box / 2} cy={box / 2} r={R} className="ring-track" strokeWidth={W} />
+              {/* при нуле дуга не рисуется вовсе: скруглённый конец давал точку,
+                  и пустое кольцо выглядело сломанным, а не пустым */}
+              {share > 0.001 && (
+                <circle cx={box / 2} cy={box / 2} r={R} strokeWidth={W} stroke={r.color}
+                  className="ring-fill" strokeLinecap="round"
+                  strokeDasharray={`${C * share} ${C}`}
+                  transform={`rotate(-90 ${box / 2} ${box / 2})`} />
+              )}
+            </svg>
+            <span className="ring-label">{r.label}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}

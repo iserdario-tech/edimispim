@@ -1,0 +1,182 @@
+{
+  "chicken": {
+    "file": "chicken.jpg",
+    "author": "Rhoda Adu",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Big_breasted_Africa.jpg"
+  },
+  "beef": {
+    "file": "beef.jpg",
+    "author": "Daderot",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Beef_stew_with_potatoes,_carrots,_and_peas,_plus_German_three-grain_bread_with_butter_and_salt_-_Massachusetts.jpg"
+  },
+  "pork": {
+    "file": "pork.jpg",
+    "author": "Bonnachoven",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Longhorn_Cowboy_Pork_Chops_.jpg"
+  },
+  "turkey": {
+    "file": "turkey.jpg",
+    "author": "Mihail Verbal",
+    "license": "CC BY 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:%D0%9C%D0%B8%D1%81%D0%B8%D1%80%D0%BA%D0%B8%D0%BD%D0%BE_%D0%BC%D0%B5%D1%81%D0%BE_,_%D1%81%D0%BE_%D0%BE%D1%80%D0%B8%D0%B7_%D0%B8_%D0%B0%D0%B2%D0%BE%D0%BA%D0%B0%D0%B4%D0%BE_%D0%BF%D0%B0%D1%80%D1%87%D0%B8%D1%9A%D0%B0_%D0%B8_%D1%81%D0%BE%D1%81.jpg"
+  },
+  "fish": {
+    "file": "fish.jpg",
+    "author": "MBC Foods from Australia",
+    "license": "CC BY 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Canap%C3%A9_Entr%C3%A9_Plate_(45957086554).jpg"
+  },
+  "seafood": {
+    "file": "seafood.jpg",
+    "author": "Texas Sea Grant from College Station",
+    "license": "CC BY 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:39._shrimp_dish_(51297736337).jpg"
+  },
+  "eggs": {
+    "file": "eggs.jpg",
+    "author": "Infrogmation of New Orleans",
+    "license": "CC BY 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Boca_Breakfast.JPG"
+  },
+  "porridge": {
+    "file": "porridge.jpg",
+    "author": "Federica Diliberto federyka",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Healthy_Breakfast_(Unsplash).jpg"
+  },
+  "pancakes": {
+    "file": "pancakes.jpg",
+    "author": "Kritzolina",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:NY_breakfast_01.jpg"
+  },
+  "pasta": {
+    "file": "pasta.jpg",
+    "author": "Breville USA",
+    "license": "CC BY 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Meaty_Lasagna_8of8_(8736299782).jpg"
+  },
+  "rice": {
+    "file": "rice.jpg",
+    "author": "Rocky Masum \n\n\n\n\n\n\nThis work was made by Masum-al-Hasan Rocky and released under",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Bangladeshi_Polao.jpg"
+  },
+  "buckwheat": {
+    "file": "buckwheat.jpg",
+    "author": "KabanDanish",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Buckwheat_porridge_in_medvedkovo.jpg"
+  },
+  "soup": {
+    "file": "soup.jpg",
+    "author": "Mx. Granger",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Amy%27s_lentil_vegetable_soup.jpg"
+  },
+  "borscht": {
+    "file": "borscht.jpg",
+    "author": "Kpalion",
+    "license": "Public domain",
+    "source": "https://commons.wikimedia.org/wiki/File:Ukrainian_borscht_ingredients.jpg"
+  },
+  "salad": {
+    "file": "salad.jpg",
+    "author": "Manjeshwari poet mysore",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Fruit_Salad_Or_Fruit_Bowl.jpg"
+  },
+  "sandwich": {
+    "file": "sandwich.jpg",
+    "author": "John Phelan",
+    "license": "CC BY 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:BBQ_Pork_Sandwich_at_Old_County_Place,_Hickory_Flat_GA.jpg"
+  },
+  "burger": {
+    "file": "burger.jpg",
+    "author": "Len Rizzi (photographer, original image), reprocessed by Off-shell",
+    "license": "Public domain",
+    "source": "https://commons.wikimedia.org/wiki/File:Hamburger_(black_bg).jpg"
+  },
+  "pizza": {
+    "file": "pizza.jpg",
+    "author": "Willis Lam",
+    "license": "CC BY-SA 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Whole_Foods_Kitchen_Margherita_Pizza_1_(15411931201).jpg"
+  },
+  "taco": {
+    "file": "taco.jpg",
+    "author": "Eden Aviv",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:New_Mexican_food.jpg"
+  },
+  "beans": {
+    "file": "beans.jpg",
+    "author": "Carstor",
+    "license": "CC BY-SA 2.5",
+    "source": "https://commons.wikimedia.org/wiki/File:Bowl_of_chili.jpg"
+  },
+  "potato": {
+    "file": "potato.jpg",
+    "author": "HaJunkiyada",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Liat_Portal_for_Foodie_Disorder_-_Chicken_hearts_roasted_with_potatoes_and_onions.jpg"
+  },
+  "vegetables": {
+    "file": "vegetables.jpg",
+    "author": "HaJunkiyada",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Liat_Portal_for_Foodie_Disorder_-_Home_Cooked_Chicken_and_Roasted_Vegetables.jpg"
+  },
+  "smoothie": {
+    "file": "smoothie.jpg",
+    "author": "Shixart1985",
+    "license": "CC BY 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Fresh_fruit_smoothie_being_poured_into_a_glass.jpg"
+  },
+  "dessert": {
+    "file": "dessert.jpg",
+    "author": "Daria YakovlevaMinor edits made by Subsidiary account",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Piece_of_chocolate_cake_on_a_white_plate_decorated_with_chocolate_sauce.jpg"
+  },
+  "fruit": {
+    "file": "fruit.jpg",
+    "author": "Shixart1985",
+    "license": "CC BY 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Fresh_apple_being_sliced_on_a_wooden_cutting_board_with_colorful_fruits_in_the_background_during_daylight_in_a_kitchen.jpg"
+  },
+  "nuts": {
+    "file": "nuts.jpg",
+    "author": "Trostle",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Nuts-484262.jpg"
+  },
+  "hummus": {
+    "file": "hummus.jpg",
+    "author": "Beyrouthhh at English Wikipedia",
+    "license": "CC BY 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Lebanese_style_hummus.jpg"
+  },
+  "cheese": {
+    "file": "cheese.jpg",
+    "author": "Ivan Radic",
+    "license": "CC BY 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Buffet_table_with_smoked_meat_and_cheese_plate,_appetizers_and_other_finger_food_-_Flickr_-_Ivan_Radic.jpg"
+  },
+  "wrap": {
+    "file": "wrap.jpg",
+    "author": "JIP",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Burrito_in_aluminium_foil_wrap.jpg"
+  },
+  "stirfry": {
+    "file": "stirfry.jpg",
+    "author": "Andy Li",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Spicy_King_Prawn_Stir-Fry_Udon_-_Aberdeen_Seafood,_Brighton_2026-07-19.jpg"
+  }
+}
