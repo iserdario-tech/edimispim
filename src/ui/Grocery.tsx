@@ -5,6 +5,7 @@ import { planPurchase, type BuyLine, type Pantry } from "../food/packaging.js";
 import { PRICES_SOURCE, PRICES_DATE, costOf } from "../food/prices.js";
 import { hintFor } from "../food/ingredients.js";
 import { isLiquid, mlOf } from "../food/nutrients.js";
+import { photoFor, photoUrl } from "../food/photos.js";
 import { tap } from "./haptics.js";
 import { IconThumb } from "./Icons.js";
 import { readLS, writeLS, SHOP_KEY } from "./localStore.js";
@@ -172,7 +173,7 @@ export function GroceryBlock({ grocery, pantry, onPantry, dayLabels }: {
         ))}
       </div>
 
-      <div className="chips" style={{ marginTop: 8 }}>
+      <div className="chips mt-2">
         <button className={scope === "week" ? "chip on" : "chip"} onClick={() => setScope("week")}>Вся неделя</button>
         {grocery.byDay.map((d, i) => (
           <button key={d.day} className={scope === i ? "chip on" : "chip"} onClick={() => setScope(i)}>
@@ -181,7 +182,7 @@ export function GroceryBlock({ grocery, pantry, onPantry, dayLabels }: {
         ))}
       </div>
 
-      <p className="small muted" style={{ marginTop: 12 }}>
+      <p className="small muted mt-3">
         Отмечай галочкой, что взял. Тап по названию открывает товар в «{shop.name}».
       </p>
 
@@ -247,8 +248,13 @@ export function MealIngredients({ meal, rating, onRate }: {
   const steps = meal.recipe.steps ?? [];
   if (!ings.length && !steps.length) return <div className="meal-ings small muted">Рецепт не указан.</div>;
 
+  const photo = photoFor(meal.recipe);
   return (
     <div className="meal-ings">
+      {/* Широкое фото сверху: карточка блюда — единственное место, где человек решает,
+          будет он это готовить. Снимок подобран по типу блюда, автор указан в разделе «Я». */}
+      <img className="dish-photo" src={photoUrl(photo)} alt={meal.recipe.name}
+        loading="lazy" decoding="async" />
       {/* Оценка живёт здесь, а не в списке: решение «нравится» человек принимает,
           когда видит состав и шаги, а не когда просматривает названия. */}
       {onRate && (
@@ -288,7 +294,7 @@ export function MealIngredients({ meal, rating, onRate }: {
 
       {/* про происхождение говорим всегда: тишина у «домашних» рецептов читалась как
           «этот тоже откуда-то взят», а половина набора написана для приложения */}
-      <p className="small muted" style={{ marginTop: 10 }}>
+      <p className="small muted mt-3">
         {meal.recipe.source ? (
           <>
             Рецепт с <a href={meal.recipe.source} target="_blank" rel="noopener noreferrer">источника</a> —
@@ -301,7 +307,7 @@ export function MealIngredients({ meal, rating, onRate }: {
 
       {steps.length > 0 && (
         <>
-          <div className="small muted" style={{ marginTop: 12 }}>
+          <div className="small muted mt-3">
             Как готовить{meal.recipe.time_min ? ` · ${meal.recipe.time_min} мин` : ""}
           </div>
           <ol className="recipe-steps small">

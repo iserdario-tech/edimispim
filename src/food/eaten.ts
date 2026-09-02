@@ -34,6 +34,8 @@ export function toggleMark(cur: DayEaten | undefined, slot: Slot, mark: MealMark
 export interface EatenTotals {
   kcal: number;
   protein: number;
+  /** Клетчатка тоже по факту: три кольца дня должны говорить об одном и том же. */
+  fiber: number;
   /** Сколько приёмов отмечено «съел» — не считая заменённых своим. */
   ate: number;
   marked: number;
@@ -41,7 +43,7 @@ export interface EatenTotals {
 
 /** Сколько съедено по плану. Заменённое своим не считаем: что там было, приложение не знает. */
 export function eatenTotals(day: Day, eaten: DayEaten | undefined): EatenTotals {
-  let kcal = 0, protein = 0, ate = 0, marked = 0;
+  let kcal = 0, protein = 0, fiber = 0, ate = 0, marked = 0;
   for (const m of day.meals) {
     const mark = eaten?.marks[m.slot];
     if (!mark) continue;
@@ -50,8 +52,9 @@ export function eatenTotals(day: Day, eaten: DayEaten | undefined): EatenTotals 
     ate++;
     kcal += m.recipe.kcal * m.servings;
     protein += m.recipe.protein_g * m.servings;
+    fiber += m.recipe.fiber_g * m.servings;
   }
-  return { kcal: Math.round(kcal), protein: Math.round(protein), ate, marked };
+  return { kcal: Math.round(kcal), protein: Math.round(protein), fiber: Math.round(fiber), ate, marked };
 }
 
 /** Доля дня, пройденная по плану. Нужна порогу «день засчитан» и разбору плато. */

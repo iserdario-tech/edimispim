@@ -13,10 +13,13 @@ import { mealRows, mergeTimeline } from "./mealRows.js";
 import { tap } from "./haptics.js";
 import { explain } from "../explain.js";
 import { toDayRecords } from "./dayRecords.js";
-import { WeekFoodBars } from "./Charts.js";
+import { WeekFoodBars, DayRings } from "./Charts.js";
 import { followedPlan } from "../food/eaten.js";
 import { localDateISO, localMinutes } from "../today-date.js";
 import { useNow } from "./useNow.js";
+import { Sheet } from "./Sheet.js";
+import { MealIngredients } from "./Grocery.js";
+import type { Meal } from "../food/types.js";
 
 const RECIPES = recipesJson as Recipe[];
 
@@ -58,6 +61,7 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
   const nowMin = localMinutes(now);
   const [draft] = useState(() => loadDayDraft(today));
   const [mode, setMode] = useState<DayMode>(draft?.mode ?? "normal");
+  const [openRecipe, setOpenRecipe] = useState<Meal | null>(null);
   const [crunchEndHM, setCrunchEndHM] = useState(draft?.crunchEndHM ?? "03:00");
   const [toggles, setToggles] = useState<DayToggles>(draft?.toggles ?? {});
   const loggedToday = history.find((h) => h.date === today);
@@ -213,7 +217,7 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
         onLog({ date: today, wokeHM, quality, ...(bedHM ? { bedHM } : {}), ...(toggles.hadAlcohol ? { hadAlcohol: true } : {}) });
         setSavedMsg("Сохранено ✓");
       }}>{loggedToday ? "Обновить отметку" : "Записать ночь"}</button>
-      {savedMsg && <span className="small muted" style={{ marginLeft: 8 }}>{savedMsg}</span>}
+      {savedMsg && <span className="small muted ml-2">{savedMsg}</span>}
     </>
   );
 
@@ -259,7 +263,7 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
         <div className="day-totals small">
           <b>Сегодня читмил.</b> Ешь что хочется — сегодня приложение калории не считает
           и меню не показывает. Завтра просто возвращаемся к плану.
-          <p className="small muted" style={{ margin: "6px 0 0" }}>
+          <p className="small muted mt-2">
             Отрабатывать этот день голоданием не надо: так делают хуже, а не лучше.
             Недельный дефицит станет меньше — это всё, что произойдёт. День запланирован
             тобой, поэтому в статистике он не считается срывом.
@@ -270,31 +274,59 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
            издевательством — человеку нужна причина и способ починить. */
         <div className="day-totals small">
           <b>Меню на сегодня не собралось.</b>
-          <p className="small note-warn" style={{ marginTop: 6 }}>{foodDay.diagnosis.messageRU}</p>
+          <p className="small note-warn mt-2">{foodDay.diagnosis.messageRU}</p>
           {onSetupFood && (
             <button className="linkbtn" onClick={onSetupFood}>Поправить ограничения →</button>
           )}
         </div>
       ) : foodDay ? (
         <div className="day-totals small">
-          <b>День целиком:</b> {foodDay.day.totals.kcal} ккал · белок {foodDay.day.totals.protein} г ·
-          клетчатка {foodDay.day.totals.fiber} г
-          {foodDay.day.simplified && <span className="tag"> · упрощён после плохой ночи</span>}
+          {/*
+            * Сводка дня — крупной цифрой и кольцами, а не строкой мелкого серого текста.
+            * Раньше главное число дня выглядело так же, как пояснение под ним: экран
+            * приходилось читать, чтобы понять, как идут дела. Кольцо показывает долю от
+            * нормы без чтения вообще.
+            */}
+          <div className="day-summary-card">
+            <div className="day-figure">
+              <b>{fact && fact.marked > 0 ? fact.kcal : foodDay.day.totals.kcal}</b>
+              <span>
+                {fact && fact.marked > 0
+                  ? `из ${foodDay.day.totals.kcal} ккал съедено`
+                  : `ккал на сегодня · белок ${foodDay.day.totals.protein} г`}
+              </span>
+            </div>
+            {/* Все три кольца — про съеденное. Раньше два показывали факт, а клетчатка план,
+                и на нетронутом дне экран выглядел сломанным: два пустых кольца рядом с полным. */}
+            <DayRings rings={[
+              { label: "ккал", value: fact?.kcal ?? 0,
+                goal: foodDay.day.totals.kcal, color: "var(--accent)" },
+              { label: "белок", value: fact?.protein ?? 0,
+                goal: foodDay.safe.proteinGTarget, color: "var(--ok)" },
+              { label: "клетч", value: fact?.fiber ?? 0, goal: 30, color: "var(--warn)" },
+            ]} />
+            {/* Пустые кольца без объяснения читаются как «приложение сломалось» */}
+            {!fact?.marked && (
+              <div className="small muted rings-hint">
+                Кольца заполняются, когда отмечаешь приёмы: жми «съел» в ленте дня.
+              </div>
+            )}
+          </div>
+          {foodDay.day.simplified && <span className="tag">упрощён после плохой ночи</span>}
           {foodDay.ramp.active && (
-            <p className="small muted" style={{ margin: "6px 0 0" }}>
+            <p className="small muted mt-2">
               Вход в режим: день {foodDay.ramp.day} из {foodDay.ramp.total}. Сегодня норма выше
               конечной ({foodDay.ramp.kcalGoal} ккал) — спускаемся понемногу.
             </p>
           )}
           {fact && fact.marked > 0 && (
-            <p className="small" style={{ margin: "6px 0 0" }}>
-              Съедено: <b>{fact.kcal} из {foodDay.day.totals.kcal} ккал</b> · белок {fact.protein} г ·
-              отмечено {fact.marked} из {foodDay.day.meals.length}
-              {fact.marked > fact.ate && <span className="muted"> (часть — своей едой)</span>}
+            <p className="small muted mt-2">
+              Отмечено {fact.marked} из {foodDay.day.meals.length} приёмов · белок {fact.protein} г
+              {fact.marked > fact.ate && " (часть — своей едой)"}
             </p>
           )}
           {foodDay.diagnosis.messageRU && (
-            <p className="small note-warn" style={{ marginTop: 8 }}>{foodDay.diagnosis.messageRU}</p>
+            <p className="small note-warn mt-2">{foodDay.diagnosis.messageRU}</p>
           )}
         </div>
       ) : (
@@ -310,7 +342,7 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
         <section className="card">
           <h3 className="card-h">Неделя по еде</h3>
           <WeekFoodBars days={foodWeek} />
-          <p className="small muted" style={{ margin: "6px 0 0" }}>
+          <p className="small muted mt-2">
             Отмечено дней: {weekMarked} из 7. Высота — сколько приёмов дня съедено по плану;
             пустая рамка значит, что день не отмечался.
           </p>
@@ -335,9 +367,27 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
           <li key={i} className={"row" + (r.past ? " past" : "") + (r.kind === "food" ? " food" : "") + (i === view.nextIdx ? " now" : "")}>
             <div className="row-time">{r.time}{r.endTime ? `–${r.endTime}` : ""}</div>
             <div className="row-body">
-              <div className="row-title">{r.icon} {r.title}</div>
+              {/* Фотография блюда. Строка еды без картинки читается как строка таблицы —
+                  а это единственное место, где человек решает, будет он это готовить. */}
+              {r.photo && (
+                <img className="row-photo" src={r.photo} alt="" loading="lazy" decoding="async" />
+              )}
+              {r.kicker && <div className="row-kicker">{r.icon} {r.kicker}</div>}
+              {/* У еды название — кнопка: рецепт открывается здесь же, а не через «Еду» */}
+              {r.kind === "food" && r.meal ? (
+                <button className="row-title row-title-btn" onClick={() => setOpenRecipe(r.meal!)}>
+                  {r.title}<span className="row-go" aria-hidden="true">›</span>
+                </button>
+              ) : (
+                <div className="row-title">{`${r.icon} ${r.title}`}</div>
+              )}
               <div className="row-detail">{r.detail}</div>
-              <div className="row-why muted small">{r.why}</div>
+              {/* «Почему» — под спойлером: три уровня текста в каждой строке превращали
+                  ленту в документ. Причина никуда не делась, она в одном нажатии. */}
+              <details className="row-why-box">
+                <summary className="small muted">почему так</summary>
+                <div className="row-why muted small">{r.why}</div>
+              </details>
               {/* Факт рядом с планом. Пропущенный приём — это данные, а не провал,
                   поэтому ничего не осуждаем и ничего не подсвечиваем красным. */}
               {r.kind === "food" && r.slot && onMarkMeal && (
@@ -353,6 +403,12 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
           </li>
         ))}
       </ol>
+
+      {openRecipe && (
+        <Sheet title={openRecipe.recipe.name} onClose={() => setOpenRecipe(null)}>
+          <MealIngredients meal={openRecipe} />
+        </Sheet>
+      )}
 
       {/* Настройки дня нужны не каждый день — по умолчанию свёрнуты */}
       <details className="card">

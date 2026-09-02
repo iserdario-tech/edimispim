@@ -265,7 +265,7 @@ export function App() {
   return (
     <>
       {saveFailed && (
-        <div className="wrap" style={{ paddingBottom: 0 }}>
+        <div className="wrap wrap-flush">
           <p className="note-warn small">
             Не удалось сохранить данные на этом устройстве: закончилось место или браузер
             работает в приватном режиме. Всё, что видно на экране, пропадёт при перезапуске —
@@ -274,7 +274,7 @@ export function App() {
         </div>
       )}
       {migrationNote && tab === "today" && (
-        <div className="wrap" style={{ paddingBottom: 0 }}>
+        <div className="wrap wrap-flush">
           <p className="muted small">📦 {migrationNote}</p>
         </div>
       )}
