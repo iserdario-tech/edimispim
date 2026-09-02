@@ -1,7 +1,9 @@
 import React, { useMemo, useState } from "react";
 import type { Recipe, MealType } from "../food/types.js";
 import { MealIngredients } from "./Grocery.js";
+import { Sheet } from "./Sheet.js";
 import { IconChevron } from "./Icons.js";
+import { photoFor, photoUrl } from "../food/photos.js";
 import treatsJson from "../food/data/treats.json";
 
 /**
@@ -87,7 +89,7 @@ export function Catalog({ recipes, ratings, onRate }: {
   return (
     <section className="card wide">
       <div className="menu-head">
-        <h3 className="card-h" style={{ margin: 0 }}>Все блюда</h3>
+        <h3 className="card-h m-0">Все блюда</h3>
         <button className="linkbtn small" onClick={() => setOpen(!open)}>
           {open ? "свернуть" : `${recipes.length} в наборе`}
         </button>
@@ -113,7 +115,7 @@ export function Catalog({ recipes, ratings, onRate }: {
             ))}
           </div>
 
-          <p className="small muted" style={{ marginTop: 0 }}>
+          <p className="small muted mt-0">
             {type === "treats"
               ? "Когда готовить нет сил: покупное сладкое с честной порцией. Одна штука вписывается в норму дня, пачка — нет."
               : found.length === 0
@@ -140,6 +142,8 @@ export function Catalog({ recipes, ratings, onRate }: {
               const rating = ratings?.[r.id];
               return (
                 <li key={r.id} className="meal-row catalog-row">
+                  <img className="meal-photo" src={photoUrl(photoFor(r))} alt=""
+                    loading="lazy" decoding="async" />
                   <span className="meal-main">
                     <button className="meal-name" aria-expanded={openDish === r.id}
                       onClick={() => setOpenDish(openDish === r.id ? null : r.id)}>
@@ -156,8 +160,14 @@ export function Catalog({ recipes, ratings, onRate }: {
                     </span>
                   </span>
                   {openDish === r.id && (
-                    <MealIngredients meal={{ recipe: r, servings: 1, timeMin: 0, slot: r.meal_type }}
-                      rating={rating} onRate={onRate} />
+                    <Sheet title={r.name} onClose={() => setOpenDish(null)}>
+                      <div className="small muted sheet-meta">
+                        {Math.round(r.kcal)} ккал · белок {Math.round(r.protein_g)} г
+                        {r.time_min ? ` · ${r.time_min} мин` : ""}
+                      </div>
+                      <MealIngredients meal={{ recipe: r, servings: 1, timeMin: 0, slot: r.meal_type }}
+                        rating={rating} onRate={onRate} />
+                    </Sheet>
                   )}
                 </li>
               );

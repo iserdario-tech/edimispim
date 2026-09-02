@@ -248,7 +248,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
           Громко храплю или кто-то замечал остановки дыхания во сне
         </label>
         {apneaGate && (
-          <div className="reveal" style={{ paddingLeft: 8 }}>
+          <div className="reveal reveal-indent">
             {([
               ["tiredDaytime", "Днём разбитость даже после долгого сна"],
               ["observedApnea", "Кто-то замечал именно остановки дыхания"],
@@ -270,7 +270,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
           Просыпаюсь ночью поесть или основная еда уходит на вечер
         </label>
         {nesGate && (
-          <div className="reveal" style={{ paddingLeft: 8 }}>
+          <div className="reveal reveal-indent">
             {([
               ["morningAnorexia", "Утром есть не хочется"],
               ["urgeToEatBeforeSleep", "Между ужином и сном тянет есть"],
@@ -296,7 +296,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
         </p>
       )}
 
-      <div style={{ display: "flex", gap: 12, marginTop: 18, flexWrap: "wrap" }}>
+      <div className="btn-row">
         <button className="chip on" disabled={problems.length > 0} onClick={() => onDone({
           profile: { sex, age, heightCm, weightKg, goalWeightKg, activity },
           constraints: {

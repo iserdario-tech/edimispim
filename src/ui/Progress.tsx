@@ -111,10 +111,10 @@ export function Progress({ profile, history, food, weights, eaten, cheatDays, on
 
       <section className="card accent">
         <h3 className="card-h">Что дальше</h3>
-        <p style={{ margin: "0 0 4px" }}>{step.titleRU}</p>
-        <p className="small muted" style={{ margin: 0 }}>{step.whyRU}</p>
+        <p className="mb-1">{step.titleRU}</p>
+        <p className="small muted m-0">{step.whyRU}</p>
         {step.need > 1 && step.done < step.need && (
-          <p className="small muted" style={{ marginTop: 6 }}>Уже есть: {step.done} из {step.need}.</p>
+          <p className="small muted mt-2">Уже есть: {step.done} из {step.need}.</p>
         )}
       </section>
 
@@ -192,12 +192,12 @@ export function Progress({ profile, history, food, weights, eaten, cheatDays, on
         {/* Приверженность еде считается по отметкам «съел», а не по отметкам сна:
             раньше их просто не существовало, и про еду приложение ничего не знало. */}
         {foodWeek.marked > 0 && (
-          <p className="small" style={{ marginTop: 8 }}>
+          <p className="small mt-2">
             По плану еды прошло <b>{foodWeek.followed} из {foodWeek.marked}</b> отмеченных дней.
           </p>
         )}
         {foodWeek.cheats > 0 && (
-          <p className="small muted" style={{ marginTop: 4 }}>
+          <p className="small muted mt-2">
             Читмилов за неделю: {foodWeek.cheats}. Они запланированы тобой и в счёт выше не входят.
           </p>
         )}
@@ -207,7 +207,7 @@ export function Progress({ profile, history, food, weights, eaten, cheatDays, on
       <section className="card">
         <h3 className="card-h">Вес</h3>
         {delta != null && (
-          <p className="small" style={{ marginTop: 0 }}>
+          <p className="small mt-0">
             С первого замера: <b>{delta > 0 ? "−" : "+"}{Math.abs(delta).toFixed(1)} кг</b>
           </p>
         )}
@@ -235,7 +235,7 @@ export function Progress({ profile, history, food, weights, eaten, cheatDays, on
             график до второго замера не появляется — и человек не понимал, сохранилось ли
             вообще. Теперь последний замер виден всегда. */}
         {weightSeries.length > 0 && (
-          <p className="small" style={{ marginTop: 6 }}>
+          <p className="small mt-2">
             Последний замер: <b>{weightSeries[weightSeries.length - 1]!.kg} кг</b>
             {weightSeries[weightSeries.length - 1]!.date === today
               ? " — сегодня"

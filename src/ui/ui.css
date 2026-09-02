@@ -409,12 +409,16 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
    уезжал под цифры и столбец шевронов рассыпался. Цифрам достаточно `min-width: 0`:
    тогда они ужимаются и переносят свой текст по словам, а шеврон остаётся на месте. */
 .day-head {
-  display: flex; width: 100%; align-items: center; gap: var(--sp-2); justify-content: space-between;
-  min-height: 52px; background: none; border: 0; font: inherit; cursor: pointer; text-align: left;
+  display: grid; width: 100%; grid-template-columns: minmax(0, 1fr) auto; align-items: center;
+  gap: 0 var(--sp-2); min-height: 52px; background: none; border: 0; font: inherit;
+  cursor: pointer; text-align: left;
 }
-.day-head b { flex: 0 0 auto; }
-.day-head .day-nums { flex: 1 1 auto; }
-.day-head .chev { flex: 0 0 auto; }
+/* Название и цифры — одно под другим. В одну строку они помещались только на широком
+   экране: на iPhone «1668 ккал · белок 116 г» переносилось прямо посреди строки и
+   шапка дня становилась выше, чем сами блюда под ней. */
+.day-head b { grid-column: 1; }
+.day-head .day-nums { grid-column: 1; }
+.day-head .chev { grid-column: 2; grid-row: 1 / span 2; }
 /* Шевроны и кнопки замены — единый набор иконок, а не символы из шрифта:
    ▾ и ↻ выглядели по-разному на iOS и Android и не совпадали по толщине с текстом */
 .day-head .chev, .card-h .chev { color: var(--fg-3); display: inline-flex; align-items: center; }
@@ -526,7 +530,10 @@ details[open] > summary.card-h::after { transform: rotate(-135deg) translate(-3p
   border-radius: var(--r-control); background: var(--surface-2);
 }
 .meal-ings ul { list-style: none; padding: 0; margin: var(--sp-1) 0 0; display: grid; gap: var(--sp-1); }
-.meal-ings li { display: flex; justify-content: space-between; gap: var(--sp-2); }
+/* Количество выравниваем по центру строки: у ссылки на продукт тап-зона 44 px, и при
+   выравнивании по верху «63 г» повисало отдельной строкой над названием. */
+.meal-ings li { display: flex; justify-content: space-between; gap: var(--sp-2); align-items: center; }
+.meal-ings li + li { border-top: var(--hairline) solid var(--separator); }
 
 /* Раздел «Вопрос» */
 .chat-screen { display: flex; flex-direction: column; min-height: 100dvh; }
@@ -878,3 +885,127 @@ input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.08); }
 .chips-grid .chip { justify-content: center; padding: 0 var(--sp-2); text-align: center; }
 /* Отдельные решения дня занимают строку целиком: они не часть набора галочек. */
 .chip.wide { display: flex; width: 100%; justify-content: center; margin-top: var(--sp-2); }
+
+/* ─── Кольца дня ───────────────────────────────────────────────────── */
+.day-summary-card {
+  display: flex; align-items: center; gap: var(--sp-4);
+  padding: var(--sp-4); border-radius: var(--r-card); background: var(--surface);
+  box-shadow: var(--shadow-1); margin-bottom: var(--sp-3);
+}
+.day-figure { flex: 1; min-width: 0; }
+/* Главная цифра дня — крупная. Раньше она была тем же мелким серым текстом, что и
+   пояснение рядом, и терялась среди слов. */
+.day-figure b {
+  display: block; font-size: var(--t-large-title); line-height: 1.05;
+  font-weight: 700; letter-spacing: -1px; font-variant-numeric: tabular-nums;
+}
+.day-figure span { display: block; margin-top: 2px; color: var(--fg-2); font-size: var(--t-footnote); }
+.rings { display: flex; gap: var(--sp-2); flex: 0 0 auto; }
+.ring { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.ring svg { width: 52px; height: 52px; display: block; }
+.ring-track { fill: none; stroke: var(--surface-2); }
+.ring-fill { fill: none; transition: stroke-dasharray 420ms var(--spring); }
+.ring-label { font-size: var(--t-caption2); color: var(--fg-2); }
+
+/* ─── Фотография блюда в ленте дня ─────────────────────────────────── */
+.row.food .row-body {
+  display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 2px var(--sp-3);
+  align-items: start;
+}
+.row-photo {
+  grid-row: 1 / span 3; width: 64px; height: 64px; object-fit: cover;
+  border-radius: 14px; background: var(--surface-2);
+  /* пока картинка грузится, на её месте ровный прямоугольник, а не прыгающая пустота */
+}
+.row.food .row-kicker, .row.food .row-title, .row.food .row-detail,
+.row.food .row-why-box, .row.food .eat-row { grid-column: 2; }
+.row-photo { grid-row: 1 / span 4; }
+/* Подпись приёма: мелкая и акцентная, как ярлык над заголовком */
+.row-kicker {
+  font-size: var(--t-caption2); font-weight: 600; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--accent-dim, var(--accent));
+}
+/* «Почему» свёрнуто: строка ленты — это блюдо и цифры, а не абзац текста */
+.row-why-box summary {
+  list-style: none; cursor: pointer; padding: 2px 0; min-height: 28px;
+  display: inline-flex; align-items: center;
+}
+.row-why-box summary::-webkit-details-marker { display: none; }
+.row-why-box summary::after { content: " ⌄"; color: var(--fg-3); }
+.row-why-box[open] summary::after { content: " ⌃"; }
+.row-why-box .row-why { padding-bottom: var(--sp-1); }
+
+/* ─── Фотографии в меню, каталоге и карточке блюда ─────────────────── */
+.meal-photo {
+  width: 44px; height: 44px; object-fit: cover; border-radius: 10px;
+  background: var(--surface-2); flex: 0 0 auto;
+}
+/* Строка блюда в меню недели: время + фото + название + замена.
+   Название набрано мельче заголовка карточки — в колонке 200 px крупный шрифт
+   ломал «Запечённое яблоко с корицей и орехами» на три строки, и семь дней
+   переставали помещаться на экран. */
+.day-meals li { grid-template-columns: minmax(2.9rem, auto) 40px minmax(0,1fr) auto; gap: var(--sp-1) var(--sp-2); }
+.day-meals .meal-main > .row-title, .day-meals .meal-main > strong,
+.day-meals .meal-name { font-size: var(--t-subhead); font-weight: 600; line-height: 1.3; }
+.day-meals .meal-photo { width: 40px; height: 40px; }
+/* в каталоге колонки времени нет — там фото идёт первым */
+.catalog-row { display: grid; grid-template-columns: 44px minmax(0,1fr); gap: var(--sp-3); align-items: start; }
+.catalog-row .meal-ings { grid-column: 1 / -1; }
+.dish-photo {
+  display: block; width: 100%; height: 160px; object-fit: cover;
+  border-radius: var(--r-control); background: var(--surface-2);
+  margin-bottom: var(--sp-3);
+}
+.photo-credits { list-style: none; padding: 0; margin: var(--sp-2) 0 0; display: grid; gap: 2px; }
+.photo-credits li { font-size: var(--t-caption1); }
+
+/* Шторка снизу */
+.sheet-back {
+  position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,.5);
+  display: flex; align-items: flex-end; justify-content: center;
+  animation: fade-in .18s ease both;
+}
+.sheet {
+  width: min(560px, 100%); max-height: 86vh; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  /* непрозрачный фон: у --surface-1 есть альфа, и сквозь шапку шторки просвечивал список */
+  background: var(--bg); color: var(--fg-1);
+  border-radius: var(--r-card) var(--r-card) 0 0;
+  padding: var(--sp-2) var(--sp-4) calc(var(--sp-5) + env(safe-area-inset-bottom));
+  box-shadow: 0 -8px 40px rgba(0,0,0,.35);
+  animation: sheet-up .26s var(--spring) both;
+}
+.sheet-grip {
+  width: 36px; height: 5px; border-radius: 3px; background: var(--fg-3); opacity: .5;
+  margin: 0 auto var(--sp-3);
+}
+.sheet-head { display: flex; align-items: flex-start; gap: var(--sp-3); margin-bottom: var(--sp-2); }
+.sheet-head strong { font-size: var(--t-headline); line-height: 1.25; flex: 1 1 auto; }
+.sheet-close {
+  flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; border: 0;
+  background: var(--surface-2); color: var(--fg-2); font-size: var(--t-subhead); cursor: pointer;
+}
+.sheet-body .meal-ings { margin-top: 0; }
+@keyframes sheet-up { from { transform: translateY(18px); opacity: .6; } to { transform: none; opacity: 1; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .sheet, .sheet-back { animation: none; }
+}
+.sheet-meta { margin-bottom: var(--sp-3); }
+/* Название блюда в ленте суток — кнопка к рецепту, а не просто текст */
+.row-title-btn {
+  background: none; border: 0; padding: 0; font: inherit; color: inherit; text-align: left;
+  display: flex; align-items: center; gap: var(--sp-1); cursor: pointer; width: 100%;
+}
+.row-go { color: var(--fg-3); font-size: var(--t-body); line-height: 1; }
+
+/* Сетка отступов. Раньше поля задавались числами прямо в разметке — 6, 8, 10, 12, 18 px
+   вперемешку, — и одинаковые на вид блоки стояли на разной высоте. Шаг один: 4/8/12/16. */
+.m-0 { margin: 0; }
+.mt-0 { margin-top: 0; }
+.mt-2 { margin-top: var(--sp-2); }
+.mt-3 { margin-top: var(--sp-3); }
+.btn-row { display: flex; gap: var(--sp-3); margin-top: var(--sp-4); flex-wrap: wrap; }
+.ml-2 { margin-left: var(--sp-2); }
+.mb-1 { margin: 0 0 var(--sp-1); }
+.wrap-flush { padding-bottom: 0; }
+.reveal-indent { padding-left: var(--sp-2); }

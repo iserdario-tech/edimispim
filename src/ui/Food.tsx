@@ -15,7 +15,9 @@ import { Catalog } from "./Catalog.js";
 import { readLS, writeLS, PANTRY_KEY } from "./localStore.js";
 import type { Pantry } from "../food/packaging.js";
 import { IconChevron, IconSwap } from "./Icons.js";
+import { photoFor, photoUrl } from "../food/photos.js";
 import { tap } from "./haptics.js";
+import { Sheet } from "./Sheet.js";
 
 const RECIPES = recipesJson as Recipe[];
 /**
@@ -181,7 +183,7 @@ export function Food({ profile, food, ratings, onRate, swaps, onSwap, onSetupFoo
 
       <section className="card wide" key={rev}>
         <div className="menu-head">
-          <h3 className="card-h" style={{ margin: 0 }}>Меню на 7 дней</h3>
+          <h3 className="card-h m-0">Меню на 7 дней</h3>
           <button className="linkbtn small" onClick={toggleAll}>
             {allOpen ? "свернуть все" : "развернуть все"}
           </button>
@@ -232,6 +234,9 @@ export function Food({ profile, food, ratings, onRate, swaps, onSwap, onSetupFoo
                   return (
                     <li key={k} className="meal-row">
                       <span className="meal-time">{fmtHM(m.timeMin)}</span>
+                      {/* миниатюра блюда: без неё меню читается как расписание, а не как еда */}
+                      <img className="meal-photo" src={photoUrl(photoFor(m.recipe))} alt=""
+                        loading="lazy" decoding="async" />
                       <span className="meal-main">
                         <button className="meal-name" aria-expanded={openMeal === key}
                           onClick={() => setOpenMeal(openMeal === key ? null : key)}>
@@ -269,8 +274,16 @@ export function Food({ profile, food, ratings, onRate, swaps, onSwap, onSetupFoo
                           </button>
                         </div>
                       )}
+                      {/* детали — в шторке: раскрытие на месте раздвигало неделю на пол-экрана */}
                       {openMeal === key && (
-                        <MealIngredients meal={m} rating={ratings?.[m.recipe.id]} onRate={onRate} />
+                        <Sheet title={m.recipe.name} onClose={() => setOpenMeal(null)}>
+                          <div className="small muted sheet-meta">
+                            {fmtHM(m.timeMin)} · {Math.round(m.recipe.kcal * m.servings)} ккал ·
+                            белок {Math.round(m.recipe.protein_g * m.servings)} г
+                            {m.recipe.time_min ? ` · ${m.recipe.time_min} мин` : ""}
+                          </div>
+                          <MealIngredients meal={m} rating={ratings?.[m.recipe.id]} onRate={onRate} />
+                        </Sheet>
                       )}
                     </li>
                   );
