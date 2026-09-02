@@ -91,3 +91,13 @@ describe("читмил-день", () => {
     expect(toDayRecords(history, [], eaten).filter(d => d.food?.followed === false)).toHaveLength(1);
   });
 });
+
+describe("клетчатка в фактах дня", () => {
+  it("считается только по отмеченному «съел» — своя еда не в счёт", () => {
+    let e: DayEaten = toggleMark(undefined, "breakfast", "ate", 4);
+    e = toggleMark(e, "lunch", "own", 4);
+    // каждое блюдо в фикстуре несёт 3 г клетчатки; засчитан один завтрак
+    expect(eatenTotals(day, e).fiber).toBe(3);
+    expect(eatenTotals(day, undefined).fiber).toBe(0);
+  });
+});
