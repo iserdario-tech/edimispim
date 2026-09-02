@@ -296,13 +296,21 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
                   : `ккал на сегодня · белок ${foodDay.day.totals.protein} г`}
               </span>
             </div>
+            {/* Все три кольца — про съеденное. Раньше два показывали факт, а клетчатка план,
+                и на нетронутом дне экран выглядел сломанным: два пустых кольца рядом с полным. */}
             <DayRings rings={[
-              { label: "ккал", value: fact && fact.marked > 0 ? fact.kcal : 0,
+              { label: "ккал", value: fact?.kcal ?? 0,
                 goal: foodDay.day.totals.kcal, color: "var(--accent)" },
-              { label: "белок", value: fact && fact.marked > 0 ? fact.protein : 0,
+              { label: "белок", value: fact?.protein ?? 0,
                 goal: foodDay.safe.proteinGTarget, color: "var(--ok)" },
-              { label: "клетч", value: foodDay.day.totals.fiber, goal: 30, color: "var(--warn)" },
+              { label: "клетч", value: fact?.fiber ?? 0, goal: 30, color: "var(--warn)" },
             ]} />
+            {/* Пустые кольца без объяснения читаются как «приложение сломалось» */}
+            {!fact?.marked && (
+              <div className="small muted rings-hint">
+                Кольца заполняются, когда отмечаешь приёмы: жми «съел» в ленте дня.
+              </div>
+            )}
           </div>
           {foodDay.day.simplified && <span className="tag">упрощён после плохой ночи</span>}
           {foodDay.ramp.active && (

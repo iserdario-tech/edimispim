@@ -888,7 +888,7 @@ input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.08); }
 
 /* ─── Кольца дня ───────────────────────────────────────────────────── */
 .day-summary-card {
-  display: flex; align-items: center; gap: var(--sp-4);
+  display: flex; align-items: center; gap: var(--sp-4); flex-wrap: wrap;
   padding: var(--sp-4); border-radius: var(--r-card); background: var(--surface);
   box-shadow: var(--shadow-1); margin-bottom: var(--sp-3);
 }
@@ -1009,3 +1009,5 @@ input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.08); }
 .mb-1 { margin: 0 0 var(--sp-1); }
 .wrap-flush { padding-bottom: 0; }
 .reveal-indent { padding-left: var(--sp-2); }
+/* карточка сводки — flex; подсказка встаёт под кольцами, а не рядом с ними */
+.rings-hint { flex: 1 0 100%; margin-top: var(--sp-2); }
