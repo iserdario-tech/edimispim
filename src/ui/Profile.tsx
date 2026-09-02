@@ -4,6 +4,7 @@ import type { ScreenerResult } from "../index.js";
 import type { FoodSettings } from "./storage.js";
 import type { Recipe } from "../food/types.js";
 import recipesJson from "../food/data/recipes.json";
+import { PHOTOS } from "../food/photos.js";
 
 const RECIPES = recipesJson as Recipe[];
 
@@ -61,7 +62,7 @@ export function Profile({ food, screener, ratings, onRate, onEditSleep, onEditFo
       {hidden.length > 0 && onRate && (
         <section className="card">
           <h3 className="card-h">Скрытые блюда</h3>
-          <p className="small muted" style={{ marginTop: 0 }}>
+          <p className="small muted mt-0">
             Эти блюда больше не появляются в меню. Промахнулся или передумал — верни обратно.
           </p>
           <ul className="fridge-list">
@@ -78,7 +79,7 @@ export function Profile({ food, screener, ratings, onRate, onEditSleep, onEditFo
 
       <section className="card">
         <h3 className="card-h">Оформление</h3>
-        <p className="small muted" style={{ marginTop: 0 }}>
+        <p className="small muted mt-0">
           По умолчанию — как в системе: днём светлое, ночью тёмное.
         </p>
         <div className="seg" role="group" aria-label="Тема оформления">
@@ -121,6 +122,30 @@ export function Profile({ food, screener, ratings, onRate, onEditSleep, onEditFo
           <p><b>Не спится больше 20 минут:</b> встань, побудь в тусклом свете, вернись, когда потянет в сон. Если так неделями — к врачу.</p>
         </div>
       </section>
+
+      {/*
+        * Авторы фотографий. Снимки взяты с Викисклада под свободными лицензиями, и часть
+        * из них требует указания авторства — это условие лицензии, а не украшение.
+        * Свёрнуто: список нужен один раз, а не каждый день.
+        */}
+      <details className="card">
+        <summary className="card-h">Фотографии блюд</summary>
+        <div className="tips-body small">
+          <p className="muted">
+            Точных снимков к рецептам не существует, поэтому фото подобрано по типу блюда:
+            курица-гриль выглядит как курица-гриль. Это настоящие фотографии настоящей еды,
+            снятые вот этими людьми, — не рисунки нейросети.
+          </p>
+          <ul className="photo-credits">
+            {Object.entries(PHOTOS).map(([kind, p]) => (
+              <li key={kind}>
+                <a href={p.source} target="_blank" rel="noopener noreferrer">{p.author}</a>
+                <span className="muted"> · {p.license}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </details>
 
       <section className="card">
         <h3 className="card-h">Честно о том, что это приложение может</h3>

@@ -1,5 +1,6 @@
 import type { Day, Meal, Slot } from "../food/types.js";
 import { fmtHM } from "../time.js";
+import { photoFor, photoUrl } from "../food/photos.js";
 
 /**
  * Приёмы пищи → строки той же ленты суток, что и окна сна.
@@ -19,6 +20,13 @@ export interface TimelineRow {
   kind: "sleep" | "food";
   /** У строки еды — какой это приём: по нему вешается отметка «съел». */
   slot?: Slot;
+  /** Фотография блюда. У строк сна её нет — там иконка. */
+  photo?: string;
+  /** «Завтрак», «Обед» — отдельной строкой над названием: в заголовке он съедал
+   *  половину места и ломал название блюда на три строки. */
+  kicker?: string;
+  /** Сам приём — чтобы «Сегодня» открывал рецепт, не отправляя человека в «Еду». */
+  meal?: Meal;
 }
 
 const ICON: Record<string, string> = {
@@ -57,13 +65,16 @@ export function mealRows(day: Day, bedMin: number, nowMin: number): TimelineRow[
     return {
       time: fmtHM(m.timeMin),
       icon: ICON[m.slot] ?? "🍴",
-      title: `${SLOT_RU[m.slot] ?? "Еда"}: ${m.recipe.name}`,
+      kicker: SLOT_RU[m.slot] ?? "Еда",
+      title: m.recipe.name,
       detail: `${kcal} ккал · белок ${protein} г${portion}${time}`,
       why: whyRU(m, bedMin),
       past: m.timeMin < nowMin,
       startMin: m.timeMin,
       kind: "food" as const,
       slot: m.slot,
+      photo: photoUrl(photoFor(m.recipe)),
+      meal: m,
     };
   });
 }

@@ -85,7 +85,7 @@ export function Fridge({ pantry, onPantry, pool }: {
   return (
     <section className="card">
       <div className="menu-head">
-        <h3 className="card-h" style={{ margin: 0 }}>Холодильник</h3>
+        <h3 className="card-h m-0">Холодильник</h3>
         <button className="linkbtn small" onClick={() => setOpen(!open)}>
           {open ? "свернуть" : items.length ? positionsRU(items.length) : "заполнить"}
         </button>
@@ -138,7 +138,7 @@ export function Fridge({ pantry, onPantry, pool }: {
 
           {cookable.length > 0 && (
             <>
-              <div className="small muted" style={{ marginTop: 12 }}>Можно приготовить из того, что есть</div>
+              <div className="small muted mt-3">Можно приготовить из того, что есть</div>
               <ul className="fridge-list">
                 {cookable.map(({ recipe, cov }) => (
                   <li key={recipe.id}>
