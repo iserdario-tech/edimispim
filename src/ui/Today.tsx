@@ -20,6 +20,8 @@ import { useNow } from "./useNow.js";
 import { Sheet } from "./Sheet.js";
 import { MealIngredients } from "./Grocery.js";
 import type { Meal } from "../food/types.js";
+import { isStandalone, isIOS, backupDue, daysSince, INSTALL_HINT_KEY } from "./dataSafety.js";
+import { readLS, writeLS } from "./localStore.js";
 
 const RECIPES = recipesJson as Recipe[];
 
@@ -36,7 +38,7 @@ function crunchStr(hm: string): string {
 const todayLabel = (d: Date): string =>
   d.toLocaleDateString("ru-RU", { day: "numeric", month: "long", weekday: "long" });
 
-export function Today({ profile, history, screener, onLog, food, weights, eaten, ratings, cheatDays, swaps, onMarkMeal, onCheatDay, onSetupFood }: {
+export function Today({ profile, history, screener, onLog, food, weights, eaten, ratings, cheatDays, swaps, onMarkMeal, onCheatDay, onSetupFood, backupAt, onBackup }: {
   profile: Profile;
   history: DayLog[];
   screener?: ScreenerResult | null;
@@ -54,6 +56,9 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
   onMarkMeal?: (date: string, slot: Slot, mark: MealMark, planned: number) => void;
   onCheatDay?: (date: string, on: boolean) => void;
   onSetupFood?: () => void;
+  /** Когда последний раз сохраняли копию — для напоминания. */
+  backupAt?: string | null;
+  onBackup?: () => void;
 }) {
   // «сейчас» обязано идти вперёд, пока экран открыт: у PWA он живёт часами без перезагрузки
   const now = useNow();
@@ -72,6 +77,10 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
   const [savedMsg, setSavedMsg] = useState("");
   const notifOn = typeof Notification !== "undefined" && Notification.permission === "granted";
   const isCheat = !!cheatDays?.includes(today);
+  // Safari стирает данные сайта после недели простоя, установленное приложение — нет
+  const [installHint, setInstallHint] = useState(() => isIOS() && !isStandalone() && !readLS(INSTALL_HINT_KEY, false));
+  const daysWithData = new Set([...history.map(h => h.date), ...Object.keys(eaten ?? {})]).size;
+  const showBackup = !!onBackup && backupDue(backupAt ?? null, today, daysWithData);
 
   useEffect(() => { saveDayDraft({ date: today, mode, crunchEndHM, toggles }); }, [today, mode, crunchEndHM, toggles]);
   // контекст дня — на Worker, иначе пуши шли бы по «обычному дню», а не по тому, что на экране
@@ -228,32 +237,70 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
         <span className="page-sub">{todayLabel(now)}</span>
       </h1>
       <div className="col-side">
-      {/* Главное сообщение дня — первое, что видно */}
-      <section className="why-today">
-        <div className="why-today-label">Почему сегодня так</div>
-        <p>{explanation.textRU}</p>
-      </section>
+      {/* Самое срочное — сохранность данных: без неё всё остальное можно потерять за неделю */}
+      {installHint && (
+        <section className="card install-hint">
+          <div className="install-head">
+            <b>Safari сотрёт данные, если не заходить неделю</b>
+            <button className="sheet-close" aria-label="Закрыть"
+              onClick={() => { writeLS(INSTALL_HINT_KEY, true); setInstallHint(false); }}>✕</button>
+          </div>
+          <p className="small">
+            Приложение, установленное на экран «Домой», так не делает. Три шага: кнопка
+            «Поделиться» внизу Safari → «На экран „Домой“» → «Добавить».
+          </p>
+          <p className="small muted">
+            У установленной версии своя память: сначала сохрани копию здесь («Я» → «Сохранить»),
+            потом загрузи её там.
+          </p>
+        </section>
+      )}
+      {showBackup && (
+        <p className="small muted backup-line">
+          {backupAt ? `Копия данных — ${daysSince(backupAt, today)} дн. назад` : "Копии данных ещё нет"}
+          {" · "}<button className="linkbtn small" onClick={onBackup}>Сохранить</button>
+        </p>
+      )}
 
-      <div className="status-line">
-        <span className="dot" style={{ background: view.readiness.color }} />
-        <b>{view.readiness.label}</b>
-        <span className="small muted">{view.readiness.whyRU}</span>
-        {streak > 0 && <span className="streak">🔥 {streak} подряд</span>}
-      </div>
+      {/* «Что сейчас» — первый вопрос, с которым открывают приложение */}
+      {view.nextIdx != null && rows[view.nextIdx] && (
+        <div className="nextup">
+          <span className="nextup-label">Сейчас / дальше</span>
+          <span className="nextup-body">
+            {rows[view.nextIdx]!.icon} {rows[view.nextIdx]!.title} · {rows[view.nextIdx]!.time}
+          </span>
+        </div>
+      )}
 
-      {/* Пока ночь не отмечена — это единственное действие дня, поэтому оно наверху.
-          После отметки сворачивается и не мешает. */}
-      {loggedToday ? (
-        <details className="card" id="mark">
-          <summary className="card-h">Ночь отмечена ✓ — поправить</summary>
-          <div className="tips-body">{markBlock}</div>
-        </details>
-      ) : (
+      {/* Пока ночь не отмечена — это единственное действие дня, поэтому оно наверху */}
+      {!loggedToday && (
         <section className="card accent" id="mark">
           <h3 className="card-h">Отметь, как спалось</h3>
           <p className="small muted">С этого весь день и строится: план еды подстроится под ночь.</p>
           {markBlock}
         </section>
+      )}
+
+      {/* Главное сообщение дня. Готовность и стрик живут в его шапке, а не отдельной
+          строкой между карточками — висящая сама по себе строка выпадала из сетки. */}
+      <section className="why-today">
+        <div className="why-today-head">
+          <span className="why-today-label">Почему сегодня так</span>
+          <span className="why-today-status">
+            <span className="dot" style={{ background: view.readiness.color }} />
+            {view.readiness.label}
+          </span>
+          {streak > 0 && <span className="streak">🔥 {streak} подряд</span>}
+        </div>
+        <p>{explanation.textRU}</p>
+        <p className="small muted">{view.readiness.whyRU}</p>
+      </section>
+
+      {loggedToday && (
+        <details className="card" id="mark">
+          <summary className="card-h">Ночь отмечена ✓ — поправить</summary>
+          <div className="tips-body">{markBlock}</div>
+        </details>
       )}
 
       {isCheat ? (
@@ -352,14 +399,6 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
       </div>
 
       <div className="col-main">
-      {view.nextIdx != null && rows[view.nextIdx] && (
-        <div className="nextup">
-          <span className="nextup-label">Сейчас / дальше</span>
-          <span className="nextup-body">
-            {rows[view.nextIdx]!.icon} {rows[view.nextIdx]!.title} · {rows[view.nextIdx]!.time}
-          </span>
-        </div>
-      )}
 
       {/* Одна лента суток: сон и еда на общей оси времени, а не два раздела */}
       <ol className="timeline">
