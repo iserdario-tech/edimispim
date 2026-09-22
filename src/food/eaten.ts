@@ -38,6 +38,8 @@ export interface DayEaten {
    * числом «переписывала» прошлое, и оценка расхода падала ровно на величину поправки.
    */
   dayKcal?: number;
+  /** Какую долю плановой порции съел по «съел»: день мог подстроиться, и ужин стал ×0.7. */
+  portion?: Partial<Record<Slot, number>>;
   /** Своя еда, описанная словами, — точнее, чем «лёгкое / плотное». Прикидка коуча. */
   ownText?: Partial<Record<Slot, WrittenFood>>;
   /** Съеденное вне плана, записанное словами («шаурма и кола»): калории — прикидка коуча. */
@@ -48,7 +50,7 @@ export interface DayEaten {
 }
 
 /** Отметить приём. Повторное нажатие той же отметкой снимает её — это же переключатель. */
-export function toggleMark(cur: DayEaten | undefined, slot: Slot, mark: MealMark, planned: number, dayKcal?: number): DayEaten {
+export function toggleMark(cur: DayEaten | undefined, slot: Slot, mark: MealMark, planned: number, dayKcal?: number, portion?: number): DayEaten {
   const marks = { ...(cur?.marks ?? {}) };
   if (marks[slot] === mark) delete marks[slot];
   else marks[slot] = mark;
@@ -56,17 +58,28 @@ export function toggleMark(cur: DayEaten | undefined, slot: Slot, mark: MealMark
   const sizes = { ...(cur?.sizes ?? {}) };
   const ownText = { ...(cur?.ownText ?? {}) };
   if (marks[slot] !== "own") { delete sizes[slot]; delete ownText[slot]; }
+  const portions = { ...(cur?.portion ?? {}) };
+  if (marks[slot] === "ate" && portion !== undefined && portion !== 1) portions[slot] = portion;
+  else delete portions[slot];
   const kcal = cur?.dayKcal ?? dayKcal;
-  return { ...cur, marks, sizes, ownText, planned: cur?.planned ?? planned, ...(kcal ? { dayKcal: kcal } : {}) };
+  return { ...cur, marks, sizes, ownText, portion: portions, planned: cur?.planned ?? planned, ...(kcal ? { dayKcal: kcal } : {}) };
 }
 
 /** «Весь день по плану» — одной кнопкой вместо пяти. Уже отмеченное не трогаем:
  *  если обед был своим, вечерняя кнопка не имеет права переписать это в «съел». */
-export function markAllAte(cur: DayEaten | undefined, slots: Slot[], planned: number, dayKcal?: number): DayEaten {
+export function markAllAte(
+  cur: DayEaten | undefined, slots: Slot[], planned: number, dayKcal?: number, portions?: Partial<Record<Slot, number>>,
+): DayEaten {
   const marks = { ...(cur?.marks ?? {}) };
-  for (const s of slots) marks[s] ??= "ate";
+  const portion = { ...(cur?.portion ?? {}) };
+  for (const s of slots) {
+    if (marks[s]) continue;
+    marks[s] = "ate";
+    const k = portions?.[s];
+    if (k !== undefined && k !== 1) portion[s] = k;
+  }
   const kcal = cur?.dayKcal ?? dayKcal;
-  return { ...cur, marks, planned: cur?.planned ?? planned, ...(kcal ? { dayKcal: kcal } : {}) };
+  return { ...cur, marks, portion, planned: cur?.planned ?? planned, ...(kcal ? { dayKcal: kcal } : {}) };
 }
 
 export function setOwnSize(cur: DayEaten, slot: Slot, size: OwnSize): DayEaten {
@@ -117,9 +130,10 @@ export function eatenTotals(day: Day, eaten: DayEaten | undefined): EatenTotals 
       continue;
     }
     ate++;
-    kcal += m.recipe.kcal * m.servings;
-    protein += m.recipe.protein_g * m.servings;
-    fiber += m.recipe.fiber_g * m.servings;
+    const k = eaten?.portion?.[m.slot] ?? 1;   // съеденная доля плановой порции
+    kcal += m.recipe.kcal * m.servings * k;
+    protein += m.recipe.protein_g * m.servings * k;
+    fiber += m.recipe.fiber_g * m.servings * k;
   }
   // записанное словами вне плана — тоже прикидка
   for (const x of eaten?.extras ?? []) { kcal += x.kcal; protein += x.protein; estimated = true; }
@@ -155,12 +169,24 @@ export function followedPlan(eaten: DayEaten | undefined): boolean | undefined {
  * Непомеченные приёмы ДО последней отметки считаются съеденными по плану: скорее всего
  * их просто забыли отметить, а считать их пропуском значило бы раздуть вечер.
  *
- * ponytail: отмеченный «съел» приём считается по плановой порции, даже если перед этим
- * её уменьшили — хранить порцию в момент отметки, если расхождение станет заметным.
+ * Отмеченный «съел» приём считается по той порции, что стояла в момент отметки (`portion`):
+ * иначе уменьшенный до ×0.7 ужин засчитывался бы целым.
  */
 const REBALANCE_MIN = 0.7, REBALANCE_MAX = 1.3, REBALANCE_STEP = 0.1;
 
 export function rebalance(day: Day, eaten: DayEaten | undefined): { day: Day; noteRU?: string } {
+  const r = rebalanceRest(day, eaten);
+  // съеденное по уменьшенной порции и показывается уменьшенным — как его и засчитали
+  const portion = eaten?.portion ?? {};
+  if (!Object.keys(portion).length) return r;
+  const meals = r.day.meals.map(m => {
+    const k = eaten?.marks[m.slot] === "ate" ? portion[m.slot] : undefined;
+    return k ? { ...m, servings: Math.round(m.servings * k * 10) / 10 } : m;
+  });
+  return { ...r, day: { ...r.day, meals } };
+}
+
+function rebalanceRest(day: Day, eaten: DayEaten | undefined): { day: Day; noteRU?: string } {
   const marks = eaten?.marks ?? {};
   const lastMarked = day.meals.reduce((last, m, i) => (marks[m.slot] ? i : last), -1);
   if (lastMarked < 0) return { day };

@@ -1,5 +1,6 @@
 import { targetsFor, type FoodSettings } from "./storage.js";
-import { targetsForToday, prefersFamiliar, type DayRhythm } from "../food/index.js";
+import { targetsForToday, prefersFamiliar, withinCookTime, type DayRhythm } from "../food/index.js";
+import type { Recipe, SafeTargets } from "../food/types.js";
 
 /** «Сегодня не готовлю»: блюда до десяти минут — собрать, а не готовить. */
 export const NO_COOK_MIN = 10;
@@ -24,8 +25,9 @@ export function cookLimitFor(food: FoodSettings, iso: string, noCook: boolean): 
  */
 export function dayOptsFor(
   food: FoodSettings, iso: string, rhythm: DayRhythm, liked: string[], noCookDays: string[] | undefined,
+  base: SafeTargets = targetsFor(food),
 ) {
-  const { ramp } = targetsForToday(targetsFor(food), food.startISO, iso, food.pace);
+  const { ramp } = targetsForToday(base, food.startISO, iso, food.pace);
   const limit = cookLimitFor(food, iso, !!noCookDays?.includes(iso));
   return {
     rhythm, mealCount: food.mealCount, familiar: prefersFamiliar(ramp), liked,
@@ -33,3 +35,8 @@ export function dayOptsFor(
     ...(food.leftovers ? { leftovers: true } : {}),
   };
 }
+
+/** Набор блюд для замены в эту дату — с тем же лимитом готовки, что и сам день:
+ *  иначе ↻ в день «не готовлю» предлагал бигос на полтора часа. */
+export const poolForDate = (pool: Recipe[], food: FoodSettings, iso: string, noCookDays: string[] | undefined): Recipe[] =>
+  withinCookTime(pool, cookLimitFor(food, iso, !!noCookDays?.includes(iso)));

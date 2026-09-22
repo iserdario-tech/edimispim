@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { rebalance, toggleMark, setOwnSize } from "../src/food/eaten";
+import { rebalance, toggleMark, setOwnSize, eatenTotals } from "../src/food/eaten";
 import type { Day, Slot } from "../src/food/types";
 
 const meal = (slot: Slot, kcal: number, timeMin: number) => ({
@@ -45,5 +45,16 @@ describe("день подстраивается под съеденное", () =
     e = setOwnSize(e, "lunch", "big");
     rebalance(day, e);
     expect(day.meals.find(m => m.slot === "dinner")!.servings).toBe(1);
+  });
+});
+
+describe("съеденная уменьшенная порция", () => {
+  it("«съел» после пересчёта засчитывает уменьшенную порцию, а не плановую", () => {
+    let e = toggleMark(undefined, "breakfast", "ate", 4);
+    e = toggleMark(e, "lunch", "own", 4);
+    e = setOwnSize(e, "lunch", "big");
+    const reduced = rebalance(day, e).day.meals.find(m => m.slot === "dinner")!.servings;   // 0.7
+    e = toggleMark(e, "dinner", "ate", 4, undefined, reduced);
+    expect(eatenTotals(day, e).kcal).toBe(400 + 900 + 350);
   });
 });

@@ -39,7 +39,12 @@ export function SwipeRow({ onLeft, onRight, leftLabel, rightLabel, enabled = tru
       <div className="swipe-over"
         // пока палец ведёт — без анимации, иначе строка отстаёт от пальца
         style={dx ? { transform: `translateX(${dx}px)`, transition: "none" } : undefined}
-        onPointerDown={e => { if (e.pointerType !== "mouse") start.current = { x: e.clientX, y: e.clientY }; }}
+        onPointerDown={e => {
+          if (e.pointerType === "mouse") return;
+          start.current = { x: e.clientX, y: e.clientY };
+          // палец может уйти за край строки — отпускание всё равно придёт сюда, иначе строка зависала сдвинутой
+          try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* синтетические события */ }
+        }}
         onPointerMove={e => {
           const s = start.current;
           if (!s) return;

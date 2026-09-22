@@ -43,7 +43,7 @@ export function todayFoodDay(a: {
   const liked = rated.filter(([, v]) => v === 1).map(([id]) => id);
   const rhythm = { wakeMin: parseHM(a.wokeHM), bedMin: a.bedMin };
   // настройки у каждой даты свои — ровно те же, что строит вкладка «Еда»
-  const optsOf = (iso: string) => dayOptsFor(food, iso, rhythm, liked, a.noCookDays);
+  const optsOf = (iso: string) => dayOptsFor(food, iso, rhythm, liked, a.noCookDays, base);
   /*
    * День берётся из того же календарного плана, что и вкладка «Еда»: раньше здесь
    * номером дня служил день недели, а там — индекс в семидневке, и один и тот же
@@ -55,6 +55,12 @@ export function todayFoodDay(a: {
   // то, что человек поменял руками на экране «Еда», должно стоять и здесь
   applySwaps(day, a.swaps?.[today], pool, safe, food.mealCount);
   // что поменялось из-за ночи — сравнение с днём после обычной ночи
-  const changes = day.simplified ? nightChanges(generateAdaptedDay(safe, pool, dayOpts), day) : [];
+  let changes: string[] = [];
+  if (day.simplified) {
+    // обычный день — с теми же ручными заменами: иначе замена блюда выдавалась бы за эффект ночи
+    const normal = generateAdaptedDay(safe, pool, dayOpts);
+    applySwaps(normal, a.swaps?.[today], pool, safe, food.mealCount);
+    changes = nightChanges(normal, day);
+  }
   return { day, safe, diagnosis, ramp, changes };
 }

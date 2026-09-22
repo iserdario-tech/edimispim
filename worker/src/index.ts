@@ -89,12 +89,13 @@ export default {
 
     // «Напиши, что съел»: тот же дневной лимит, что у коуча — это тоже вызов модели
     if (req.method === "POST" && url.pathname === "/estimate") {
-      const ip = req.headers.get("cf-connecting-ip") ?? "unknown";
-      if (await overCoachLimit(env, ip))
-        return new Response(JSON.stringify({ error: "На сегодня хватит — продолжим завтра." }), { status: 429, headers: JSON_CORS });
+      // сначала проверяем запрос, потом тратим лимит: пустой запрос не должен съедать квоту
       const body = (await req.json().catch(() => ({}))) as { text?: unknown };
       const text = typeof body.text === "string" ? body.text.trim().slice(0, 300) : "";
       if (!text) return new Response(JSON.stringify({ error: "Напиши, что съел." }), { status: 400, headers: JSON_CORS });
+      const ip = req.headers.get("cf-connecting-ip") ?? "unknown";
+      if (await overCoachLimit(env, ip))
+        return new Response(JSON.stringify({ error: "На сегодня хватит — продолжим завтра." }), { status: 429, headers: JSON_CORS });
       try {
         const est = await estimateFood(env.AI, text);
         if (!est) return new Response(JSON.stringify({ error: "Не понял, что это за еда. Попробуй написать иначе." }), { status: 422, headers: JSON_CORS });
