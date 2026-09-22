@@ -918,7 +918,7 @@ input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.08); }
   /* пока картинка грузится, на её месте ровный прямоугольник, а не прыгающая пустота */
 }
 .row.food .row-kicker, .row.food .row-title, .row.food .row-detail,
-.row.food .row-why-box, .row.food .eat-row { grid-column: 2; }
+.row.food .row-why-box, .row.food .eat-row, .row.food .own-size { grid-column: 2; }
 .row-photo { grid-row: 1 / span 4; }
 /* Подпись приёма: мелкая и акцентная, как ярлык над заголовком */
 .row-kicker {
@@ -1032,3 +1032,40 @@ input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.08); }
 .backup-line .linkbtn { padding: 0; min-height: 0; }
 /* без ссылки строка продукта держит ту же высоту, что и со ссылкой */
 .ing-name { min-height: var(--tap); display: inline-flex; align-items: center; }
+
+/* ─── Свайп по блюду ─── */
+.swipe { position: relative; }
+.swipe-over { position: relative; touch-action: pan-y; transition: transform .18s var(--spring); }
+.swipe-under {
+  position: absolute; inset: 0; display: flex; justify-content: space-between; align-items: center;
+  padding: 0 var(--sp-4); border-radius: var(--r-card);
+}
+.swipe-label { font-weight: 600; font-size: var(--t-subhead); opacity: .25; transition: opacity .12s; }
+.swipe-label.on { opacity: 1; }
+.swipe-label.ate { color: var(--ok); }
+.swipe-label.own { color: var(--accent); }
+
+/* ─── Утро в один тап ─── */
+.q-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--sp-1); margin: var(--sp-3) 0 var(--sp-2); }
+.q-btn {
+  min-height: 52px; padding: 0 2px; border: 0; border-radius: var(--r-control);
+  background: var(--surface-2); color: var(--fg); font: inherit;
+  font-size: var(--t-caption1); font-weight: 600; cursor: pointer;
+}
+.q-btn:active { background: var(--accent); color: var(--accent-ink); }
+.q-hint { margin: 0; }
+.q-hint .linkbtn { padding: 0; min-height: 0; }
+
+/* ─── Своя еда: размер ─── */
+.own-size { margin-top: var(--sp-2); display: grid; gap: var(--sp-1); }
+.own-size .chips { margin: 0; }
+
+.all-plan-btn {
+  display: block; width: 100%; margin-top: var(--sp-3); min-height: 48px;
+  border-radius: var(--r-control); border: 1.5px solid var(--accent);
+  background: transparent; color: var(--accent); font: inherit; font-weight: 600; cursor: pointer;
+}
+.all-plan-btn:active { background: var(--accent-soft); }
+/* в колонке рядом с фото три крупных чипа вставали столбиком — здесь они компактные */
+.own-size .chip { min-height: 32px; padding: 0 var(--sp-3); font-size: var(--t-footnote); }
+.own-size .chips { gap: var(--sp-1); }

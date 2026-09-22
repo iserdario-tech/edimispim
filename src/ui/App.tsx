@@ -14,7 +14,7 @@ import { loadState, saveState, exportAll, importAll, type FoodSettings, type Sto
 import { syncPushContext } from "./notifications.js";
 import { migrateAll } from "../migrate.js";
 import { localDateISO } from "../today-date.js";
-import { toggleMark, type MealMark } from "../food/eaten.js";
+import { toggleMark, markAllAte, setOwnSize, type DayEaten, type MealMark, type OwnSize } from "../food/eaten.js";
 import type { Slot } from "../food/types.js";
 import { readLS, writeLS } from "./localStore.js";
 import { BACKUP_KEY } from "./dataSafety.js";
@@ -132,11 +132,11 @@ export function App() {
    * Отметка «съел» / «заменил своим». Хранится не больше 180 дней — ровно как история сна:
    * ряд нужен месяцами для разбора плато, но копить его вечно незачем.
    */
-  const markMeal = (date: string, slot: Slot, mark: MealMark, planned: number) => {
+  const editEaten = (date: string, edit: (cur: DayEaten | undefined) => DayEaten) => {
     setState((prev) => {
       if (!prev) return prev;
       const all = { ...(prev.eaten ?? {}) };
-      all[date] = toggleMark(all[date], slot, mark, planned);
+      all[date] = edit(all[date]);
       const kept = Object.keys(all).sort().slice(-180);
       const eaten = Object.fromEntries(kept.map(d => [d, all[d]!]));
       const next = { ...prev, eaten };
@@ -144,6 +144,12 @@ export function App() {
       return next;
     });
   };
+  const markMeal = (date: string, slot: Slot, mark: MealMark, planned: number) =>
+    editEaten(date, cur => toggleMark(cur, slot, mark, planned));
+  const markAll = (date: string, slots: Slot[], planned: number) =>
+    editEaten(date, cur => markAllAte(cur, slots, planned));
+  const ownSize = (date: string, slot: Slot, size: OwnSize) =>
+    editEaten(date, cur => setOwnSize(cur ?? { marks: {}, planned: 0 }, slot, size));
 
   /**
    * Оценка блюда. Повторное нажатие той же оценки снимает её: человек передумал —
@@ -292,6 +298,7 @@ export function App() {
           eaten={state.eaten} ratings={state.ratings} cheatDays={state.cheatDays}
           swaps={state.swaps}
           onMarkMeal={markMeal} onCheatDay={setCheatDay}
+          onMarkAll={markAll} onOwnSize={ownSize}
           onSetupFood={() => openOverlay("food")}
           backupAt={backupAt} onBackup={backup}
         />
