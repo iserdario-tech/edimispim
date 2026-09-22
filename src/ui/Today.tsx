@@ -19,6 +19,7 @@ import { WeekFoodBars, DayRings } from "./Charts.js";
 import { followedPlan } from "../food/eaten.js";
 import { localDateISO, localMinutes } from "../today-date.js";
 import { useNow } from "./useNow.js";
+import { todayFoodDay } from "./todayPlan.js";
 import { Sheet } from "./Sheet.js";
 import { MealIngredients } from "./Grocery.js";
 import type { Meal } from "../food/types.js";
@@ -43,7 +44,7 @@ function crunchStr(hm: string): string {
 const todayLabel = (d: Date): string =>
   d.toLocaleDateString("ru-RU", { day: "numeric", month: "long", weekday: "long" });
 
-export function Today({ profile, history, screener, onLog, food, weights, eaten, ratings, cheatDays, swaps, onMarkMeal, onMarkAll, onOwnSize, onCheatDay, onSetupFood, backupAt, onBackup, noCookDays, onNoCook }: {
+export function Today({ profile, history, screener, onLog, food, weights, eaten, ratings, cheatDays, swaps, onMarkMeal, onMarkAll, onOwnSize, onCheatDay, onSetupFood, backupAt, onBackup, noCookDays, onNoCook, onTuned }: {
   profile: Profile;
   history: DayLog[];
   screener?: ScreenerResult | null;
@@ -69,6 +70,8 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
   /** Дни «не готовлю» и переключатель — хранятся по датам, как читмил: «Еда» должна их видеть. */
   noCookDays?: string[];
   onNoCook?: (date: string, on: boolean) => void;
+  /** Закрыть «донастрой» без правки настроек. */
+  onTuned?: () => void;
 }) {
   // «сейчас» обязано идти вперёд, пока экран открыт: у PWA он живёт часами без перезагрузки
   const now = useNow();
@@ -129,36 +132,10 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
     // читмил объявляет сам человек: в этот день приложение не считает калории
     // и не показывает меню — иначе оно спорит с решением, которое уже принято
     if (!food || isCheat) return null;
-    const base = targetsFor(food);
-    // во время вхождения в дефицит цель на сегодня своя — она выше конечной и снижается по дням
-    const { targets: safe, ramp } = targetsForToday(base, food.startISO, today, food.pace);
-    const rated = Object.entries(ratings ?? {});
-    const pool = filterRecipes(RECIPES, {
-      ...food.constraints,
-      bannedIds: rated.filter(([, v]) => v === -1).map(([id]) => id),
+    return todayFoodDay({
+      food, today, wokeHM, bedMin, ratings, swaps, noCookDays,
+      night: { sleptMin, targetSleepMin: profile.targetSleepMin, quality },
     });
-    // Пустой набор — это НЕ «еда не подключена»: человек мог скрыть все блюда пальцем
-    // вниз или выставить взаимоисключающие ограничения. Возвращаем день без приёмов,
-    // чтобы экран показал разбор причины, а не предложил заполнить форму заново.
-    const diagnosis = diagnosePool(pool, food.mealCount);
-    const liked = rated.filter(([, v]) => v === 1).map(([id]) => id);
-    const rhythm = { wakeMin: parseHM(wokeHM), bedMin };
-    // настройки у каждой даты свои — ровно те же, что строит вкладка «Еда»
-    const optsOf = (iso: string) => dayOptsFor(food, iso, rhythm, liked, noCookDays);
-    const opts = optsOf(today);
-    /*
-     * День берётся из того же календарного плана, что и вкладка «Еда»: раньше здесь
-     * номером дня служил день недели, а там — индекс в семидневке, и один и тот же
-     * четверг показывал на двух экранах разную еду.
-     */
-    const planned = scheduleFor(today, pool, iso => targetsForToday(base, food.startISO, iso, food.pace).targets, optsOf);
-    const dayOpts = { ...opts, offset: planned.offset, avoid: planned.avoid, ...(planned.leftover ? { leftover: planned.leftover } : {}) };
-    const day = generateAdaptedDay(safe, pool, dayOpts, { sleptMin, targetSleepMin: profile.targetSleepMin, quality });
-    // то, что человек поменял руками на экране «Еда», должно стоять и здесь
-    applySwaps(day, swaps?.[today], pool, safe, food.mealCount);
-    // что поменялось из-за ночи — сравнение с днём после обычной ночи
-    const changes = day.simplified ? nightChanges(generateAdaptedDay(safe, pool, dayOpts), day) : [];
-    return { day, safe, diagnosis, ramp, changes };
   }, [food, isCheat, noCookDays, wokeHM, bedMin, today, sleptMin, profile.targetSleepMin, quality, ratings, swaps]);
 
   // факт против плана: что из сегодняшнего меню действительно съедено
@@ -335,6 +312,21 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
         )}
         <p className="small muted">{view.readiness.whyRU}</p>
       </section>
+
+      {/* После быстрого старта меню собрано по умолчанию — зовём донастроить, но не заставляем */}
+      {food && food.tuned === false && onSetupFood && (
+        <section className="card">
+          <h3 className="card-h">Донастрой меню · 1 минута</h3>
+          <p className="small muted">
+            Сейчас стоят настройки по умолчанию. Скажи, что не ешь, какая техника есть на кухне,
+            бюджет и сколько времени готовить в будни — меню станет твоим.
+          </p>
+          <div className="btn-row">
+            <button className="chip on" onClick={onSetupFood}>Настроить</button>
+            {onTuned && <button className="linkbtn" onClick={onTuned}>не нужно</button>}
+          </div>
+        </section>
+      )}
 
       {loggedToday && (
         <details className="card" id="mark">

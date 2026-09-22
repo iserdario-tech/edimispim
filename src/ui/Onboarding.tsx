@@ -4,7 +4,7 @@ import { runScreener } from "../index.js";
 import { buildProfile, formFromProfile, isValidTime, type OnboardingForm } from "./onboardingModel.js";
 import { isStandalone } from "./dataSafety.js";
 
-const emptyScreener: ScreenerAnswers = {
+export const emptyScreener: ScreenerAnswers = {
   loudSnoringWithPauses: false, daytimeSleepyDespiteEnoughSleep: false,
   legUrgeToMoveEvening: false, insomnia3xWeek3Months: false, lowMood2Weeks: false, selfHarmThoughts: false,
 };

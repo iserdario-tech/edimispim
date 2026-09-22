@@ -7,6 +7,7 @@ import { hintFor } from "../food/ingredients.js";
 import { isLiquid, mlOf } from "../food/nutrients.js";
 import { photoFor, photoUrl } from "../food/photos.js";
 import { tap } from "./haptics.js";
+import { shareText, shareNoteRU } from "./share.js";
 import { IconThumb } from "./Icons.js";
 import { readLS, writeLS, SHOP_KEY } from "./localStore.js";
 
@@ -116,6 +117,7 @@ export function GroceryBlock({ grocery, pantry, onPantry, dayLabels }: {
   }, [lines]);
 
   const chooseShop = (id: string) => { setShopId(id); writeLS(SHOP_KEY, id); };
+  const [shareNote, setShareNote] = useState("");
 
   /** Галочка: продукт взят или уже есть — кладём в кладовку вместе с остатком упаковки. */
   const toggle = (line: BuyLine, checked: boolean) => {
@@ -185,6 +187,19 @@ export function GroceryBlock({ grocery, pantry, onPantry, dayLabels }: {
       <p className="small muted mt-3">
         Отмечай галочкой, что взял. Тап по названию открывает товар в «{shop.name}».
       </p>
+      {/* список чаще нужен тому, кто идёт в магазин, а не тому, кто планирует */}
+      <div className="share-row">
+        <button className="linkbtn small" onClick={async () => {
+          tap();
+          const text = [title, ...byAisle.flatMap(({ ru, items }) => {
+            const left = items.filter(l => l.toBuy > 0);
+            return left.length ? ["", ru + ":", ...left.map(l => `• ${l.name} — ${
+              l.packs > 0 ? `${l.packs} × ${amountRU(l.packSize, l.unit)}` : amountRU(l.toBuy, l.unit)}`)] : [];
+          })].join("\n");
+          setShareNote(shareNoteRU(await shareText(title, text)));
+        }}>Поделиться списком</button>
+        {shareNote && <span className="small muted">{shareNote}</span>}
+      </div>
 
       {/* Строка остаётся на своём месте: раньше отмеченное сразу улетало вниз,
           и список прыгал под пальцем — легко потерять, где ты был. Отмеченное
@@ -252,6 +267,7 @@ export function MealIngredients({ meal, rating, onRate, links = false, household
   });
 
   const steps = meal.recipe.steps ?? [];
+  const [shareNote, setShareNote] = useState("");
   if (!ings.length && !steps.length) return <div className="meal-ings small muted">Рецепт не указан.</div>;
 
   const photo = photoFor(meal.recipe);
@@ -326,6 +342,20 @@ export function MealIngredients({ meal, rating, onRate, links = false, household
           </ol>
         </>
       )}
+      <div className="share-row">
+        <button className="linkbtn small" onClick={async () => {
+          tap();
+          const text = [
+            meal.recipe.name,
+            "",
+            household > 1 ? `Продукты на ${household} порции:` : "Продукты:",
+            ...ings.map(i => `• ${i.name} — ${amountRU(i.qty, i.unit)}`),
+            ...(steps.length ? ["", "Как готовить:", ...steps.map((st, k) => `${k + 1}. ${st}`)] : []),
+          ].join("\n");
+          setShareNote(shareNoteRU(await shareText(meal.recipe.name, text)));
+        }}>Поделиться рецептом</button>
+        {shareNote && <span className="small muted">{shareNote}</span>}
+      </div>
     </div>
   );
 }

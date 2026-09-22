@@ -3,7 +3,7 @@ import type { FoodSettings } from "./storage.js";
 import type { Activity, Budget, MealCount, Sex } from "../food/types.js";
 import { DEFAULT_PACE, RAMP_DAYS, type RampPace } from "../food/rampin.js";
 import { localDateISO } from "../today-date.js";
-import { nightEating, type StopBangAnswers, type NesAnswers } from "../screening.js";
+import { JunctionScreening, junctionFrom, junctionResult, type JunctionValue } from "./JunctionScreening.js";
 
 const COOKWARE = [
   ["stove", "плита"], ["oven", "духовка"], ["microwave", "микроволновка"],
@@ -77,20 +77,8 @@ export function FoodSetup({ initial, onDone, onCancel }: {
   const [cookWeekend, setCookWeekend] = useState<number | undefined>(initial?.cookMin?.weekend);
   const [leftovers, setLeftovers] = useState(!!initial?.leftovers);
   const [household, setHousehold] = useState(initial?.household ?? 1);
-  // скрининг стыка: «ворота» открывают остальные вопросы, чтобы форма не пугала длиной
-  const sb = initial?.screening?.stopBang;
-  const ne = initial?.screening?.nes;
-  const [apneaGate, setApneaGate] = useState(!!sb?.snoringLoud);
-  const [apnea, setApnea] = useState<Omit<StopBangAnswers, "snoringLoud">>({
-    tiredDaytime: !!sb?.tiredDaytime, observedApnea: !!sb?.observedApnea,
-    highBloodPressure: !!sb?.highBloodPressure, neckOver40cm: !!sb?.neckOver40cm,
-  });
-  const [nesGate, setNesGate] = useState(!!(ne?.eveningHyperphagia || ne?.nightEatingTwicePlus));
-  const [nes, setNes] = useState<Omit<NesAnswers, "eveningHyperphagia" | "nightEatingTwicePlus">>({
-    morningAnorexia: !!ne?.morningAnorexia, urgeToEatBeforeSleep: !!ne?.urgeToEatBeforeSleep,
-    insomnia: !!ne?.insomnia, mustEatToSleep: !!ne?.mustEatToSleep,
-    eveningMoodDrop: !!ne?.eveningMoodDrop, distress: !!ne?.distress,
-  });
+  // скрининг стыка — общий компонент с быстрым стартом
+  const [junction, setJunction] = useState<JunctionValue>(() => junctionFrom(initial?.screening));
   const saved = initial?.constraints.dislikes ?? [];
   const [noRare, setNoRare] = useState(RARE_INGREDIENTS.every(r => saved.includes(r)));
   const [dislikes, setDislikes] = useState(saved.filter(d => !RARE_INGREDIENTS.includes(d)).join(", "));
@@ -281,51 +269,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
           и не ставит жёсткий дефицит.
         </p>
 
-        <label className="chk">
-          <input type="checkbox" checked={apneaGate}
-            onChange={e => setApneaGate(e.target.checked)} />
-          Громко храплю или кто-то замечал остановки дыхания во сне
-        </label>
-        {apneaGate && (
-          <div className="reveal reveal-indent">
-            {([
-              ["tiredDaytime", "Днём разбитость даже после долгого сна"],
-              ["observedApnea", "Кто-то замечал именно остановки дыхания"],
-              ["highBloodPressure", "Высокое давление или лечусь от него"],
-              ["neckOver40cm", "Окружность шеи больше 40 см"],
-            ] as const).map(([key, ru]) => (
-              <label key={key} className="chk">
-                <input type="checkbox" checked={!!apnea[key]}
-                  onChange={e => setApnea({ ...apnea, [key]: e.target.checked })} />
-                {ru}
-              </label>
-            ))}
-          </div>
-        )}
-
-        <label className="chk">
-          <input type="checkbox" checked={nesGate}
-            onChange={e => setNesGate(e.target.checked)} />
-          Просыпаюсь ночью поесть или основная еда уходит на вечер
-        </label>
-        {nesGate && (
-          <div className="reveal reveal-indent">
-            {([
-              ["morningAnorexia", "Утром есть не хочется"],
-              ["urgeToEatBeforeSleep", "Между ужином и сном тянет есть"],
-              ["insomnia", "Сон рваный: трудно заснуть или просыпаюсь"],
-              ["mustEatToSleep", "Кажется, что без еды не усну"],
-              ["eveningMoodDrop", "К вечеру настроение хуже"],
-              ["distress", "Меня это беспокоит и мешает жить"],
-            ] as const).map(([key, ru]) => (
-              <label key={key} className="chk">
-                <input type="checkbox" checked={!!nes[key]}
-                  onChange={e => setNes({ ...nes, [key]: e.target.checked })} />
-                {ru}
-              </label>
-            ))}
-          </div>
-        )}
+        <JunctionScreening value={junction} onChange={setJunction} />
       </section>
 
       {problems.length > 0 && (
@@ -357,15 +301,9 @@ export function FoodSetup({ initial, onDone, onCancel }: {
           ...(initial?.kcalAdjust ? { kcalAdjust: initial.kcalAdjust } : {}),
           // дата старта ставится один раз: правка формы не должна начинать лестницу заново
           startISO: initial?.startISO ?? localDateISO(),
-          screening: {
-            stopBang: { snoringLoud: apneaGate, ...apnea },
-            nes: { eveningHyperphagia: nesGate, nightEatingTwicePlus: nesGate, ...nes },
-          },
+          screening: junctionResult(junction).screening,
           // ночное питание — красный флаг для расчёта: дефицит смягчается, а не максимальный
-          screen: {
-            ...(initial?.screen ?? {}),
-            nesFlagged: nightEating({ eveningHyperphagia: nesGate, nightEatingTwicePlus: nesGate, ...nes }).flagged,
-          },
+          screen: { ...(initial?.screen ?? {}), nesFlagged: junctionResult(junction).nesFlagged },
         })}>Собрать меню</button>
         {onCancel && <button className="linkbtn" onClick={onCancel}>Не сейчас</button>}
       </div>
