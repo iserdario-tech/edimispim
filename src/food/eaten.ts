@@ -15,20 +15,90 @@ import type { Day, Slot } from "./types";
 
 export type MealMark = "ate" | "own";
 
+/**
+ * Сколько примерно съедено своей еды — относительно плановой порции.
+ *
+ * До этого «своё» считалось нулём: кольца показывали меньше, чем человек съел, и чем
+ * честнее он отмечал, тем сильнее врала сводка. Точное число он всё равно не знает,
+ * а «лёгкое / как в плане / плотное» ответит за секунду.
+ */
+export type OwnSize = "light" | "usual" | "big";
+/** Еда, записанная словами, и прикидка калорий к ней. */
+export interface WrittenFood { text: string; kcal: number; protein: number }
+export const OWN_FACTOR: Record<OwnSize, number> = { light: 0.6, usual: 1, big: 1.5 };
+
 export interface DayEaten {
   /** Слот → что с ним стало. Слот в дне один, поэтому его хватает как ключа. */
   marks: Partial<Record<Slot, MealMark>>;
+  /** Размер своей еды по слотам. Нет записи — «как в плане». */
+  sizes?: Partial<Record<Slot, OwnSize>>;
+  /**
+   * Калорийность плана этого дня в момент первой отметки. Норма потом может поменяться —
+   * по реальному расходу, — а съедено было по тогдашней: без этого поправка нормы задним
+   * числом «переписывала» прошлое, и оценка расхода падала ровно на величину поправки.
+   */
+  dayKcal?: number;
+  /** Какую долю плановой порции съел по «съел»: день мог подстроиться, и ужин стал ×0.7. */
+  portion?: Partial<Record<Slot, number>>;
+  /** Своя еда, описанная словами, — точнее, чем «лёгкое / плотное». Прикидка коуча. */
+  ownText?: Partial<Record<Slot, WrittenFood>>;
+  /** Съеденное вне плана, записанное словами («шаурма и кола»): калории — прикидка коуча. */
+  extras?: WrittenFood[];
   /** Сколько приёмов было в плане в момент отметки. Хранится, чтобы доля не поехала,
    *  когда человек потом сменит схему питания с четырёх приёмов на два. */
   planned: number;
 }
 
 /** Отметить приём. Повторное нажатие той же отметкой снимает её — это же переключатель. */
-export function toggleMark(cur: DayEaten | undefined, slot: Slot, mark: MealMark, planned: number): DayEaten {
+export function toggleMark(cur: DayEaten | undefined, slot: Slot, mark: MealMark, planned: number, dayKcal?: number, portion?: number): DayEaten {
   const marks = { ...(cur?.marks ?? {}) };
   if (marks[slot] === mark) delete marks[slot];
   else marks[slot] = mark;
-  return { marks, planned: cur?.planned ?? planned };
+  // размер относится только к своей еде: сменили отметку — старый размер не должен всплыть
+  const sizes = { ...(cur?.sizes ?? {}) };
+  const ownText = { ...(cur?.ownText ?? {}) };
+  if (marks[slot] !== "own") { delete sizes[slot]; delete ownText[slot]; }
+  const portions = { ...(cur?.portion ?? {}) };
+  if (marks[slot] === "ate" && portion !== undefined && portion !== 1) portions[slot] = portion;
+  else delete portions[slot];
+  const kcal = cur?.dayKcal ?? dayKcal;
+  return { ...cur, marks, sizes, ownText, portion: portions, planned: cur?.planned ?? planned, ...(kcal ? { dayKcal: kcal } : {}) };
+}
+
+/** «Весь день по плану» — одной кнопкой вместо пяти. Уже отмеченное не трогаем:
+ *  если обед был своим, вечерняя кнопка не имеет права переписать это в «съел». */
+export function markAllAte(
+  cur: DayEaten | undefined, slots: Slot[], planned: number, dayKcal?: number, portions?: Partial<Record<Slot, number>>,
+): DayEaten {
+  const marks = { ...(cur?.marks ?? {}) };
+  const portion = { ...(cur?.portion ?? {}) };
+  for (const s of slots) {
+    if (marks[s]) continue;
+    marks[s] = "ate";
+    const k = portions?.[s];
+    if (k !== undefined && k !== 1) portion[s] = k;
+  }
+  const kcal = cur?.dayKcal ?? dayKcal;
+  return { ...cur, marks, portion, planned: cur?.planned ?? planned, ...(kcal ? { dayKcal: kcal } : {}) };
+}
+
+export function setOwnSize(cur: DayEaten, slot: Slot, size: OwnSize): DayEaten {
+  // выбранный размер важнее прежнего описания: человек передумал, как это считать
+  const ownText = { ...(cur.ownText ?? {}) };
+  delete ownText[slot];
+  return { ...cur, sizes: { ...(cur.sizes ?? {}), [slot]: size }, ownText };
+}
+
+export function setOwnText(cur: DayEaten, slot: Slot, food: WrittenFood): DayEaten {
+  return { ...cur, ownText: { ...(cur.ownText ?? {}), [slot]: food } };
+}
+
+export function addExtra(cur: DayEaten | undefined, food: WrittenFood, planned: number): DayEaten {
+  return { marks: {}, ...cur, planned: cur?.planned ?? planned, extras: [...(cur?.extras ?? []), food] };
+}
+
+export function removeExtra(cur: DayEaten, index: number): DayEaten {
+  return { ...cur, extras: (cur.extras ?? []).filter((_, i) => i !== index) };
 }
 
 export interface EatenTotals {
@@ -38,23 +108,36 @@ export interface EatenTotals {
   fiber: number;
   /** Сколько приёмов отмечено «съел» — не считая заменённых своим. */
   ate: number;
+  /** В сумме есть своя еда — её калории прикинуты, а не посчитаны. Показывается как «≈». */
+  estimated: boolean;
   marked: number;
 }
 
-/** Сколько съедено по плану. Заменённое своим не считаем: что там было, приложение не знает. */
+/** Сколько съедено: по плану — точно, своё — прикидкой от плановой порции. */
 export function eatenTotals(day: Day, eaten: DayEaten | undefined): EatenTotals {
-  let kcal = 0, protein = 0, fiber = 0, ate = 0, marked = 0;
+  let kcal = 0, protein = 0, fiber = 0, ate = 0, marked = 0, estimated = false;
   for (const m of day.meals) {
     const mark = eaten?.marks[m.slot];
     if (!mark) continue;
     marked++;
-    if (mark !== "ate") continue;
+    if (mark === "own") {
+      // своя еда — описанная словами или прикидка от плановой порции; клетчатку не выдумываем
+      const written = eaten?.ownText?.[m.slot];
+      const k = OWN_FACTOR[eaten?.sizes?.[m.slot] ?? "usual"];
+      kcal += written ? written.kcal : m.recipe.kcal * m.servings * k;
+      protein += written ? written.protein : m.recipe.protein_g * m.servings * k;
+      estimated = true;
+      continue;
+    }
     ate++;
-    kcal += m.recipe.kcal * m.servings;
-    protein += m.recipe.protein_g * m.servings;
-    fiber += m.recipe.fiber_g * m.servings;
+    const k = eaten?.portion?.[m.slot] ?? 1;   // съеденная доля плановой порции
+    kcal += m.recipe.kcal * m.servings * k;
+    protein += m.recipe.protein_g * m.servings * k;
+    fiber += m.recipe.fiber_g * m.servings * k;
   }
-  return { kcal: Math.round(kcal), protein: Math.round(protein), fiber: Math.round(fiber), ate, marked };
+  // записанное словами вне плана — тоже прикидка
+  for (const x of eaten?.extras ?? []) { kcal += x.kcal; protein += x.protein; estimated = true; }
+  return { kcal: Math.round(kcal), protein: Math.round(protein), fiber: Math.round(fiber), ate, marked, estimated };
 }
 
 /** Доля дня, пройденная по плану. Нужна порогу «день засчитан» и разбору плато. */
@@ -73,4 +156,58 @@ export function followedPlan(eaten: DayEaten | undefined): boolean | undefined {
   const own = Object.values(eaten.marks).filter(m => m === "own").length;
   if (ate + own === 0) return undefined;
   return ate / eaten.planned >= FOLLOWED_SHARE;
+}
+
+/**
+ * День подстраивается под то, что уже съедено.
+ *
+ * План на утро не знает, что обед оказался плотнее или завтрак пропал. Без этого человек,
+ * съевший на обед вдвое больше, получал вечером тот же полный ужин — и либо перебирал,
+ * либо бросал план как «уже всё равно сорвался». Поправка идёт мягко: порции оставшихся
+ * приёмов меняются не больше чем на 30% — ужин в полпорции уже не ужин.
+ *
+ * Непомеченные приёмы ДО последней отметки считаются съеденными по плану: скорее всего
+ * их просто забыли отметить, а считать их пропуском значило бы раздуть вечер.
+ *
+ * Отмеченный «съел» приём считается по той порции, что стояла в момент отметки (`portion`):
+ * иначе уменьшенный до ×0.7 ужин засчитывался бы целым.
+ */
+const REBALANCE_MIN = 0.7, REBALANCE_MAX = 1.3, REBALANCE_STEP = 0.1;
+
+export function rebalance(day: Day, eaten: DayEaten | undefined): { day: Day; noteRU?: string } {
+  const r = rebalanceRest(day, eaten);
+  // съеденное по уменьшенной порции и показывается уменьшенным — как его и засчитали
+  const portion = eaten?.portion ?? {};
+  if (!Object.keys(portion).length) return r;
+  const meals = r.day.meals.map(m => {
+    const k = eaten?.marks[m.slot] === "ate" ? portion[m.slot] : undefined;
+    return k ? { ...m, servings: Math.round(m.servings * k * 10) / 10 } : m;
+  });
+  return { ...r, day: { ...r.day, meals } };
+}
+
+function rebalanceRest(day: Day, eaten: DayEaten | undefined): { day: Day; noteRU?: string } {
+  const marks = eaten?.marks ?? {};
+  const lastMarked = day.meals.reduce((last, m, i) => (marks[m.slot] ? i : last), -1);
+  if (lastMarked < 0) return { day };
+  const rest = day.meals.slice(lastMarked + 1).filter(m => !marks[m.slot]);
+  const restKcal = rest.reduce((s, m) => s + m.recipe.kcal * m.servings, 0);
+  if (!rest.length || restKcal <= 0) return { day };
+
+  const assumed = day.meals.slice(0, lastMarked).filter(m => !marks[m.slot])
+    .reduce((s, m) => s + m.recipe.kcal * m.servings, 0);
+  const left = day.totals.kcal - eatenTotals(day, eaten).kcal - assumed;
+  const k = Math.min(REBALANCE_MAX, Math.max(REBALANCE_MIN, left / restKcal));
+  if (Math.abs(k - 1) < REBALANCE_STEP) return { day };
+
+  const restSet = new Set(rest);
+  const meals = day.meals.map(m => restSet.has(m)
+    ? { ...m, servings: Math.max(0.5, Math.round(m.servings * k * 10) / 10) }
+    : m);
+  return {
+    day: { ...day, meals },
+    noteRU: k < 1
+      ? "Порции на остаток дня уменьшены: съедено больше плана."
+      : "Порции на остаток дня чуть больше: до этого съедено меньше плана.",
+  };
 }

@@ -16,6 +16,13 @@ export default defineConfig({
         skipWaiting: true,        // новая версия активируется сразу
         clientsClaim: true,
         cleanupOutdatedCaches: true,
+        // Фото блюд — в кэш по мере просмотра, а не все 4 МБ при установке: без этого
+        // в метро вместо еды были пустые квадраты, а предзагрузка съела бы трафик за раз.
+        runtimeCaching: [{
+          urlPattern: /\/food\/[^/]+\.jpg$/,
+          handler: "CacheFirst",
+          options: { cacheName: "food-photos", expiration: { maxEntries: 120 } },
+        }],
       },
       manifest: {
         name: "edim & spim — сутки целиком",

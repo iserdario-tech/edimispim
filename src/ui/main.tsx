@@ -2,6 +2,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { readTheme, applyTheme } from "./theme.js";
 import { App } from "./App.js";
+import { askPersistentStorage } from "./dataSafety.js";
 import "./ui.css";
 
 // тема ставится до первой отрисовки, иначе экран мигнёт чужим фоном
@@ -69,6 +70,9 @@ if ("serviceWorker" in navigator) {
     check();
   }).catch(() => { /* без service worker приложение работает, просто без офлайна */ });
 }
+
+// просим браузер не стирать данные; в Safari ненадёжно, но безвредно
+askPersistentStorage();
 
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode><App /></React.StrictMode>

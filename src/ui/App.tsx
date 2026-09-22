@@ -1,6 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import type { Profile, ScreenerResult, DayLog } from "../index.js";
 import { Onboarding } from "./Onboarding.js";
+import { QuickStart } from "./QuickStart.js";
+import { todayFoodDay } from "./todayPlan.js";
+import { eatenTotals, rebalance } from "../food/eaten.js";
+import { expectedBedMin } from "../food/index.js";
+import { parseHM, fmtHM, sleepDurationMin } from "../index.js";
 import { Today } from "./Today.js";
 import { Food } from "./Food.js";
 import { Progress } from "./Progress.js";
@@ -14,8 +19,10 @@ import { loadState, saveState, exportAll, importAll, type FoodSettings, type Sto
 import { syncPushContext } from "./notifications.js";
 import { migrateAll } from "../migrate.js";
 import { localDateISO } from "../today-date.js";
-import { toggleMark, type MealMark } from "../food/eaten.js";
+import { toggleMark, markAllAte, setOwnSize, setOwnText, addExtra, removeExtra, type DayEaten, type MealMark, type OwnSize, type WrittenFood } from "../food/eaten.js";
 import type { Slot } from "../food/types.js";
+import { readLS, writeLS } from "./localStore.js";
+import { BACKUP_KEY } from "./dataSafety.js";
 
 /**
  * Данные из pospat и oheedet лежат на том же origin — подхватываем их, а не просим вводить заново.
@@ -74,6 +81,7 @@ export function App() {
   const [saveFailed, setSaveFailed] = useState(false);
   const persist = (next: StoredState): void => { setSaveFailed(!saveState(next)); };
   const fileRef = useRef<HTMLInputElement>(null);
+  const [backupAt, setBackupAt] = useState<string | null>(() => readLS<string | null>(BACKUP_KEY, null));
 
   useEffect(() => {
     if (state) return;
@@ -129,11 +137,11 @@ export function App() {
    * Отметка «съел» / «заменил своим». Хранится не больше 180 дней — ровно как история сна:
    * ряд нужен месяцами для разбора плато, но копить его вечно незачем.
    */
-  const markMeal = (date: string, slot: Slot, mark: MealMark, planned: number) => {
+  const editEaten = (date: string, edit: (cur: DayEaten | undefined) => DayEaten) => {
     setState((prev) => {
       if (!prev) return prev;
       const all = { ...(prev.eaten ?? {}) };
-      all[date] = toggleMark(all[date], slot, mark, planned);
+      all[date] = edit(all[date]);
       const kept = Object.keys(all).sort().slice(-180);
       const eaten = Object.fromEntries(kept.map(d => [d, all[d]!]));
       const next = { ...prev, eaten };
@@ -141,6 +149,18 @@ export function App() {
       return next;
     });
   };
+  const markMeal = (date: string, slot: Slot, mark: MealMark, planned: number, dayKcal?: number, portion?: number) =>
+    editEaten(date, cur => toggleMark(cur, slot, mark, planned, dayKcal, portion));
+  const markAll = (date: string, slots: Slot[], planned: number, dayKcal?: number, portions?: Partial<Record<Slot, number>>) =>
+    editEaten(date, cur => markAllAte(cur, slots, planned, dayKcal, portions));
+  const ownSize = (date: string, slot: Slot, size: OwnSize) =>
+    editEaten(date, cur => setOwnSize(cur ?? { marks: {}, planned: 0 }, slot, size));
+  const ownWritten = (date: string, slot: Slot, food: WrittenFood) =>
+    editEaten(date, cur => setOwnText(cur ?? { marks: {}, planned: 0 }, slot, food));
+  const extraAdd = (date: string, food: WrittenFood, planned: number) =>
+    editEaten(date, cur => addExtra(cur, food, planned));
+  const extraRemove = (date: string, index: number) =>
+    editEaten(date, cur => removeExtra(cur ?? { marks: {}, planned: 0 }, index));
 
   /**
    * Оценка блюда. Повторное нажатие той же оценки снимает её: человек передумал —
@@ -172,6 +192,39 @@ export function App() {
       const rest = (prev.cheatDays ?? []).filter(d => d !== date);
       const cheatDays = (on ? [...rest, date] : rest).sort().slice(-180);
       const next = { ...prev, cheatDays };
+      persist(next);
+      return next;
+    });
+  };
+
+  /** Поправка нормы по реальному расходу: шаг прибавляется к прежней; 0 — сбросить. */
+  const adjustKcal = (step: number) => {
+    setState((prev) => {
+      if (!prev?.food) return prev;
+      const kcalAdjust = step === 0 ? 0 : (prev.food.kcalAdjust ?? 0) + step;
+      const next = { ...prev, food: { ...prev.food, kcalAdjust, kcalAdjustAt: localDateISO() } };
+      persist(next);
+      return next;
+    });
+  };
+
+  /** Карточка «донастрой» закрыта без правки настроек — больше не показываем. */
+  const markTuned = () => {
+    setState((prev) => {
+      if (!prev?.food) return prev;
+      const next = { ...prev, food: { ...prev.food, tuned: true } };
+      persist(next);
+      return next;
+    });
+  };
+
+  /** «Сегодня не готовлю» — по датам, как читмил: «Еда» и «Сегодня» должны видеть одно и то же. */
+  const setNoCook = (date: string, on: boolean) => {
+    setState((prev) => {
+      if (!prev) return prev;
+      const rest = (prev.noCookDays ?? []).filter(d => d !== date);
+      const noCookDays = (on ? [...rest, date] : rest).sort().slice(-60);
+      const next = { ...prev, noCookDays };
       persist(next);
       return next;
     });
@@ -212,6 +265,9 @@ export function App() {
     const a = document.createElement("a");
     a.href = url; a.download = `edim-spim-копия-${localDateISO()}.json`;
     a.click(); URL.revokeObjectURL(url);
+    // отметка для напоминания «копии N дней»: скачал — значит, сохранил
+    const today = localDateISO();
+    writeLS(BACKUP_KEY, today); setBackupAt(today);
   };
   const restore = async (file: File) => {
     const restored = importAll(await file.text());
@@ -226,9 +282,30 @@ export function App() {
   useSwipeBack(!!state && (editing || editingFood), back);
 
 
-  if (!state || editing) {
+  // Новый человек — быстрый старт: три шага и сразу день с едой. Полная форма сна
+  // осталась для правки из «Я».
+  if (!state) {
     return <>
-      {state && <ScreenHeader title="Сон" onBack={back} />}
+      <QuickStart onRestore={() => fileRef.current?.click()}
+        onDone={(profile, screener, quickFood) => {
+          const picked = pickUpOldApps();
+          // перенесённое из oheedet полнее быстрого старта: там уже есть ограничения и скрининг
+          const food = picked.food ?? quickFood;
+          update({
+            profile, history: picked.history, screener, food,
+            ...(picked.weights.length ? { weights: picked.weights } : {}),
+          });
+          setTab("today");
+          void syncPushContext(profile);
+        }} />
+      <input ref={fileRef} type="file" accept="application/json,.json" hidden
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) restore(f); e.target.value = ""; }} />
+    </>;
+  }
+
+  if (editing) {
+    return <>
+      <ScreenHeader title="Сон" onBack={back} />
       <Onboarding initial={state?.profile} onRestore={() => fileRef.current?.click()}
         onDone={(profile: Profile, screener: ScreenerResult) => {
       const picked = state
@@ -286,7 +363,12 @@ export function App() {
           eaten={state.eaten} ratings={state.ratings} cheatDays={state.cheatDays}
           swaps={state.swaps}
           onMarkMeal={markMeal} onCheatDay={setCheatDay}
+          onMarkAll={markAll} onOwnSize={ownSize}
+          onOwnWritten={ownWritten} onExtraAdd={extraAdd} onExtraRemove={extraRemove}
+          noCookDays={state.noCookDays} onNoCook={setNoCook}
+          onTuned={markTuned}
           onSetupFood={() => openOverlay("food")}
+          backupAt={backupAt} onBackup={backup}
         />
       )}
       {tab === "food" && (
@@ -295,13 +377,14 @@ export function App() {
           ratings={state.ratings} onRate={rateDish}
           swaps={state.swaps} onSwap={saveSwap}
           onSetupFood={() => openOverlay("food")}
+          noCookDays={state.noCookDays}
         />
       )}
       {tab === "progress" && (
         <Progress
           profile={state.profile} history={state.history} food={state.food}
           weights={state.weights} eaten={state.eaten} cheatDays={state.cheatDays}
-          onAddWeight={addWeight}
+          onAddWeight={addWeight} onAdjustKcal={adjustKcal}
         />
       )}
       {tab === "coach" && (
@@ -346,6 +429,7 @@ function coachContext(state: StoredState): string {
     `Обычный подъём: ${state.profile.anchorWakeHM}. Цель сна: ${(state.profile.targetSleepMin / 60).toFixed(1)} ч.`,
     last ? `Последняя отмеченная ночь ${last.date}: подъём ${last.wokeHM}, качество ${last.quality}/5${last.hadAlcohol ? ", был алкоголь" : ""}.` : "Ночи пока не отмечались.",
     state.food ? `Питание настроено: ${state.food.mealCount} ${state.food.mealCount < 5 ? "приёма" : "приёмов"} в день.` : "Питание пока не настроено.",
+    ...todayMenuRU(state),
     weights.length >= 2
       ? `Вес: с ${weights[0]!.kg} до ${weights[weights.length - 1]!.kg} кг за ${weights.length} замеров.`
       : "",
@@ -353,4 +437,49 @@ function coachContext(state: StoredState): string {
       ? `ВАЖНО, анкета показала признаки, требующие врача: ${state.screener.messagesRU.join(" ")}`
       : "",
   ].filter(Boolean).join("\n");
+}
+
+const SLOT_RU: Record<string, string> = { breakfast: "завтрак", lunch: "обед", dinner: "ужин", dessert: "сладкое", snack: "перекус" };
+const SIZE_RU: Record<string, string> = { light: "лёгкое", usual: "как в плане", big: "плотное" };
+
+/**
+ * Сегодняшнее меню и что из него съедено — чтобы коуч отвечал про этот день.
+ * На «чем заменить ужин» без меню он мог сказать только «чем-нибудь белковым».
+ */
+function todayMenuRU(state: StoredState): string[] {
+  if (!state.food) return [];
+  const today = localDateISO();
+  if (state.cheatDays?.includes(today)) return ["Сегодня человек объявил читмил: калории не считаем, меню нет."];
+  const log = state.history.find(h => h.date === today);
+  const p = state.profile;
+  const fd = todayFoodDay({
+    food: state.food, today,
+    wokeHM: log?.wokeHM ?? p.anchorWakeHM,
+    bedMin: expectedBedMin(parseHM(p.anchorWakeHM), p.targetSleepMin),
+    night: {
+      targetSleepMin: p.targetSleepMin,
+      ...(log ? { quality: log.quality } : {}),
+      ...(log?.bedHM ? { sleptMin: sleepDurationMin(log, p.targetSleepMin) } : {}),
+    },
+    ratings: state.ratings, swaps: state.swaps, noCookDays: state.noCookDays,
+  });
+  if (!fd.day.meals.length) return ["Меню на сегодня не собралось: ограничения выели все блюда."];
+  const eaten = state.eaten?.[today];
+  const { day, noteRU } = rebalance(fd.day, eaten);
+  const fact = eatenTotals(fd.day, eaten);
+  const lines = day.meals.map(m => {
+    const mark = eaten?.marks[m.slot];
+    const status = mark === "ate" ? " [съел]" : mark === "own" ? ` [ел своё, ${SIZE_RU[eaten?.sizes?.[m.slot] ?? "usual"]}]` : "";
+    return `${fmtHM(m.timeMin)} ${SLOT_RU[m.slot] ?? m.slot} — ${m.recipe.name}, ${Math.round(m.recipe.kcal * m.servings)} ккал${m.leftover ? ", остатки вчерашнего ужина" : ""}${status}`;
+  });
+  return [
+    `Меню на сегодня (цель ${fd.day.totals.kcal} ккал, белок ${fd.safe.proteinGTarget} г):`,
+    ...lines,
+    fact.marked
+      ? `Съедено ${fact.estimated ? "примерно " : ""}${fact.kcal} ккал, белок ${fact.protein} г; осталось около ${Math.max(0, fd.day.totals.kcal - fact.kcal)} ккал.`
+      : "Из сегодняшнего меню пока ничего не отмечено.",
+    ...(fd.changes.length ? [`День перестроен после плохой ночи: ${fd.changes.join("; ")}.`] : []),
+    ...(state.noCookDays?.includes(today) ? ["Сегодня человек не готовит: блюда до 10 минут."] : []),
+    ...(noteRU ? [noteRU] : []),
+  ];
 }

@@ -72,3 +72,40 @@ export function generateAdaptedDay(
   if (!isRoughNight(night)) return generateDay(targets, pool, opts);
   return generateDay(targets, simplifyPool(pool), { ...opts, roughNight: true });
 }
+
+/**
+ * Что именно поменялось в дне из-за ночи — словами, по пунктам.
+ *
+ * Главное отличие приложения — еда подстраивается под сон, — а увидеть его было нельзя:
+ * после плохой ночи появлялась метка «упрощён», и человек не знал, что конкретно
+ * изменилось и зачем. Здесь — сравнение с тем днём, который был бы после обычной ночи.
+ */
+const fmt = (min: number): string => {
+  const m = ((Math.round(min) % 1440) + 1440) % 1440;
+  return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+};
+const kcalOf = (d: Day, slot: string) =>
+  d.meals.filter(m => m.slot === slot).reduce((s, m) => s + m.recipe.kcal * m.servings, 0);
+const avgCook = (d: Day) => {
+  const mains = d.meals.filter(m => ["breakfast", "lunch", "dinner"].includes(m.slot) && !m.leftover);
+  return mains.length ? mains.reduce((s, m) => s + (m.recipe.time_min ?? 0), 0) / mains.length : 0;
+};
+
+export function nightChanges(normal: Day, adapted: Day): string[] {
+  const out: string[] = [];
+  const was = normal.meals.find(m => m.slot === "dessert")?.timeMin;
+  const now = adapted.meals.find(m => m.slot === "dessert")?.timeMin;
+  if (was !== undefined && now !== undefined && now - was >= 30) {
+    out.push(`Сладкое — на вечер: ${fmt(now)} вместо ${fmt(was)}. Запланированное сладкое вечером — замена срыву, а не добавка`);
+  }
+  // сдвиг заметен, если ужин потерял хотя бы двадцатую часть дня
+  const day = Math.max(1, adapted.totals.kcal);
+  if ((kcalOf(normal, "dinner") - kcalOf(adapted, "dinner")) / day >= 0.05) {
+    out.push("Калории сдвинуты к утру: ужин меньше, завтрак и обед больше — за день столько же");
+  }
+  const before = avgCook(normal), after = avgCook(adapted);
+  if (before - after >= 5) {
+    out.push(`Блюда проще: в среднем ${Math.round(after)} мин готовки вместо ${Math.round(before)}`);
+  }
+  return out;
+}

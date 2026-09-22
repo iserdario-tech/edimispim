@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { toggleMark, eatenTotals, followedPlan, type DayEaten } from "../src/food/eaten";
+import { toggleMark, eatenTotals, followedPlan, markAllAte, setOwnSize, setOwnText, addExtra, removeExtra, type DayEaten } from "../src/food/eaten";
 import { toDayRecords } from "../src/ui/dayRecords";
 import { plateau } from "../src/plateau";
 import type { Day } from "../src/food/types";
@@ -15,13 +15,15 @@ const day: Day = {
 };
 
 describe("отметка «съел»: факт против плана", () => {
-  it("считает только съеденное по плану — своя еда в калории не идёт", () => {
+  it("своя еда входит в сумму прикидкой, а «съел по плану» считает только плановое", () => {
     let e: DayEaten = toggleMark(undefined, "breakfast", "ate", 4);
     e = toggleMark(e, "lunch", "own", 4);
     const t = eatenTotals(day, e);
-    expect(t.kcal).toBe(400);          // обед заменён своим: что там было, приложение не знает
-    expect(t.protein).toBe(25);
-    expect(t.ate).toBe(1);
+    // раньше своё считалось нулём и сводка занижала съеденное; теперь — плановая порция как оценка
+    expect(t.kcal).toBe(1000);
+    expect(t.protein).toBe(65);
+    expect(t.estimated).toBe(true);
+    expect(t.ate).toBe(1);             // «съел по плану» — по-прежнему только завтрак
     expect(t.marked).toBe(2);
   });
 
@@ -99,5 +101,70 @@ describe("клетчатка в фактах дня", () => {
     // каждое блюдо в фикстуре несёт 3 г клетчатки; засчитан один завтрак
     expect(eatenTotals(day, e).fiber).toBe(3);
     expect(eatenTotals(day, undefined).fiber).toBe(0);
+  });
+});
+
+describe("«весь день по плану» и размер своей еды", () => {
+  it("ставит «съел» только неотмеченным — своё не перетирает", () => {
+    const cur = toggleMark(undefined, "lunch", "own", 4);
+    const e = markAllAte(cur, ["breakfast", "lunch", "dinner", "dessert"], 4);
+    expect(e.marks).toEqual({ breakfast: "ate", lunch: "own", dinner: "ate", dessert: "ate" });
+    expect(e.planned).toBe(4);
+  });
+  it("своё без размера считается как плановая порция и помечается оценкой", () => {
+    const e = toggleMark(undefined, "lunch", "own", 4);
+    const t = eatenTotals(day, e);
+    expect(t.kcal).toBe(600);
+    expect(t.protein).toBe(40);
+    expect(t.estimated).toBe(true);
+  });
+  it("плотное своё — в полтора раза больше плана, лёгкое — 0.6", () => {
+    let e = toggleMark(undefined, "lunch", "own", 4);
+    e = setOwnSize(e, "lunch", "big");
+    expect(eatenTotals(day, e).kcal).toBe(900);
+    e = setOwnSize(e, "lunch", "light");
+    expect(eatenTotals(day, e).kcal).toBe(360);
+  });
+  it("клетчатку своей еды не выдумываем", () => {
+    const e = toggleMark(undefined, "lunch", "own", 4);
+    expect(eatenTotals(day, e).fiber).toBe(0);
+  });
+  it("съеденное по плану — не оценка", () => {
+    const e = toggleMark(undefined, "breakfast", "ate", 4);
+    expect(eatenTotals(day, e).estimated).toBe(false);
+  });
+  it("снятая отметка «своё» забывает и размер", () => {
+    let e = toggleMark(undefined, "lunch", "own", 4);
+    e = setOwnSize(e, "lunch", "big");
+    e = toggleMark(e, "lunch", "own", 4);
+    expect(e.sizes?.lunch).toBeUndefined();
+  });
+});
+
+describe("записанное словами", () => {
+  it("своё с описанием считается по прикидке, а не по плану", () => {
+    let e = toggleMark(undefined, "lunch", "own", 4);
+    e = setOwnText(e, "lunch", { text: "шаурма", kcal: 560, protein: 28 });
+    const t = eatenTotals(day, e);
+    expect(t.kcal).toBe(560);
+    expect(t.protein).toBe(28);
+  });
+  it("еда вне плана прибавляется к дню", () => {
+    let e = toggleMark(undefined, "breakfast", "ate", 4);
+    e = addExtra(e, { text: "шоколадка", kcal: 250, protein: 3 }, 4);
+    expect(eatenTotals(day, e).kcal).toBe(650);
+    expect(eatenTotals(day, e).estimated).toBe(true);
+  });
+  it("запись вне плана можно убрать", () => {
+    let e = addExtra(undefined, { text: "а", kcal: 100, protein: 1 }, 4);
+    e = addExtra(e, { text: "б", kcal: 200, protein: 2 }, 4);
+    e = removeExtra(e, 0);
+    expect(e.extras).toEqual([{ text: "б", kcal: 200, protein: 2 }]);
+  });
+  it("снятая отметка «своё» забывает и описание", () => {
+    let e = toggleMark(undefined, "lunch", "own", 4);
+    e = setOwnText(e, "lunch", { text: "шаурма", kcal: 560, protein: 28 });
+    e = toggleMark(e, "lunch", "own", 4);
+    expect(e.ownText?.lunch).toBeUndefined();
   });
 });

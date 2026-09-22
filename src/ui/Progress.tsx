@@ -12,6 +12,9 @@ import { plateau } from "../plateau.js";
 import { SleepSparkline, WeightChart } from "./Charts.js";
 import { tap } from "./haptics.js";
 import { stopBang, nightEating } from "../screening.js";
+import { sleepFoodLink, monthRecap } from "../sleep-food.js";
+import { expenditure } from "../expenditure.js";
+import { readLS, writeLS } from "./localStore.js";
 
 /**
  * Итоги: где ты сейчас и что дальше.
@@ -24,7 +27,7 @@ import { stopBang, nightEating } from "../screening.js";
  * почему стоит вес, как прошла неделя, ровность режима. Первое, что видно, — действие,
  * а не цифры: цифры без действия только тревожат.
  */
-export function Progress({ profile, history, food, weights, eaten, cheatDays, onAddWeight }: {
+export function Progress({ profile, history, food, weights, eaten, cheatDays, onAddWeight, onAdjustKcal }: {
   profile: Profile;
   history: DayLog[];
   food?: FoodSettings;
@@ -32,6 +35,8 @@ export function Progress({ profile, history, food, weights, eaten, cheatDays, on
   eaten?: Record<string, DayEaten>;
   cheatDays?: string[];
   onAddWeight: (kg: number) => void;
+  /** Принять поправку нормы по реальному расходу (шаг в ккал; 0 — сбросить поправку). */
+  onAdjustKcal?: (step: number) => void;
 }) {
   const [kg, setKg] = useState("");
   const today = localDateISO();
@@ -48,6 +53,40 @@ export function Progress({ profile, history, food, weights, eaten, cheatDays, on
   const anchorInfo = useMemo(() => anchor(records, profile.targetSleepMin), [records, profile.targetSleepMin]);
   const step = useMemo(() => nextStep(records, !!food), [records, food]);
   const plateauInfo = useMemo(() => plateau(records, profile.targetSleepMin), [records, profile.targetSleepMin]);
+  // последние 60 дней: старые привычки не должны заслонять нынешние
+  const link = useMemo(
+    () => sleepFoodLink(records.filter(r => r.date >= plusDaysISO(today, -60)), profile.targetSleepMin),
+    [records, today, profile.targetSleepMin],
+  );
+  // реальный расход по весу и отмеченной еде (research-2026-09-23, раздел 2)
+  const exp = useMemo(() => {
+    if (!food) return null;
+    const base = targetsFor(food);
+    // дни до поправки нормы считаются по норме без неё — съедено было по тогдашней
+    const unadjusted = targetsFor({ ...food, kcalAdjust: 0 });
+    const targetOf = (iso: string) => targetsForToday(
+      food.kcalAdjustAt && iso < food.kcalAdjustAt ? unadjusted : base, food.startISO, iso, food.pace).targets.kcalTarget;
+    return {
+      formulaTdee: base.tdee, tempo: base.tempoKgPerWeek,
+      r: expenditure({
+        today, weights: weights ?? [], eaten: eaten ?? {}, mealCount: food.mealCount, targetOf,
+        currentTarget: targetOf(today),
+        ...(food.startISO ? { startISO: food.startISO } : {}),
+        ...(cheatDays ? { cheatDays } : {}),
+        ...(food.kcalAdjustAt ? { lastAdjustISO: food.kcalAdjustAt } : {}),
+      }),
+    };
+  }, [food, weights, eaten, cheatDays, today]);
+  // «не сейчас» прячет предложение на неделю — к следующему пересчёту
+  const [expHiddenAt, setExpHiddenAt] = useState(() => readLS<string | null>("edimispim.expHidden", null));
+  const expHidden = !!expHiddenAt && plusDaysISO(expHiddenAt, 7) > today;
+
+  // итог ПРОШЛОГО месяца: текущий ещё не закончен
+  const prevMonth = useMemo(() => {
+    const d = new Date(today + "T12:00:00Z"); d.setUTCDate(0);
+    const ym = d.toISOString().slice(0, 7);
+    return { ym, name: d.toLocaleDateString("ru-RU", { month: "long", timeZone: "UTC" }), recap: monthRecap(records, ym) };
+  }, [records, today]);
 
   /**
    * Вердикты скрининга стыка. Считаются из сохранённых ответов, а не хранятся текстом:
@@ -117,6 +156,116 @@ export function Progress({ profile, history, food, weights, eaten, cheatDays, on
           <p className="small muted mt-2">Уже есть: {step.done} из {step.need}.</p>
         )}
       </section>
+
+      {/*
+        * Сон и еда у тебя — ради этой карточки приложение и просит отмечать и ночи, и еду.
+        * Полосы одного цвета: зелёный и оранжевый выносили бы приговор «хорошо / плохо»,
+        * а это наблюдение. Подписи стоят прямо у полос, поэтому цвет ничего не кодирует.
+        */}
+      {food && (
+        <section className="card">
+          <h3 className="card-h">Сон и еда у тебя</h3>
+          {link.ready ? (
+            <>
+              {([["После обычной ночи", link.good], ["После плохой ночи", link.rough]] as const).map(([ru, g]) => (
+                <div key={ru} className="link-bar">
+                  <div className="link-bar-head small">
+                    <span>{ru}</span>
+                    <b>{g.followed} из {g.total} дней по плану</b>
+                  </div>
+                  <div className="link-track" role="img" aria-label={`${ru}: ${g.followed} из ${g.total} дней по плану`}>
+                    <div className="link-fill" style={{ width: `${(g.followed / g.total) * 100}%` }} />
+                  </div>
+                </div>
+              ))}
+              <p className="small muted mt-2">
+                Это наблюдение, а не вывод о причинах: в плохие дни могло совпасть и что-то ещё.
+                Плохая ночь — оценка 1–2 или сна на час меньше цели.
+              </p>
+            </>
+          ) : (
+            <p className="small muted m-0">
+              Покажет, держится ли план после плохой ночи так же, как после обычной. Нужно хотя бы
+              по 3 дня с отметками еды после обычных и после плохих ночей — сейчас {link.good} и {link.rough}.
+            </p>
+          )}
+        </section>
+      )}
+
+      {exp && (
+        <section className="card">
+          <h3 className="card-h">Твой реальный расход</h3>
+          {exp.r.status === "wait" && (
+            <p className="small m-0">
+              Пока считаем по формуле: ≈ {exp.formulaTdee} ккал в день. Через {exp.r.daysLeft} дн.
+              посчитаем по твоим данным — для этого взвешивайся 4 раза в неделю и чаще, утром,
+              и отмечай все приёмы дня.
+            </p>
+          )}
+          {exp.r.status === "data" && (
+            <p className="small m-0">
+              Для расчёта по данным не хватает записей за последние 4 недели: взвешиваний
+              {" "}{exp.r.weighIns} из {exp.r.weighInsNeed}, недель, где записано 5+ дней, — {exp.r.weeksLogged} из {exp.r.weeks}.
+              Незаписанный день не считается нулём — его просто пропускаем. Пока норма по формуле: ≈ {exp.formulaTdee} ккал.
+            </p>
+          )}
+          {exp.r.status === "uncertain" && (
+            <p className="small m-0">
+              ≈ {exp.r.tdee} ккал в день, но разброс ±{exp.r.ci} — слишком широкий, чтобы менять норму.
+              Чаще взвешивайся — точность вырастет.
+            </p>
+          )}
+          {exp.r.status === "ready" && (
+            <>
+              <div className="exp-figure"><b>≈ {exp.r.tdee}</b><span>ккал в день · ±{exp.r.ci}</span></div>
+              <p className="small">
+                За 4 недели вес снижался на {exp.r.lossPerWeek} кг в неделю, план рассчитан на {exp.tempo}.
+                {exp.r.step === 0 && " Норма совпадает с реальным расходом — менять ничего не надо."}
+              </p>
+              {exp.r.step !== 0 && exp.r.nextChangeInDays > 0 && (
+                <p className="small muted">Следующую поправку можно будет принять через {exp.r.nextChangeInDays} дн. — норму не меняют чаще раза в 2 недели.</p>
+              )}
+              {exp.r.step !== 0 && exp.r.nextChangeInDays === 0 && !expHidden && onAdjustKcal && (
+                <div className="btn-row">
+                  <button className="chip on" onClick={() => { tap(); onAdjustKcal(exp.r.status === "ready" ? exp.r.step : 0); }}>
+                    {exp.r.step < 0 ? `Убрать ${-exp.r.step} ккал` : `Добавить ${exp.r.step} ккал`}
+                  </button>
+                  <button className="linkbtn" onClick={() => { writeLS("edimispim.expHidden", today); setExpHiddenAt(today); }}>не сейчас</button>
+                </div>
+              )}
+            </>
+          )}
+          {food?.kcalAdjust ? (
+            <p className="small muted mt-2">
+              Норма уже поправлена на {food.kcalAdjust > 0 ? "+" : ""}{food.kcalAdjust} ккал.{" "}
+              {onAdjustKcal && <button className="linkbtn small" onClick={() => onAdjustKcal(0)}>сбросить</button>}
+            </p>
+          ) : null}
+          <p className="small muted mt-2">
+            Это расчёт по твоим записям и весу, а не замер. Тренировки уже учтены — они видны в весе.
+            Читмилы и незаписанные дни в расчёт не входят. Норма не опустится ниже безопасного минимума.
+          </p>
+        </section>
+      )}
+
+      {prevMonth.recap && (
+        <section className="card">
+          <h3 className="card-h month-h">{prevMonth.name}</h3>
+          <div className="stat-grid">
+            <div><b>{prevMonth.recap.nights}</b><span>ночей отмечено</span></div>
+            <div>
+              <b>{prevMonth.recap.avgSleepMin != null
+                ? `${Math.floor(prevMonth.recap.avgSleepMin / 60)} ч ${prevMonth.recap.avgSleepMin % 60} мин` : "—"}</b>
+              <span>{prevMonth.recap.avgSleepMin != null ? "средний сон" : "сон: отбой не отмечался"}</span>
+            </div>
+            <div><b>{prevMonth.recap.followed} из {prevMonth.recap.marked}</b><span>дней еды по плану</span></div>
+            <div>
+              <b>{prevMonth.recap.weightFrom != null ? `${prevMonth.recap.weightFrom} → ${prevMonth.recap.weightTo}` : "—"}</b>
+              <span>{prevMonth.recap.weightFrom != null ? "кг за месяц" : "вес не записывался"}</span>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Где ты в лестнице. Без этого низкая цель выглядит как обещание, которое приложение
           почему-то не выполняет: в «Сегодня» одна цифра, в цели — другая. */}
@@ -245,7 +394,12 @@ export function Progress({ profile, history, food, weights, eaten, cheatDays, on
             )}
           </p>
         )}
-        <p className="small muted">Взвешивайся раз в неделю в одно время: одна цифра прыгает, линия за недели показывает правду.</p>
+        {/* Раньше здесь стояло «раз в неделю». Для линии тренда этого хватает, но для расчёта
+            реального расхода — нет: исследование требует от 4 взвешиваний в неделю. */}
+        <p className="small muted">
+          Взвешивайся утром, до еды. Одна цифра прыгает на полкило из-за воды и соли — смотри на линию.
+          Раза в неделю хватит для линии; 4 раза в неделю и чаще — чтобы приложение посчитало твой реальный расход.
+        </p>
       </section>
 
       {/* Карточка появляется вместе с цифрой. Пока ночей мало, она повторяла бы слово

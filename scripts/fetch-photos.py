@@ -22,10 +22,10 @@ KINDS = {
     "beef":       "beef stew plate food",
     "pork":       "pork chop plate food",
     "turkey":     "turkey meat dish plate",
-    "fish":       "salmon fillet plate food",
+    "fish":       "fried fish fillet plate",
     "seafood":    "shrimp dish plate food",
     "eggs":       "omelette plate breakfast",
-    "cottage":    "cottage cheese pancakes syrniki",
+    "cottage":    "syrniki",
     "porridge":   "oatmeal bowl breakfast",
     "pancakes":   "pancakes plate breakfast",
     "pasta":      "pasta bolognese plate",
@@ -42,7 +42,6 @@ KINDS = {
     "potato":     "roasted potatoes dish",
     "vegetables": "roasted vegetables dish",
     "smoothie":   "smoothie glass fruit",
-    "yogurt":     "yogurt berries bowl breakfast",
     "dessert":    "chocolate dessert plate",
     "fruit":      "apple fruit fresh",
     "nuts":       "nuts bowl snack",
@@ -50,7 +49,58 @@ KINDS = {
     "cheese":     "cheese plate appetizer",
     "wrap":       "burrito wrap plate",
     "stirfry":    "stir fry noodles wok",
+    # волна 37: конкретнее — чтобы йогурт-боул не показывал торт, а голубцы — пасту
+    "shakshuka":  "shakshuka pan eggs tomato",
+    "frenchtoast": "french toast berries plate",
+    "muffins":    "muffins",
+    "dumplings":  "pelmeni dumplings plate",
+    "vareniki":   "vareniki",
+    "cabbagerolls": "cabbage rolls golubtsy",
+    "meatballs":  "meatballs tomato sauce plate",
+    "cutlets":    "kotleta",
+    "curry":      "curry rice bowl",
+    "stew":       "meat stew pot vegetables",
+    "roast":      "roast pork potatoes dish",
+    "wings":      "chicken wings",
+    "goulash":    "goulash stew",
+    "salmon":     "salmon steak dish",
+    "whitefish":  "cod fillet",
+    "chia":       "chia pudding glass",
+    "icecream":   "ice cream scoops bowl",
+    "cheesecake": "cheesecake",
+    "bakedapple": "baked apples",
+    "energyballs": "energy balls",
+    "overnightoats": "overnight oats",
+    "bowl":       "quinoa salad bowl",
+    "noodles":    "udon noodles bowl",
+    "plov":       "plov",
+    "risotto":    "mushroom risotto",
+    "lasagna":    "lasagna slice plate",
+    "avotoast":   "avocado toast plate",
+    "creamsoup":  "pumpkin cream soup",
+    "lentilsoup": "lentil soup bowl",
+    "coldsoup":   "okroshka cold soup",
+    "falafel":    "falafel plate",
+    "stuffedpeppers": "stuffed bell peppers",
+    "fritters":   "zucchini fritters plate",
+    "draniki":    "potato pancakes draniki",
+    "poke":       "poke bowl salmon",
+    "tofu":       "tofu dish plate",
+    "casserole":  "cottage cheese casserole",
+    "mousse":     "chocolate mousse",
+    # йогурт и творог с ягодами берут этот снимок: отдельные с Викисклада не нашлись приличные
+    "granola":    "granola with yogurt",
+    "kasha":      "millet porridge bowl",
+    "bruschetta": "bruschetta tomato",
+    "quesadilla": "quesadilla plate",
+    "lavash":     "lavash roll",
+    "mushrooms":  "sauteed mushrooms",
 }
+
+# «вид=номер»: если первый снимок не подошёл по виду, берём следующий кандидат
+import sys as _sys
+SKIP = dict(a.split("=") for a in _sys.argv[1:] if "=" in a)
+FORCE = {a for a in _sys.argv[1:] if "=" not in a}
 
 def search(q, limit=6):
     url = ("https://commons.wikimedia.org/w/api.php?action=query&format=json"
@@ -74,11 +124,15 @@ def pick(pages):
     return sorted(pages, key=rank)
 
 os.makedirs(OUT, exist_ok=True)
-meta = {}
+# дописываем к собранному, а не собираем заново: проверенные глазами снимки не трогаем
+meta = json.load(open(META, encoding="utf-8")) if os.path.exists(META) else {}
 for kind, query in KINDS.items():
     dest = os.path.join(OUT, f"{kind}.jpg")
+    if kind in meta and kind not in FORCE and kind not in SKIP:
+        continue
     try:
-        for page in pick(search(query)):
+        cands = pick(search(query, limit=10))[int(SKIP.get(kind, 0)):]
+        for page in cands:
             ii = page["imageinfo"][0]
             ex = ii.get("extmetadata", {})
             lic = ex.get("LicenseShortName", {}).get("value", "?")
