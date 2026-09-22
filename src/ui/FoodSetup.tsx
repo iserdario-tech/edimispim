@@ -310,6 +310,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
           // полные настройки открыты — карточка «донастрой» больше не нужна
           tuned: true,
           ...(initial?.kcalAdjust ? { kcalAdjust: initial.kcalAdjust } : {}),
+          ...(initial?.kcalAdjustAt ? { kcalAdjustAt: initial.kcalAdjustAt } : {}),
           // дата старта ставится один раз: правка формы не должна начинать лестницу заново
           startISO: initial?.startISO ?? localDateISO(),
           screening: junctionResult(junction).screening,

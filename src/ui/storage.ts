@@ -41,6 +41,8 @@ export interface FoodSettings {
   strength?: boolean;
   /** Поправка нормы калорий, принятая по реальному расходу (ккал в день, обычно отрицательная). */
   kcalAdjust?: number;
+  /** Когда поправку меняли последний раз — следующая не раньше чем через 2 недели. */
+  kcalAdjustAt?: string;
 }
 
 /**
@@ -51,7 +53,11 @@ export interface FoodSettings {
  * Один вызов — один шанс забыть аргумент.
  */
 export const targetsFor = (food: FoodSettings): SafeTargets => {
-  const t = applySafety(computeTargets(food.profile), food.profile, food.screen ?? {});
+  const raw = computeTargets(food.profile);
+  // поправка по реальному расходу — ДО защиты: пол 1500/1200 и мягкий дефицит при
+  // красных флагах скрининга она не пробивает
+  const adjusted = food.kcalAdjust ? { ...raw, kcalTarget: raw.kcalTarget + food.kcalAdjust } : raw;
+  const t = applySafety(adjusted, food.profile, food.screen ?? {});
   // силовые поднимают белок, но не ниже обычной нормы; калории не трогают — тренировки
   // видны в весе, а браслеты ошибаются на 27–93% (research-2026-09-23, T1–T3)
   return food.strength ? { ...t, proteinGTarget: Math.max(t.proteinGTarget, strengthProtein(food.profile)) } : t;

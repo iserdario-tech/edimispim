@@ -59,8 +59,8 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
   /** Ручные замены блюд по датам — накладываются поверх календарного плана,
    *  иначе «Сегодня» показывало бы не то, что человек выбрал на экране «Еда». */
   swaps?: Record<string, Record<string, string>>;
-  onMarkMeal?: (date: string, slot: Slot, mark: MealMark, planned: number) => void;
-  onMarkAll?: (date: string, slots: Slot[], planned: number) => void;
+  onMarkMeal?: (date: string, slot: Slot, mark: MealMark, planned: number, dayKcal?: number) => void;
+  onMarkAll?: (date: string, slots: Slot[], planned: number, dayKcal?: number) => void;
   onOwnSize?: (date: string, slot: Slot, size: OwnSize) => void;
   onCheatDay?: (date: string, on: boolean) => void;
   onSetupFood?: () => void;
@@ -157,7 +157,7 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
   const markMeal = (slot: Slot, mark: MealMark) => {
     if (!onMarkMeal || !foodDay) return;
     tap();
-    onMarkMeal(today, slot, mark, foodDay.day.meals.length);
+    onMarkMeal(today, slot, mark, foodDay.day.meals.length, foodDay.day.totals.kcal);
   };
 
   /**
@@ -410,7 +410,7 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
           {onMarkAll && unmarkedSlots.length > 0 && nowMin >= dinnerMin && (
             <button className="all-plan-btn" onClick={() => {
               tap();
-              onMarkAll(today, unmarkedSlots, foodDay.day.meals.length);
+              onMarkAll(today, unmarkedSlots, foodDay.day.meals.length, foodDay.day.totals.kcal);
             }}>✓ Весь день по плану</button>
           )}
           {foodDay.diagnosis.messageRU && (

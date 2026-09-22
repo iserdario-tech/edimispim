@@ -39,6 +39,19 @@ const SCHEMES: Record<MealCount, {
 
 export const DEFAULT_MEAL_COUNT: MealCount = 4;
 
+/**
+ * Доля калорий дня на каждый приём — та же схема, по которой собирается день.
+ * Нужна там, где дня под рукой нет: оценка расхода считает съеденное по отметкам прошлых дней.
+ */
+export function slotShares(count: MealCount): Partial<Record<Slot, number>> {
+  const { mains, treatShare, treatCount } = SCHEMES[count];
+  const out: Partial<Record<Slot, number>> = {};
+  for (const [t, share] of Object.entries(mains) as [MealType, number][]) out[t as Slot] = share * (1 - treatShare);
+  if (treatCount >= 1) out.dessert = treatShare / treatCount;
+  if (treatCount >= 2) out.snack = treatShare / treatCount;
+  return out;
+}
+
 /** Ритм суток: подъём и отбой. Отбой может быть >24:00 («27:00» = 3 ночи). */
 export interface DayRhythm {
   wakeMin: number;

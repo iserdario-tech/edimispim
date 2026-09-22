@@ -1098,3 +1098,6 @@ input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.08); }
 .coach-hints { display: flex; gap: var(--sp-2); overflow-x: auto; margin: var(--sp-3) calc(-1 * var(--sp-4)) 0; padding: 0 var(--sp-4) var(--sp-1); scrollbar-width: none; }
 .coach-hints::-webkit-scrollbar { display: none; }
 .coach-hints .chip { flex: 0 0 auto; white-space: nowrap; }
+.exp-figure { display: flex; align-items: baseline; gap: var(--sp-2); flex-wrap: wrap; margin-bottom: var(--sp-1); }
+.exp-figure b { font-size: var(--t-title1); font-variant-numeric: tabular-nums; }
+.exp-figure span { font-size: var(--t-footnote); color: var(--fg-2); }
