@@ -6,7 +6,8 @@ import { loadDayDraft, saveDayDraft, targetsFor, type FoodSettings } from "./sto
 import { enableNotifications, syncPushContext } from "./notifications.js";
 import { filterRecipes, generateAdaptedDay, expectedBedMin, diagnosePool, targetsForToday, prefersFamiliar, scheduleFor, applySwaps } from "../food/index.js";
 import type { Recipe, Slot } from "../food/types.js";
-import { eatenTotals, type DayEaten, type MealMark } from "../food/eaten.js";
+import { eatenTotals, type DayEaten, type MealMark, type OwnSize } from "../food/eaten.js";
+import { SwipeRow } from "./SwipeRow.js";
 import { plusDaysISO } from "../today-date.js";
 import recipesJson from "../food/data/recipes.json";
 import { mealRows, mergeTimeline } from "./mealRows.js";
@@ -25,6 +26,9 @@ import { readLS, writeLS } from "./localStore.js";
 
 const RECIPES = recipesJson as Recipe[];
 
+const QUALITY_RU = [[1, "ужасно"], [2, "плохо"], [3, "норм"], [4, "хорошо"], [5, "отлично"]] as const;
+const OWN_SIZES = [["light", "лёгкое"], ["usual", "как в плане"], ["big", "плотное"]] as const;
+
 // "03:00" после полуночи -> "27:00" (движок считает минуты от полуночи дня)
 function crunchStr(hm: string): string {
   const [h, m] = hm.split(":").map(Number);
@@ -38,7 +42,7 @@ function crunchStr(hm: string): string {
 const todayLabel = (d: Date): string =>
   d.toLocaleDateString("ru-RU", { day: "numeric", month: "long", weekday: "long" });
 
-export function Today({ profile, history, screener, onLog, food, weights, eaten, ratings, cheatDays, swaps, onMarkMeal, onCheatDay, onSetupFood, backupAt, onBackup }: {
+export function Today({ profile, history, screener, onLog, food, weights, eaten, ratings, cheatDays, swaps, onMarkMeal, onMarkAll, onOwnSize, onCheatDay, onSetupFood, backupAt, onBackup }: {
   profile: Profile;
   history: DayLog[];
   screener?: ScreenerResult | null;
@@ -54,6 +58,8 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
    *  иначе «Сегодня» показывало бы не то, что человек выбрал на экране «Еда». */
   swaps?: Record<string, Record<string, string>>;
   onMarkMeal?: (date: string, slot: Slot, mark: MealMark, planned: number) => void;
+  onMarkAll?: (date: string, slots: Slot[], planned: number) => void;
+  onOwnSize?: (date: string, slot: Slot, size: OwnSize) => void;
   onCheatDay?: (date: string, on: boolean) => void;
   onSetupFood?: () => void;
   /** Когда последний раз сохраняли копию — для напоминания. */
@@ -67,6 +73,7 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
   const [draft] = useState(() => loadDayDraft(today));
   const [mode, setMode] = useState<DayMode>(draft?.mode ?? "normal");
   const [openRecipe, setOpenRecipe] = useState<Meal | null>(null);
+  const [markOpen, setMarkOpen] = useState(false);
   const [crunchEndHM, setCrunchEndHM] = useState(draft?.crunchEndHM ?? "03:00");
   const [toggles, setToggles] = useState<DayToggles>(draft?.toggles ?? {});
   const loggedToday = history.find((h) => h.date === today);
@@ -161,6 +168,8 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
     () => (foodDay ? eatenTotals(foodDay.day, todayEaten) : null),
     [foodDay, todayEaten],
   );
+  const unmarkedSlots = foodDay ? foodDay.day.meals.map(m => m.slot).filter(sl => !todayEaten?.marks[sl]) : [];
+  const dinnerMin = foodDay?.day.meals.find(m => m.slot === "dinner")?.timeMin ?? 19 * 60;
   const markMeal = (slot: Slot, mark: MealMark) => {
     if (!onMarkMeal || !foodDay) return;
     tap();
@@ -209,6 +218,11 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
   // первое — единственная награда за регулярность, второе — ответ на «что сейчас».
   const streak = useMemo(() => streakDays(history, today), [history, today]);
   const t = (k: keyof DayToggles) => setToggles({ ...toggles, [k]: !toggles[k] });
+  const quickLog = (q: 1 | 2 | 3 | 4 | 5) => {
+    tap();
+    setQuality(q);
+    onLog({ date: today, wokeHM, quality: q, ...(bedHM ? { bedHM } : {}), ...(toggles.hadAlcohol ? { hadAlcohol: true } : {}) });
+  };
   const markBlock = (
     <>
       <label className="fld small">Во сколько встал сегодня
@@ -273,11 +287,22 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
       )}
 
       {/* Пока ночь не отмечена — это единственное действие дня, поэтому оно наверху */}
+      {/* Утро в один тап. Отбой не подставляем: время, которое человек не называл,
+          стало бы выдуманной ночью в истории и испортило бы подсчёт недосыпа. */}
       {!loggedToday && (
         <section className="card accent" id="mark">
-          <h3 className="card-h">Отметь, как спалось</h3>
-          <p className="small muted">С этого весь день и строится: план еды подстроится под ночь.</p>
-          {markBlock}
+          <h3 className="card-h">Как спалось?</h3>
+          <div className="q-row" role="group" aria-label="Как спалось">
+            {QUALITY_RU.map(([q, ru]) => (
+              <button key={q} className="q-btn" onClick={() => quickLog(q)}>{ru}</button>
+            ))}
+          </div>
+          <p className="small muted q-hint">
+            встал {wokeHM} · {bedHM ? `лёг ${bedHM}` : "отбой не указан"} —{" "}
+            <button className="linkbtn small" aria-expanded={markOpen}
+              onClick={() => setMarkOpen(!markOpen)}>поправить</button>
+          </p>
+          {markOpen && <div className="reveal">{markBlock}</div>}
         </section>
       )}
 
@@ -336,7 +361,7 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
             */}
           <div className="day-summary-card">
             <div className="day-figure">
-              <b>{fact && fact.marked > 0 ? fact.kcal : foodDay.day.totals.kcal}</b>
+              <b>{fact && fact.marked > 0 ? `${fact.estimated ? "≈" : ""}${fact.kcal}` : foodDay.day.totals.kcal}</b>
               <span>
                 {fact && fact.marked > 0
                   ? `из ${foodDay.day.totals.kcal} ккал съедено`
@@ -369,8 +394,15 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
           {fact && fact.marked > 0 && (
             <p className="small muted mt-2">
               Отмечено {fact.marked} из {foodDay.day.meals.length} приёмов · белок {fact.protein} г
-              {fact.marked > fact.ate && " (часть — своей едой)"}
+              {fact.estimated && " · своя еда — прикидкой"}
             </p>
+          )}
+          {/* Вечером — одна кнопка вместо пяти отметок. Уже отмеченное она не трогает. */}
+          {onMarkAll && unmarkedSlots.length > 0 && nowMin >= dinnerMin && (
+            <button className="all-plan-btn" onClick={() => {
+              tap();
+              onMarkAll(today, unmarkedSlots, foodDay.day.meals.length);
+            }}>✓ Весь день по плану</button>
           )}
           {foodDay.diagnosis.messageRU && (
             <p className="small note-warn mt-2">{foodDay.diagnosis.messageRU}</p>
@@ -405,6 +437,10 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
         {rows.map((r, i) => (
           <li key={i} className={"row" + (r.past ? " past" : "") + (r.kind === "food" ? " food" : "") + (i === view.nextIdx ? " now" : "")}>
             <div className="row-time">{r.time}{r.endTime ? `–${r.endTime}` : ""}</div>
+            <SwipeRow enabled={r.kind === "food" && !!r.slot && !!onMarkMeal}
+              leftLabel="съел ✓" rightLabel="своё"
+              onLeft={() => r.slot && todayEaten?.marks[r.slot] !== "ate" && markMeal(r.slot, "ate")}
+              onRight={() => r.slot && todayEaten?.marks[r.slot] !== "own" && markMeal(r.slot, "own")}>
             <div className="row-body">
               {/* Фотография блюда. Строка еды без картинки читается как строка таблицы —
                   а это единственное место, где человек решает, будет он это готовить. */}
@@ -438,7 +474,23 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
                   ))}
                 </div>
               )}
+              {/* Своя еда — «сколько примерно». Без этого она считалась нулём и сводка врала. */}
+              {r.kind === "food" && r.slot && todayEaten?.marks[r.slot] === "own" && onOwnSize && (
+                <div className="own-size">
+                  <div className="small muted">Сколько примерно?</div>
+                  <div className="chips">
+                    {OWN_SIZES.map(([sz, ru]) => {
+                      const on = (todayEaten?.sizes?.[r.slot!] ?? "usual") === sz;
+                      return (
+                        <button key={sz} className={on ? "chip on" : "chip"} aria-pressed={on}
+                          onClick={() => { tap(); onOwnSize(today, r.slot!, sz); }}>{ru}</button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
+            </SwipeRow>
           </li>
         ))}
       </ol>
