@@ -2,13 +2,15 @@ import React, { useEffect, useMemo, useState } from "react";
 import type { Profile, DayLog, DayMode, DayToggles, ScreenerResult } from "../index.js";
 import { planDay, parseHM, sleepDurationMin, streakDays } from "../index.js";
 import { toPlanView } from "./viewModel.js";
-import { loadDayDraft, saveDayDraft, targetsFor, type FoodSettings } from "./storage.js";
+import { loadDayDraft, saveDayDraft, type FoodSettings } from "./storage.js";
 import { enableNotifications, syncPushContext } from "./notifications.js";
-import { filterRecipes, generateAdaptedDay, expectedBedMin, diagnosePool, targetsForToday, prefersFamiliar, scheduleFor, applySwaps } from "../food/index.js";
-import type { Recipe, Slot } from "../food/types.js";
-import { eatenTotals, type DayEaten, type MealMark } from "../food/eaten.js";
+import { expectedBedMin } from "../food/index.js";
+import type { Slot } from "../food/types.js";
+import { eatenTotals, rebalance, type DayEaten, type MealMark, type OwnSize, type WrittenFood } from "../food/eaten.js";
+import { EatSheet } from "./EatSheet.js";
+import { NO_COOK_MIN } from "./dayOpts.js";
+import { SwipeRow } from "./SwipeRow.js";
 import { plusDaysISO } from "../today-date.js";
-import recipesJson from "../food/data/recipes.json";
 import { mealRows, mergeTimeline } from "./mealRows.js";
 import { tap } from "./haptics.js";
 import { explain } from "../explain.js";
@@ -17,11 +19,15 @@ import { WeekFoodBars, DayRings } from "./Charts.js";
 import { followedPlan } from "../food/eaten.js";
 import { localDateISO, localMinutes } from "../today-date.js";
 import { useNow } from "./useNow.js";
+import { todayFoodDay } from "./todayPlan.js";
 import { Sheet } from "./Sheet.js";
 import { MealIngredients } from "./Grocery.js";
 import type { Meal } from "../food/types.js";
+import { isStandalone, isIOS, backupDue, daysSince, INSTALL_HINT_KEY } from "./dataSafety.js";
+import { readLS, writeLS } from "./localStore.js";
 
-const RECIPES = recipesJson as Recipe[];
+const QUALITY_RU = [[1, "ужасно"], [2, "плохо"], [3, "норм"], [4, "хорошо"], [5, "отлично"]] as const;
+const OWN_SIZES = [["light", "лёгкое"], ["usual", "как в плане"], ["big", "плотное"]] as const;
 
 // "03:00" после полуночи -> "27:00" (движок считает минуты от полуночи дня)
 function crunchStr(hm: string): string {
@@ -36,7 +42,7 @@ function crunchStr(hm: string): string {
 const todayLabel = (d: Date): string =>
   d.toLocaleDateString("ru-RU", { day: "numeric", month: "long", weekday: "long" });
 
-export function Today({ profile, history, screener, onLog, food, weights, eaten, ratings, cheatDays, swaps, onMarkMeal, onCheatDay, onSetupFood }: {
+export function Today({ profile, history, screener, onLog, food, weights, eaten, ratings, cheatDays, swaps, onMarkMeal, onMarkAll, onOwnSize, onOwnWritten, onExtraAdd, onExtraRemove, onCheatDay, onSetupFood, backupAt, onBackup, noCookDays, onNoCook, onTuned }: {
   profile: Profile;
   history: DayLog[];
   screener?: ScreenerResult | null;
@@ -51,9 +57,23 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
   /** Ручные замены блюд по датам — накладываются поверх календарного плана,
    *  иначе «Сегодня» показывало бы не то, что человек выбрал на экране «Еда». */
   swaps?: Record<string, Record<string, string>>;
-  onMarkMeal?: (date: string, slot: Slot, mark: MealMark, planned: number) => void;
+  onMarkMeal?: (date: string, slot: Slot, mark: MealMark, planned: number, dayKcal?: number, portion?: number) => void;
+  onMarkAll?: (date: string, slots: Slot[], planned: number, dayKcal?: number, portions?: Partial<Record<Slot, number>>) => void;
+  onOwnSize?: (date: string, slot: Slot, size: OwnSize) => void;
+  /** «Напиши, что съел» — своя еда словами и еда вне плана. */
+  onOwnWritten?: (date: string, slot: Slot, food: WrittenFood) => void;
+  onExtraAdd?: (date: string, food: WrittenFood, planned: number) => void;
+  onExtraRemove?: (date: string, index: number) => void;
   onCheatDay?: (date: string, on: boolean) => void;
   onSetupFood?: () => void;
+  /** Когда последний раз сохраняли копию — для напоминания. */
+  backupAt?: string | null;
+  onBackup?: () => void;
+  /** Дни «не готовлю» и переключатель — хранятся по датам, как читмил: «Еда» должна их видеть. */
+  noCookDays?: string[];
+  onNoCook?: (date: string, on: boolean) => void;
+  /** Закрыть «донастрой» без правки настроек. */
+  onTuned?: () => void;
 }) {
   // «сейчас» обязано идти вперёд, пока экран открыт: у PWA он живёт часами без перезагрузки
   const now = useNow();
@@ -62,6 +82,9 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
   const [draft] = useState(() => loadDayDraft(today));
   const [mode, setMode] = useState<DayMode>(draft?.mode ?? "normal");
   const [openRecipe, setOpenRecipe] = useState<Meal | null>(null);
+  const [markOpen, setMarkOpen] = useState(false);
+  // шторка «что съел»: для своего приёма (slot) или вне плана (null)
+  const [writing, setWriting] = useState<{ slot: Slot | null } | null>(null);
   const [crunchEndHM, setCrunchEndHM] = useState(draft?.crunchEndHM ?? "03:00");
   const [toggles, setToggles] = useState<DayToggles>(draft?.toggles ?? {});
   const loggedToday = history.find((h) => h.date === today);
@@ -72,6 +95,11 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
   const [savedMsg, setSavedMsg] = useState("");
   const notifOn = typeof Notification !== "undefined" && Notification.permission === "granted";
   const isCheat = !!cheatDays?.includes(today);
+  const noCook = !!noCookDays?.includes(today);
+  // Safari стирает данные сайта после недели простоя, установленное приложение — нет
+  const [installHint, setInstallHint] = useState(() => isIOS() && !isStandalone() && !readLS(INSTALL_HINT_KEY, false));
+  const daysWithData = new Set([...history.map(h => h.date), ...Object.keys(eaten ?? {})]).size;
+  const showBackup = !!onBackup && backupDue(backupAt ?? null, today, daysWithData);
 
   useEffect(() => { saveDayDraft({ date: today, mode, crunchEndHM, toggles }); }, [today, mode, crunchEndHM, toggles]);
   // контекст дня — на Worker, иначе пуши шли бы по «обычному дню», а не по тому, что на экране
@@ -108,54 +136,40 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
     // читмил объявляет сам человек: в этот день приложение не считает калории
     // и не показывает меню — иначе оно спорит с решением, которое уже принято
     if (!food || isCheat) return null;
-    const base = targetsFor(food);
-    // во время вхождения в дефицит цель на сегодня своя — она выше конечной и снижается по дням
-    const { targets: safe, ramp } = targetsForToday(base, food.startISO, today, food.pace);
-    const rated = Object.entries(ratings ?? {});
-    const pool = filterRecipes(RECIPES, {
-      ...food.constraints,
-      bannedIds: rated.filter(([, v]) => v === -1).map(([id]) => id),
+    return todayFoodDay({
+      food, today, wokeHM, bedMin, ratings, swaps, noCookDays,
+      night: { sleptMin, targetSleepMin: profile.targetSleepMin, quality },
     });
-    // Пустой набор — это НЕ «еда не подключена»: человек мог скрыть все блюда пальцем
-    // вниз или выставить взаимоисключающие ограничения. Возвращаем день без приёмов,
-    // чтобы экран показал разбор причины, а не предложил заполнить форму заново.
-    const diagnosis = diagnosePool(pool, food.mealCount);
-    const opts = {
-      rhythm: { wakeMin: parseHM(wokeHM), bedMin }, mealCount: food.mealCount,
-      familiar: prefersFamiliar(ramp),
-      liked: rated.filter(([, v]) => v === 1).map(([id]) => id),
-    };
-    /*
-     * День берётся из того же календарного плана, что и вкладка «Еда»: раньше здесь
-     * номером дня служил день недели, а там — индекс в семидневке, и один и тот же
-     * четверг показывал на двух экранах разную еду.
-     */
-    const planned = scheduleFor(today, pool, iso => targetsForToday(base, food.startISO, iso, food.pace).targets, () => opts);
-    const day = generateAdaptedDay(
-      safe, pool,
-      { ...opts, offset: planned.offset, avoid: planned.avoid },
-      { sleptMin, targetSleepMin: profile.targetSleepMin, quality },
-    );
-    // то, что человек поменял руками на экране «Еда», должно стоять и здесь
-    applySwaps(day, swaps?.[today], pool, safe, food.mealCount);
-    return { day, safe, diagnosis, ramp };
-  }, [food, isCheat, wokeHM, bedMin, today, sleptMin, profile.targetSleepMin, quality, ratings, swaps]);
-
-  const rows = useMemo(() => {
-    if (!foodDay) return view.rows;
-    return mergeTimeline(view.rows, mealRows(foodDay.day, bedMin, nowMin));
-  }, [view.rows, foodDay, bedMin, nowMin]);
+  }, [food, isCheat, noCookDays, wokeHM, bedMin, today, sleptMin, profile.targetSleepMin, quality, ratings, swaps]);
 
   // факт против плана: что из сегодняшнего меню действительно съедено
   const todayEaten = eaten?.[today];
+  // остаток дня подстраивается под съеденное: плотный обед — ужин поменьше
+  const balanced = useMemo(() => (foodDay ? rebalance(foodDay.day, todayEaten) : null), [foodDay, todayEaten]);
+
+  const rows = useMemo(() => {
+    if (!foodDay || !balanced) return view.rows;
+    return mergeTimeline(view.rows, mealRows(balanced.day, bedMin, nowMin));
+  }, [view.rows, foodDay, balanced, bedMin, nowMin]);
+
   const fact = useMemo(
     () => (foodDay ? eatenTotals(foodDay.day, todayEaten) : null),
     [foodDay, todayEaten],
   );
+  // факт есть и когда отмечена только еда вне плана: утренняя шоколадка тоже съедена
+  const hasFact = !!fact && (fact.marked > 0 || fact.kcal > 0);
+  const unmarkedSlots = foodDay ? foodDay.day.meals.map(m => m.slot).filter(sl => !todayEaten?.marks[sl]) : [];
+  const dinnerMin = foodDay?.day.meals.find(m => m.slot === "dinner")?.timeMin ?? 19 * 60;
+  // какая доля плановой порции стоит сейчас: после пересчёта дня ужин мог стать ×0.7
+  const portionOf = (slot: Slot): number => {
+    const plan = foodDay?.day.meals.find(m => m.slot === slot)?.servings;
+    const now = balanced?.day.meals.find(m => m.slot === slot)?.servings;
+    return plan && now ? Math.round((now / plan) * 100) / 100 : 1;
+  };
   const markMeal = (slot: Slot, mark: MealMark) => {
     if (!onMarkMeal || !foodDay) return;
     tap();
-    onMarkMeal(today, slot, mark, foodDay.day.meals.length);
+    onMarkMeal(today, slot, mark, foodDay.day.meals.length, foodDay.day.totals.kcal, portionOf(slot));
   };
 
   /**
@@ -200,6 +214,11 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
   // первое — единственная награда за регулярность, второе — ответ на «что сейчас».
   const streak = useMemo(() => streakDays(history, today), [history, today]);
   const t = (k: keyof DayToggles) => setToggles({ ...toggles, [k]: !toggles[k] });
+  const quickLog = (q: 1 | 2 | 3 | 4 | 5) => {
+    tap();
+    setQuality(q);
+    onLog({ date: today, wokeHM, quality: q, ...(bedHM ? { bedHM } : {}), ...(toggles.hadAlcohol ? { hadAlcohol: true } : {}) });
+  };
   const markBlock = (
     <>
       <label className="fld small">Во сколько встал сегодня
@@ -228,32 +247,104 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
         <span className="page-sub">{todayLabel(now)}</span>
       </h1>
       <div className="col-side">
-      {/* Главное сообщение дня — первое, что видно */}
+      {/* Самое срочное — сохранность данных: без неё всё остальное можно потерять за неделю */}
+      {installHint && (
+        <section className="card install-hint">
+          <div className="install-head">
+            <b>Safari сотрёт данные, если не заходить неделю</b>
+            <button className="sheet-close" aria-label="Закрыть"
+              onClick={() => { writeLS(INSTALL_HINT_KEY, true); setInstallHint(false); }}>✕</button>
+          </div>
+          <p className="small">
+            Приложение, установленное на экран «Домой», так не делает. Три шага: кнопка
+            «Поделиться» внизу Safari → «На экран „Домой“» → «Добавить».
+          </p>
+          <p className="small muted">
+            У установленной версии своя память: сначала сохрани копию здесь («Я» → «Сохранить»),
+            потом загрузи её там.
+          </p>
+        </section>
+      )}
+      {showBackup && (
+        <p className="small muted backup-line">
+          {backupAt ? `Копия данных — ${daysSince(backupAt, today)} дн. назад` : "Копии данных ещё нет"}
+          {" · "}<button className="linkbtn small" onClick={onBackup}>Сохранить</button>
+        </p>
+      )}
+
+      {/* «Что сейчас» — первый вопрос, с которым открывают приложение */}
+      {view.nextIdx != null && rows[view.nextIdx] && (
+        <div className="nextup">
+          <span className="nextup-label">Сейчас / дальше</span>
+          <span className="nextup-body">
+            {rows[view.nextIdx]!.icon} {rows[view.nextIdx]!.title} · {rows[view.nextIdx]!.time}
+          </span>
+        </div>
+      )}
+
+      {/* Пока ночь не отмечена — это единственное действие дня, поэтому оно наверху */}
+      {/* Утро в один тап. Отбой не подставляем: время, которое человек не называл,
+          стало бы выдуманной ночью в истории и испортило бы подсчёт недосыпа. */}
+      {!loggedToday && (
+        <section className="card accent" id="mark">
+          <h3 className="card-h">Как спалось?</h3>
+          <div className="q-row" role="group" aria-label="Как спалось">
+            {QUALITY_RU.map(([q, ru]) => (
+              <button key={q} className="q-btn" onClick={() => quickLog(q)}>{ru}</button>
+            ))}
+          </div>
+          <p className="small muted q-hint">
+            встал {wokeHM} · {bedHM ? `лёг ${bedHM}` : "отбой не указан"} —{" "}
+            <button className="linkbtn small" aria-expanded={markOpen}
+              onClick={() => setMarkOpen(!markOpen)}>поправить</button>
+          </p>
+          {markOpen && <div className="reveal">{markBlock}</div>}
+        </section>
+      )}
+
+      {/* Главное сообщение дня. Готовность и стрик живут в его шапке, а не отдельной
+          строкой между карточками — висящая сама по себе строка выпадала из сетки. */}
       <section className="why-today">
-        <div className="why-today-label">Почему сегодня так</div>
+        <div className="why-today-head">
+          <span className="why-today-label">Почему сегодня так</span>
+          <span className="why-today-status">
+            <span className="dot" style={{ background: view.readiness.color }} />
+            {view.readiness.label}
+          </span>
+          {streak > 0 && <span className="streak">🔥 {streak} подряд</span>}
+        </div>
         <p>{explanation.textRU}</p>
+        {/* Главное отличие приложения — еда под сон. Раньше от него оставалась метка
+            «упрощён», а что именно изменилось, человек не видел. */}
+        {foodDay && foodDay.changes.length > 0 && (
+          <>
+            <div className="why-changes-label">Что поменялось из-за ночи</div>
+            <ul className="why-changes">{foodDay.changes.map(c => <li key={c}>{c}</li>)}</ul>
+          </>
+        )}
+        <p className="small muted">{view.readiness.whyRU}</p>
       </section>
 
-      <div className="status-line">
-        <span className="dot" style={{ background: view.readiness.color }} />
-        <b>{view.readiness.label}</b>
-        <span className="small muted">{view.readiness.whyRU}</span>
-        {streak > 0 && <span className="streak">🔥 {streak} подряд</span>}
-      </div>
+      {/* После быстрого старта меню собрано по умолчанию — зовём донастроить, но не заставляем */}
+      {food && food.tuned === false && onSetupFood && (
+        <section className="card">
+          <h3 className="card-h">Донастрой меню · 1 минута</h3>
+          <p className="small muted">
+            Сейчас стоят настройки по умолчанию. Скажи, что не ешь, какая техника есть на кухне,
+            бюджет и сколько времени готовить в будни — меню станет твоим.
+          </p>
+          <div className="btn-row">
+            <button className="chip on" onClick={onSetupFood}>Настроить</button>
+            {onTuned && <button className="linkbtn" onClick={onTuned}>не нужно</button>}
+          </div>
+        </section>
+      )}
 
-      {/* Пока ночь не отмечена — это единственное действие дня, поэтому оно наверху.
-          После отметки сворачивается и не мешает. */}
-      {loggedToday ? (
+      {loggedToday && (
         <details className="card" id="mark">
           <summary className="card-h">Ночь отмечена ✓ — поправить</summary>
           <div className="tips-body">{markBlock}</div>
         </details>
-      ) : (
-        <section className="card accent" id="mark">
-          <h3 className="card-h">Отметь, как спалось</h3>
-          <p className="small muted">С этого весь день и строится: план еды подстроится под ночь.</p>
-          {markBlock}
-        </section>
       )}
 
       {isCheat ? (
@@ -289,9 +380,9 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
             */}
           <div className="day-summary-card">
             <div className="day-figure">
-              <b>{fact && fact.marked > 0 ? fact.kcal : foodDay.day.totals.kcal}</b>
+              <b>{hasFact ? `${fact!.estimated ? "≈" : ""}${fact!.kcal}` : foodDay.day.totals.kcal}</b>
               <span>
-                {fact && fact.marked > 0
+                {hasFact
                   ? `из ${foodDay.day.totals.kcal} ккал съедено`
                   : `ккал на сегодня · белок ${foodDay.day.totals.protein} г`}
               </span>
@@ -313,6 +404,8 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
             )}
           </div>
           {foodDay.day.simplified && <span className="tag">упрощён после плохой ночи</span>}
+          {noCook && <span className="tag">сегодня без готовки — блюда до {NO_COOK_MIN} минут</span>}
+          {balanced?.noteRU && <p className="small muted mt-2">{balanced.noteRU}</p>}
           {foodDay.ramp.active && (
             <p className="small muted mt-2">
               Вход в режим: день {foodDay.ramp.day} из {foodDay.ramp.total}. Сегодня норма выше
@@ -322,8 +415,31 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
           {fact && fact.marked > 0 && (
             <p className="small muted mt-2">
               Отмечено {fact.marked} из {foodDay.day.meals.length} приёмов · белок {fact.protein} г
-              {fact.marked > fact.ate && " (часть — своей едой)"}
+              {fact.estimated && " · своя еда — прикидкой"}
             </p>
+          )}
+          {/* Съеденное вне плана: раньше ему некуда было попасть, и день выглядел лучше, чем был */}
+          {todayEaten?.extras?.length ? (
+            <ul className="extras small">
+              {todayEaten.extras.map((x, k) => (
+                <li key={k}>
+                  <span>Вне плана: {x.text} ≈ {x.kcal} ккал</span>
+                  {onExtraRemove && <button className="linkbtn small" aria-label={`Убрать «${x.text}»`}
+                    onClick={() => onExtraRemove(today, k)}>убрать</button>}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {onExtraAdd && (
+            <button className="linkbtn small extra-add" onClick={() => setWriting({ slot: null })}>+ съел что-то ещё</button>
+          )}
+          {/* Вечером — одна кнопка вместо пяти отметок. Уже отмеченное она не трогает. */}
+          {onMarkAll && unmarkedSlots.length > 0 && nowMin >= dinnerMin && (
+            <button className="all-plan-btn" onClick={() => {
+              tap();
+              onMarkAll(today, unmarkedSlots, foodDay.day.meals.length, foodDay.day.totals.kcal,
+                Object.fromEntries(unmarkedSlots.map(sl => [sl, portionOf(sl)])));
+            }}>✓ Весь день по плану</button>
           )}
           {foodDay.diagnosis.messageRU && (
             <p className="small note-warn mt-2">{foodDay.diagnosis.messageRU}</p>
@@ -352,20 +468,16 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
       </div>
 
       <div className="col-main">
-      {view.nextIdx != null && rows[view.nextIdx] && (
-        <div className="nextup">
-          <span className="nextup-label">Сейчас / дальше</span>
-          <span className="nextup-body">
-            {rows[view.nextIdx]!.icon} {rows[view.nextIdx]!.title} · {rows[view.nextIdx]!.time}
-          </span>
-        </div>
-      )}
 
       {/* Одна лента суток: сон и еда на общей оси времени, а не два раздела */}
       <ol className="timeline">
         {rows.map((r, i) => (
           <li key={i} className={"row" + (r.past ? " past" : "") + (r.kind === "food" ? " food" : "") + (i === view.nextIdx ? " now" : "")}>
             <div className="row-time">{r.time}{r.endTime ? `–${r.endTime}` : ""}</div>
+            <SwipeRow enabled={r.kind === "food" && !!r.slot && !!onMarkMeal}
+              leftLabel="съел ✓" rightLabel="своё"
+              onLeft={() => r.slot && todayEaten?.marks[r.slot] !== "ate" && markMeal(r.slot, "ate")}
+              onRight={() => r.slot && todayEaten?.marks[r.slot] !== "own" && markMeal(r.slot, "own")}>
             <div className="row-body">
               {/* Фотография блюда. Строка еды без картинки читается как строка таблицы —
                   а это единственное место, где человек решает, будет он это готовить. */}
@@ -399,14 +511,48 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
                   ))}
                 </div>
               )}
+              {/* Своя еда — «сколько примерно». Без этого она считалась нулём и сводка врала. */}
+              {r.kind === "food" && r.slot && todayEaten?.marks[r.slot] === "own" && onOwnSize && (
+                <div className="own-size">
+                  <div className="small muted">Сколько примерно?</div>
+                  <div className="chips">
+                    {OWN_SIZES.map(([sz, ru]) => {
+                      const on = !todayEaten?.ownText?.[r.slot!] && (todayEaten?.sizes?.[r.slot!] ?? "usual") === sz;
+                      return (
+                        <button key={sz} className={on ? "chip on" : "chip"} aria-pressed={on}
+                          onClick={() => { tap(); onOwnSize(today, r.slot!, sz); }}>{ru}</button>
+                      );
+                    })}
+                    {onOwnWritten && (
+                      <button className={todayEaten?.ownText?.[r.slot!] ? "chip on" : "chip"}
+                        onClick={() => setWriting({ slot: r.slot! })}>✎ написать</button>
+                    )}
+                  </div>
+                  {todayEaten?.ownText?.[r.slot!] && (
+                    <div className="small muted">
+                      «{todayEaten.ownText[r.slot!]!.text}» ≈ {todayEaten.ownText[r.slot!]!.kcal} ккал
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
+            </SwipeRow>
           </li>
         ))}
       </ol>
 
+      {writing && foodDay && (
+        <EatSheet title={writing.slot ? "Что ты съел вместо плана?" : "Что ты съел ещё?"}
+          onClose={() => setWriting(null)}
+          onSave={food => {
+            if (writing.slot) onOwnWritten?.(today, writing.slot, food);
+            else onExtraAdd?.(today, food, foodDay.day.meals.length);
+          }} />
+      )}
+
       {openRecipe && (
         <Sheet title={openRecipe.recipe.name} onClose={() => setOpenRecipe(null)}>
-          <MealIngredients meal={openRecipe} />
+          <MealIngredients meal={openRecipe} household={food?.household ?? 1} />
         </Sheet>
       )}
 
@@ -448,6 +594,12 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
           </div>
 
           <div className="day-group">
+            {onNoCook && food && !isCheat && (
+              <button className={noCook ? "chip on wide" : "chip wide"} aria-pressed={noCook}
+                onClick={() => { tap(); onNoCook(today, !noCook); }}>
+                🥪 Сегодня не готовлю
+              </button>
+            )}
             {onCheatDay && (
               <button className={isCheat ? "chip on wide" : "chip wide"}
                 onClick={() => { tap(); onCheatDay(today, !isCheat); }}>

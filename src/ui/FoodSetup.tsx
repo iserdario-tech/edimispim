@@ -3,7 +3,7 @@ import type { FoodSettings } from "./storage.js";
 import type { Activity, Budget, MealCount, Sex } from "../food/types.js";
 import { DEFAULT_PACE, RAMP_DAYS, type RampPace } from "../food/rampin.js";
 import { localDateISO } from "../today-date.js";
-import { nightEating, type StopBangAnswers, type NesAnswers } from "../screening.js";
+import { JunctionScreening, junctionFrom, junctionResult, type JunctionValue } from "./JunctionScreening.js";
 
 const COOKWARE = [
   ["stove", "плита"], ["oven", "духовка"], ["microwave", "микроволновка"],
@@ -73,20 +73,13 @@ export function FoodSetup({ initial, onDone, onCancel }: {
   const [cookware, setCookware] = useState<string[]>(initial?.constraints.cookware ?? ["stove", "oven", "microwave"]);
   const [allergens, setAllergens] = useState<string[]>(initial?.constraints.allergens ?? []);
   const [pace, setPace] = useState<RampPace>(initial?.pace ?? DEFAULT_PACE);
-  // скрининг стыка: «ворота» открывают остальные вопросы, чтобы форма не пугала длиной
-  const sb = initial?.screening?.stopBang;
-  const ne = initial?.screening?.nes;
-  const [apneaGate, setApneaGate] = useState(!!sb?.snoringLoud);
-  const [apnea, setApnea] = useState<Omit<StopBangAnswers, "snoringLoud">>({
-    tiredDaytime: !!sb?.tiredDaytime, observedApnea: !!sb?.observedApnea,
-    highBloodPressure: !!sb?.highBloodPressure, neckOver40cm: !!sb?.neckOver40cm,
-  });
-  const [nesGate, setNesGate] = useState(!!(ne?.eveningHyperphagia || ne?.nightEatingTwicePlus));
-  const [nes, setNes] = useState<Omit<NesAnswers, "eveningHyperphagia" | "nightEatingTwicePlus">>({
-    morningAnorexia: !!ne?.morningAnorexia, urgeToEatBeforeSleep: !!ne?.urgeToEatBeforeSleep,
-    insomnia: !!ne?.insomnia, mustEatToSleep: !!ne?.mustEatToSleep,
-    eveningMoodDrop: !!ne?.eveningMoodDrop, distress: !!ne?.distress,
-  });
+  const [cookWeekday, setCookWeekday] = useState<number | undefined>(initial?.cookMin?.weekday);
+  const [cookWeekend, setCookWeekend] = useState<number | undefined>(initial?.cookMin?.weekend);
+  const [leftovers, setLeftovers] = useState(!!initial?.leftovers);
+  const [household, setHousehold] = useState(initial?.household ?? 1);
+  const [strength, setStrength] = useState(!!initial?.strength);
+  // скрининг стыка — общий компонент с быстрым стартом
+  const [junction, setJunction] = useState<JunctionValue>(() => junctionFrom(initial?.screening));
   const saved = initial?.constraints.dislikes ?? [];
   const [noRare, setNoRare] = useState(RARE_INGREDIENTS.every(r => saved.includes(r)));
   const [dislikes, setDislikes] = useState(saved.filter(d => !RARE_INGREDIENTS.includes(d)).join(", "));
@@ -134,6 +127,15 @@ export function FoodSetup({ initial, onDone, onCancel }: {
           <button className={activity === "medium" ? "chip on" : "chip"} onClick={() => setActivity("medium")}>Средний</button>
           <button className={activity === "high" ? "chip on" : "chip"} onClick={() => setActivity("high")}>На ногах</button>
         </div>
+        <label className="chk">
+          <input type="checkbox" checked={strength} onChange={e => setStrength(e.target.checked)} />
+          Регулярно делаю силовые — 2 раза в неделю и чаще
+        </label>
+        <p className="small muted">
+          Белок поднимется до 1.6 г на кг — каждый день одинаково, а не только в день тренировки.
+          Калории за тренировку не добавляем: вес зависит от среднего за неделю, а браслеты ошибаются
+          в расходе на 27–93%. Реальный расход приложение увидит по весу.
+        </p>
 
       </section>
 
@@ -167,8 +169,43 @@ export function FoodSetup({ initial, onDone, onCancel }: {
         </div>
       </section>
 
+      {/* Готовка — отдельно от техники: будни у большинства короче выходных, и бигос
+          на полтора часа в среду был гарантированным срывом плана. */}
       <section className="card">
-        <h3 className="card-h">5 · Чего не будет в меню</h3>
+        <h3 className="card-h">5 · Готовка</h3>
+        <p className="small muted">Долгие блюда уйдут на выходные — или туда, где времени нет ограничений.</p>
+        {([["В будни", cookWeekday, setCookWeekday], ["В выходные", cookWeekend, setCookWeekend]] as const).map(([ru, v, set]) => (
+          <div key={ru} className="day-group">
+            <div className="day-group-label small muted">{ru}</div>
+            <div className="seg" role="group" aria-label={`Время на готовку ${ru.toLowerCase()}`}>
+              {([[15, "15 мин"], [30, "30 мин"], [45, "45 мин"], [undefined, "сколько надо"]] as const).map(([m, label]) => (
+                <button key={label} className={v === m ? "seg-item on" : "seg-item"}
+                  aria-pressed={v === m} onClick={() => set(m)}>{label}</button>
+              ))}
+            </div>
+          </div>
+        ))}
+        <label className="chk">
+          <input type="checkbox" checked={leftovers} onChange={e => setLeftovers(e.target.checked)} />
+          Готовлю ужин на два дня — обед назавтра из остатков
+        </label>
+        <p className="small muted">Час готовки в день превращается в час через день, и половина покупок совпадает.</p>
+        <div className="day-group">
+          <div className="day-group-label small muted">Готовлю на</div>
+          <div className="seg" role="group" aria-label="На сколько человек готовить">
+            {[1, 2, 3, 4].map(n => (
+              <button key={n} className={household === n ? "seg-item on" : "seg-item"}
+                aria-pressed={household === n} onClick={() => setHousehold(n)}>
+                {n === 1 ? "себя" : `${n} чел.`}
+              </button>
+            ))}
+          </div>
+          <p className="small muted">Калории считаются только на тебя, продукты в списке покупок — на всех.</p>
+        </div>
+      </section>
+
+      <section className="card">
+        <h3 className="card-h">6 · Чего не будет в меню</h3>
         <p className="small muted">Аллергии исключаются жёстко, нелюбимое — тоже.</p>
         <div className="chips">
           {ALLERGENS.map(([key, ru]) => (
@@ -191,7 +228,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
       </section>
 
       <section className="card">
-        <h3 className="card-h">6 · Бюджет</h3>
+        <h3 className="card-h">7 · Бюджет</h3>
         <p className="small muted">
           «Небольшой» оставит блюда повыгоднее по цене за грамм белка — неделя выйдет
           примерно на тысячу рублей дешевле. Цель по калориям и белку при этом та же.
@@ -206,7 +243,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
       </section>
 
       <section className="card">
-        <h3 className="card-h">7 · Как входить в режим</h3>
+        <h3 className="card-h">8 · Как входить в режим</h3>
         <p className="small muted">
           С первого дня есть на полном дефиците — самая частая причина бросить на первой неделе.
           Поэтому начинаем с того калоража, на котором ты и так живёшь, и спускаемся к цели
@@ -235,58 +272,14 @@ export function FoodSetup({ initial, onDone, onCancel }: {
         большинству эта часть формы стоит пяти секунд.
       */}
       <section className="card">
-        <h3 className="card-h">8 · Короткая проверка</h3>
+        <h3 className="card-h">9 · Короткая проверка</h3>
         <p className="small muted">
           Два вопроса про сон и еду вместе. Это не диагноз — приложение ничего не лечит
           и никуда не отправляет данные, а при тревожных ответах просто советует врача
           и не ставит жёсткий дефицит.
         </p>
 
-        <label className="chk">
-          <input type="checkbox" checked={apneaGate}
-            onChange={e => setApneaGate(e.target.checked)} />
-          Громко храплю или кто-то замечал остановки дыхания во сне
-        </label>
-        {apneaGate && (
-          <div className="reveal reveal-indent">
-            {([
-              ["tiredDaytime", "Днём разбитость даже после долгого сна"],
-              ["observedApnea", "Кто-то замечал именно остановки дыхания"],
-              ["highBloodPressure", "Высокое давление или лечусь от него"],
-              ["neckOver40cm", "Окружность шеи больше 40 см"],
-            ] as const).map(([key, ru]) => (
-              <label key={key} className="chk">
-                <input type="checkbox" checked={!!apnea[key]}
-                  onChange={e => setApnea({ ...apnea, [key]: e.target.checked })} />
-                {ru}
-              </label>
-            ))}
-          </div>
-        )}
-
-        <label className="chk">
-          <input type="checkbox" checked={nesGate}
-            onChange={e => setNesGate(e.target.checked)} />
-          Просыпаюсь ночью поесть или основная еда уходит на вечер
-        </label>
-        {nesGate && (
-          <div className="reveal reveal-indent">
-            {([
-              ["morningAnorexia", "Утром есть не хочется"],
-              ["urgeToEatBeforeSleep", "Между ужином и сном тянет есть"],
-              ["insomnia", "Сон рваный: трудно заснуть или просыпаюсь"],
-              ["mustEatToSleep", "Кажется, что без еды не усну"],
-              ["eveningMoodDrop", "К вечеру настроение хуже"],
-              ["distress", "Меня это беспокоит и мешает жить"],
-            ] as const).map(([key, ru]) => (
-              <label key={key} className="chk">
-                <input type="checkbox" checked={!!nes[key]}
-                  onChange={e => setNes({ ...nes, [key]: e.target.checked })} />
-                {ru}
-              </label>
-            ))}
-          </div>
-        )}
+        <JunctionScreening value={junction} onChange={setJunction} />
       </section>
 
       {problems.length > 0 && (
@@ -308,17 +301,21 @@ export function FoodSetup({ initial, onDone, onCancel }: {
           },
           mealCount,
           pace,
+          ...(cookWeekday !== undefined || cookWeekend !== undefined
+            ? { cookMin: { ...(cookWeekday !== undefined ? { weekday: cookWeekday } : {}), ...(cookWeekend !== undefined ? { weekend: cookWeekend } : {}) } }
+            : {}),
+          ...(leftovers ? { leftovers: true } : {}),
+          ...(household > 1 ? { household } : {}),
+          ...(strength ? { strength: true } : {}),
+          // полные настройки открыты — карточка «донастрой» больше не нужна
+          tuned: true,
+          ...(initial?.kcalAdjust ? { kcalAdjust: initial.kcalAdjust } : {}),
+          ...(initial?.kcalAdjustAt ? { kcalAdjustAt: initial.kcalAdjustAt } : {}),
           // дата старта ставится один раз: правка формы не должна начинать лестницу заново
           startISO: initial?.startISO ?? localDateISO(),
-          screening: {
-            stopBang: { snoringLoud: apneaGate, ...apnea },
-            nes: { eveningHyperphagia: nesGate, nightEatingTwicePlus: nesGate, ...nes },
-          },
+          screening: junctionResult(junction).screening,
           // ночное питание — красный флаг для расчёта: дефицит смягчается, а не максимальный
-          screen: {
-            ...(initial?.screen ?? {}),
-            nesFlagged: nightEating({ eveningHyperphagia: nesGate, nightEatingTwicePlus: nesGate, ...nes }).flagged,
-          },
+          screen: { ...(initial?.screen ?? {}), nesFlagged: junctionResult(junction).nesFlagged },
         })}>Собрать меню</button>
         {onCancel && <button className="linkbtn" onClick={onCancel}>Не сейчас</button>}
       </div>

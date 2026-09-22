@@ -23,7 +23,22 @@ describe("фотографии блюд", () => {
     expect(kindOf("Куриный суп с лапшой")).toBe("soup");
     expect(kindOf("Гороховый суп с копчёными рёбрышками")).toBe("soup");
     expect(kindOf("Салат капрезе")).toBe("salad");
-    expect(kindOf("Шоколадный протеиновый мусс")).toBe("dessert");
+    expect(kindOf("Шоколадный протеиновый мусс")).toBe("mousse");
+  });
+
+  it("состав не перебивает название: томатная паста не делает рагу макаронами", () => {
+    const kindOf = (name: string) => photoFor(RECIPES.find(x => x.name === name)!).file.replace(".jpg", "");
+    // раньше название и состав склеивались, и 44 блюда показывали пасту, 47 — яйца
+    expect(kindOf("Голубцы с мясом и рисом")).toBe("cabbagerolls");
+    expect(kindOf("Йогурт-боул с гранолой, мёдом и орехами")).toBe("granola");
+    expect(kindOf("Классическая шакшука")).toBe("shakshuka");
+    expect(kindOf("Митболы в томатном соусе")).toBe("meatballs");
+  });
+
+  it("ни один снимок не висит на большой доле блюд", () => {
+    const count = new Map<string, number>();
+    for (const r of RECIPES) { const f = photoFor(r).file; count.set(f, (count.get(f) ?? 0) + 1); }
+    expect(Math.max(...count.values())).toBeLessThanOrEqual(25);
   });
 
   it("у каждой фотографии есть автор и лицензия", () => {
@@ -36,6 +51,6 @@ describe("фотографии блюд", () => {
 
   it("разные блюда получают разные снимки — список не выглядит одинаковым", () => {
     const kinds = new Set(RECIPES.map(r => photoFor(r).file));
-    expect(kinds.size).toBeGreaterThan(12);
+    expect(kinds.size).toBeGreaterThan(60);
   });
 });

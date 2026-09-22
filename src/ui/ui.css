@@ -918,7 +918,7 @@ input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.08); }
   /* пока картинка грузится, на её месте ровный прямоугольник, а не прыгающая пустота */
 }
 .row.food .row-kicker, .row.food .row-title, .row.food .row-detail,
-.row.food .row-why-box, .row.food .eat-row { grid-column: 2; }
+.row.food .row-why-box, .row.food .eat-row, .row.food .own-size { grid-column: 2; }
 .row-photo { grid-row: 1 / span 4; }
 /* Подпись приёма: мелкая и акцентная, как ярлык над заголовком */
 .row-kicker {
@@ -1011,3 +1011,107 @@ input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.08); }
 .reveal-indent { padding-left: var(--sp-2); }
 /* карточка сводки — flex; подсказка встаёт под кольцами, а не рядом с ними */
 .rings-hint { flex: 1 0 100%; margin-top: var(--sp-2); }
+
+/* ─── Волна 37: шапка «почему сегодня так», плашка установки, копия ─── */
+.why-today-head { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; margin-bottom: var(--sp-1); }
+.why-today-head .why-today-label { margin-bottom: 0; }
+.why-today-status {
+  display: inline-flex; align-items: center; gap: var(--sp-1);
+  font-size: var(--t-caption1); font-weight: 600; color: var(--fg-2);
+}
+.why-today-status .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.why-today p.small { font-size: var(--t-footnote); line-height: 1.4; margin-top: var(--sp-2); }
+.why-changes { margin: var(--sp-2) 0 0; padding-left: var(--sp-4); display: grid; gap: var(--sp-1); font-size: var(--t-subhead); }
+.why-changes-label { font-size: var(--t-footnote); font-weight: 600; color: var(--fg-2); margin-top: var(--sp-3); }
+
+.install-hint { background: color-mix(in srgb, var(--warn) 14%, var(--surface)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--warn) 35%, transparent); }
+.install-head { display: flex; align-items: flex-start; gap: var(--sp-3); justify-content: space-between; }
+.install-head b { font-size: var(--t-callout); line-height: 1.3; }
+.install-hint p { margin: var(--sp-2) 0 0; }
+.backup-line { margin: var(--sp-2) 0; }
+.backup-line .linkbtn { padding: 0; min-height: 0; }
+/* без ссылки строка продукта держит ту же высоту, что и со ссылкой */
+.ing-name { min-height: var(--tap); display: inline-flex; align-items: center; }
+
+/* ─── Свайп по блюду ─── */
+.swipe { position: relative; }
+.swipe-over { position: relative; touch-action: pan-y; transition: transform .18s var(--spring); }
+.swipe-under {
+  position: absolute; inset: 0; display: flex; justify-content: space-between; align-items: center;
+  padding: 0 var(--sp-4); border-radius: var(--r-card);
+}
+.swipe-label { font-weight: 600; font-size: var(--t-subhead); opacity: .25; transition: opacity .12s; }
+.swipe-label.on { opacity: 1; }
+.swipe-label.ate { color: var(--ok); }
+.swipe-label.own { color: var(--accent); }
+
+/* ─── Утро в один тап ─── */
+.q-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--sp-1); margin: var(--sp-3) 0 var(--sp-2); }
+.q-btn {
+  min-height: 52px; padding: 0 2px; border: 0; border-radius: var(--r-control);
+  background: var(--surface-2); color: var(--fg); font: inherit;
+  font-size: var(--t-caption1); font-weight: 600; cursor: pointer;
+}
+.q-btn:active { background: var(--accent); color: var(--accent-ink); }
+.q-hint { margin: 0; }
+.q-hint .linkbtn { padding: 0; min-height: 0; }
+
+/* ─── Своя еда: размер ─── */
+.own-size { margin-top: var(--sp-2); display: grid; gap: var(--sp-1); }
+.own-size .chips { margin: 0; }
+
+.all-plan-btn {
+  display: block; width: 100%; margin-top: var(--sp-3); min-height: 48px;
+  border-radius: var(--r-control); border: 1.5px solid var(--accent);
+  background: transparent; color: var(--accent); font: inherit; font-weight: 600; cursor: pointer;
+}
+.all-plan-btn:active { background: var(--accent-soft); }
+/* в колонке рядом с фото три крупных чипа вставали столбиком — здесь они компактные */
+.own-size .chip { min-height: 32px; padding: 0 var(--sp-3); font-size: var(--t-footnote); }
+.own-size .chips { gap: var(--sp-1); }
+
+/* ─── Итоги: сон и еда, итог месяца ─── */
+.link-bar { display: grid; gap: var(--sp-1); margin-top: var(--sp-3); }
+.link-bar-head { display: flex; justify-content: space-between; gap: var(--sp-2); flex-wrap: wrap; }
+.link-bar-head b { font-weight: 600; }
+.link-track { height: 10px; border-radius: 5px; background: var(--surface-2); overflow: hidden; }
+.link-fill { height: 100%; border-radius: 4px; background: var(--accent); min-width: 4px; }
+.month-h::first-letter { text-transform: uppercase; }
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4) var(--sp-3); margin-top: var(--sp-2); }
+.stat-grid > div { display: grid; gap: 2px; min-width: 0; }
+.stat-grid b { font-size: var(--t-title2); line-height: 1.15; font-variant-numeric: tabular-nums; }
+.stat-grid span { font-size: var(--t-footnote); color: var(--fg-2); }
+
+/* ─── Быстрый старт ─── */
+.quick { display: flex; flex-direction: column; gap: var(--sp-3); }
+.quick h1 { margin: var(--sp-2) 0 0; }
+.quick .primary { margin-top: var(--sp-2); }
+.quick .linkbtn { align-self: flex-start; }
+.quick-dots { display: flex; gap: 6px; margin-top: var(--sp-4); }
+.quick-dots span { width: 8px; height: 8px; border-radius: 4px; background: var(--surface-2); transition: width .2s var(--spring); }
+.quick-dots span.done { background: var(--accent); }
+.quick-dots span.on { width: 24px; background: var(--accent); }
+.quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 var(--sp-3); }
+.share-row { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; margin-top: var(--sp-3); }
+.share-row .linkbtn { padding-left: 0; }
+/* подсказки коуча — одной прокручиваемой строкой, чтобы не съедать переписку */
+.coach-hints { display: flex; gap: var(--sp-2); overflow-x: auto; margin: var(--sp-3) calc(-1 * var(--sp-4)) 0; padding: 0 var(--sp-4) var(--sp-1); scrollbar-width: none; }
+.coach-hints::-webkit-scrollbar { display: none; }
+.coach-hints .chip { flex: 0 0 auto; white-space: nowrap; }
+.exp-figure { display: flex; align-items: baseline; gap: var(--sp-2); flex-wrap: wrap; margin-bottom: var(--sp-1); }
+.exp-figure b { font-size: var(--t-title1); font-variant-numeric: tabular-nums; }
+.exp-figure span { font-size: var(--t-footnote); color: var(--fg-2); }
+
+/* ─── «Что ты съел?» ─── */
+.eat-text {
+  width: 100%; box-sizing: border-box; margin: var(--sp-3) 0; padding: var(--sp-3);
+  border-radius: var(--r-control); border: var(--hairline) solid var(--border);
+  background: var(--surface); color: var(--fg); font: inherit; resize: none;
+}
+.eat-result { margin-top: var(--sp-2); padding: var(--sp-3) var(--sp-4); border-radius: var(--r-control); background: var(--surface); }
+.eat-result b { font-size: var(--t-title3); }
+.eat-result p { margin: var(--sp-1) 0 0; }
+.extras { list-style: none; padding: 0; margin: var(--sp-2) 0 0; display: grid; gap: var(--sp-1); }
+.extras li { display: flex; justify-content: space-between; gap: var(--sp-2); align-items: center; }
+.extras .linkbtn { padding: 0; min-height: 0; }
+.extra-add { padding-left: 0; margin-top: var(--sp-2); }

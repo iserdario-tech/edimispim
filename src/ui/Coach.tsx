@@ -5,7 +5,10 @@ import { tap } from "./haptics.js";
 
 interface Turn { role: "user" | "assistant"; content: string }
 
-const HINTS = ["Почему я разбитый?", "Как продержаться сегодня?", "Спал 5 часов — что делать?"];
+/* Подсказки про этот день: коуч теперь видит меню и отметки, и вопросы про еду стали
+   осмысленными. Пустое поле ввода — самый трудный интерфейс: непонятно, о чём можно спросить. */
+const HINTS = ["Чем заменить ужин?", "Голоден вечером — что делать?", "Почему стоит вес?",
+  "Спал 5 часов — как прожить день?", "Почему я разбитый?"];
 const KEY = "edimispim.coach.v1";
 const loadTurns = (): Turn[] => {
   // в хранилище может лежать что угодно: одного `JSON.parse` мало — не массив уронит отрисовку
@@ -145,6 +148,15 @@ export function Coach({ contextRU }: { contextRU: string }) {
 
         {/* Кнопка стоит НАД полем ввода: под ним лежит полоса фона, которая закрывает
             щель до панели вкладок, — и всё, что оказывалось ниже, пропадало из виду. */}
+        {/* подсказки остаются и после первого вопроса — у самого поля ввода */}
+        {turns.length > 0 && !busy && (
+          <div className="coach-hints" aria-label="Готовые вопросы">
+            {HINTS.map((h) => (
+              <button key={h} className="chip" onClick={() => send(h)}>{h}</button>
+            ))}
+          </div>
+        )}
+
         {turns.length > 0 && (
           <div className="coach-clear">
             <button className="linkbtn small" onClick={() => { setTurns([]); setErr(""); }}>

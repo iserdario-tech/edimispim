@@ -95,3 +95,17 @@ export function buildGroceryList(week: Pick<Day, "meals">[]): Grocery {
   const estCostRub = byDay.reduce((s, d) => s + d.estCostRub, 0);
   return { items, estCostRub, byDay };
 }
+
+/**
+ * Покупки на несколько человек. Калории и меню считаются на одного — ест он, — а продукты
+ * покупают на всех, кто сидит за столом. Без этого человек умножал список в уме.
+ */
+export function scaleGrocery(g: Grocery, n: number): Grocery {
+  if (n <= 1) return g;
+  const times = <T extends { qty: number }>(i: T): T => ({ ...i, qty: +(i.qty * n).toFixed(1) });
+  return {
+    items: g.items.map(times),
+    estCostRub: Math.round(g.estCostRub * n),
+    byDay: g.byDay.map(d => ({ ...d, items: d.items.map(times), estCostRub: Math.round(d.estCostRub * n) })),
+  };
+}

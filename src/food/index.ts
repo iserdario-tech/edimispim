@@ -1,12 +1,12 @@
 export { computeTargets } from "./targets";
 export { applySafety } from "./safety";
 export {
-  filterRecipes, generateDay, generateWeek, swapDish, swapOptions, swapTo, mealTimes, expectedBedMin,
+  filterRecipes, generateDay, generateWeek, swapDish, swapOptions, swapTo, mealTimes, expectedBedMin, slotShares, withinCookTime,
   DEFAULT_MEAL_COUNT, DINNER_BEFORE_BED_MIN,
   type DayRhythm, type DayOptions, type WeekOptions,
 } from "./planner";
 export {
-  generateAdaptedDay, isRoughNight, simplifyPool, ROUGH_SLEEP_DEFICIT_MIN,
+  generateAdaptedDay, isRoughNight, simplifyPool, nightChanges, ROUGH_SLEEP_DEFICIT_MIN,
   type NightSummary,
 } from "./adapt";
 export {
@@ -17,7 +17,7 @@ export {
   planBlock, planWindow, scheduleFor, applySwaps, dayNumber, isoOfDay,
   type ScheduledDay, type DaySwaps,
 } from "./schedule";
-export { buildGroceryList } from "./grocery";
+export { buildGroceryList, scaleGrocery } from "./grocery";
 export type * from "./types";
 export { diagnosePool, type PoolDiagnosis } from "./diagnose";
 export { PRICES, priceFor, costOf, coverage, PRICES_SOURCE, PRICES_DATE } from "./prices";

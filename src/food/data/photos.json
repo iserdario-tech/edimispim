@@ -25,9 +25,9 @@
   },
   "fish": {
     "file": "fish.jpg",
-    "author": "MBC Foods from Australia",
-    "license": "CC BY 2.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Canap%C3%A9_Entr%C3%A9_Plate_(45957086554).jpg"
+    "author": "AP22088 NgSaiKeaung Hooo",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:HK_CWB_%E9%8A%85%E9%91%BC%E7%81%A3_Causeway_Bay_Great_George_Street_%E9%87%91%E7%99%BE%E5%88%A9%E5%95%86%E5%A0%B4_Island_Centre_(Island_Beverley)_%E8%8A%B1%E5%9C%92%E9%A4%90%E5%BB%B3_Sweetheart_Garden_Restaurant_food_%E9%90%B5%E6%9D%BF%E7%87%92%E9%AD%9A%E6%89%92_hot_metal_plate_with_fish_fillet_May_2026_RA7P_01.jpg"
   },
   "seafood": {
     "file": "seafood.jpg",
@@ -178,5 +178,275 @@
     "author": "Andy Li",
     "license": "CC0",
     "source": "https://commons.wikimedia.org/wiki/File:Spicy_King_Prawn_Stir-Fry_Udon_-_Aberdeen_Seafood,_Brighton_2026-07-19.jpg"
+  },
+  "shakshuka": {
+    "file": "shakshuka.jpg",
+    "author": "HaJunkiyada",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Liat_Portal_for_Foodie_Disorder_-_Classic_Red_Shakshuka_with_Egg.jpg"
+  },
+  "frenchtoast": {
+    "file": "frenchtoast.jpg",
+    "author": "Daderot",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:French_toast_with_berries,_banana,_maple_syrup,_and_sausage_-_London,_UK.jpg"
+  },
+  "dumplings": {
+    "file": "dumplings.jpg",
+    "author": "Sergey A. Demidov",
+    "license": "CC BY 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:20260329_Black_dumplings_with_fish_and_shrimp.jpg"
+  },
+  "cabbagerolls": {
+    "file": "cabbagerolls.jpg",
+    "author": "Kagor",
+    "license": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Golubtsy_(1).jpg"
+  },
+  "meatballs": {
+    "file": "meatballs.jpg",
+    "author": "USDAgov",
+    "license": "Public domain",
+    "source": "https://commons.wikimedia.org/wiki/File:MyPlate_gov_Cultural_Food_(20241025-USDA-FNS-UNK-0055).jpg"
+  },
+  "cutlets": {
+    "file": "cutlets.jpg",
+    "author": "Yusuke Kawasaki (kawanet @ Flickr) ; reprocessed by Off-shell",
+    "license": "CC BY 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Veal_cutlet_Marechale.jpg"
+  },
+  "curry": {
+    "file": "curry.jpg",
+    "author": "Andy Li",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Hot_bowl_(Teriyaki_Mushroom,_Pacific_Coconut_Curry,_Rice)_-_Island_Pok%C3%A9_2023-10-08.jpg"
+  },
+  "stew": {
+    "file": "stew.jpg",
+    "author": "Marc-Lautenbacher",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Bouilli_quebecois.jpg"
+  },
+  "roast": {
+    "file": "roast.jpg",
+    "author": "David Jackmanson from Melbourne, Australia, Australia",
+    "license": "CC BY 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:-food,_meat-_BBQ_Pork_Ribs_and_potato_salad_(50078700982).jpg"
+  },
+  "wings": {
+    "file": "wings.jpg",
+    "author": "Andy Li",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Chicken_wings_and_vegan_nuggets_-_Lost_Boys_Chicken_2023-11-12.jpg"
+  },
+  "goulash": {
+    "file": "goulash.jpg",
+    "author": "El Nuevo Doge",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Estofado_goulash,_Mazatl%C3%A1n,_9_de_enero_de_2022.jpg"
+  },
+  "salmon": {
+    "file": "salmon.jpg",
+    "author": "Geoffreyrabbit",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Fish_dish_with_cheese_butter.jpg"
+  },
+  "chia": {
+    "file": "chia.jpg",
+    "author": "Sebastián LP elmundoderabbitlp",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Lima_Region_chia_pudding_(Unsplash).jpg"
+  },
+  "bakedapple": {
+    "file": "bakedapple.jpg",
+    "author": "Alabama Extension",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Hot_and_Sweet_Baked_Apples.jpg"
+  },
+  "noodles": {
+    "file": "noodles.jpg",
+    "author": "LingLass",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Bowl_of_Kitsune_Udon.jpg"
+  },
+  "plov": {
+    "file": "plov.jpg",
+    "author": "مانفی",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Baghala_polo.jpg"
+  },
+  "risotto": {
+    "file": "risotto.jpg",
+    "author": "spurekar",
+    "license": "CC BY 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Mushroom_and_Leek_Risotto_(49535206656).jpg"
+  },
+  "lasagna": {
+    "file": "lasagna.jpg",
+    "author": "jules / stonesoup",
+    "license": "CC BY 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Lasagne_-_stonesoup.jpg"
+  },
+  "avotoast": {
+    "file": "avotoast.jpg",
+    "author": "edenpictures",
+    "license": "CC BY 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Avocado_Toast,_M%C3%A9rida,_Yucat%C3%A1n.jpg"
+  },
+  "creamsoup": {
+    "file": "creamsoup.jpg",
+    "author": "Luca Nebuloni from Milan, Italy",
+    "license": "CC BY 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Cream_of_pumpkin_and_carrots_with_almond_%26_pine_nuts_(6476719127).jpg"
+  },
+  "lentilsoup": {
+    "file": "lentilsoup.jpg",
+    "author": "Mx. Granger",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Amy%27s_lentil_vegetable_soup.jpg"
+  },
+  "coldsoup": {
+    "file": "coldsoup.jpg",
+    "author": "Rakoon",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:20250215_Okroshka.jpg"
+  },
+  "falafel": {
+    "file": "falafel.jpg",
+    "author": "yummyporky",
+    "license": "CC BY 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Falafel_balls.jpg"
+  },
+  "stuffedpeppers": {
+    "file": "stuffedpeppers.jpg",
+    "author": "Daderot",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Bell_pepper,_stuffed_with_tuna_fish_and_refried_beans,_baked,_with_camembert_cheese,_olive_oil,_and_black_pepper_-_Massachusetts.jpg"
+  },
+  "fritters": {
+    "file": "fritters.jpg",
+    "author": "William Neuheisel from DC, US",
+    "license": "CC BY 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Zucchini_Fritters_-_Lunch_at_Yanyali_Fehmi_Lokantasi_(6421047753).jpg"
+  },
+  "draniki": {
+    "file": "draniki.jpg",
+    "author": "Wikibubulle",
+    "license": "CC BY 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Gromperekichelcher_avec_compote_de_pommes.jpg"
+  },
+  "poke": {
+    "file": "poke.jpg",
+    "author": "Andy Li",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Philadelphia_Poke_Bowl_-_Happy_Maki_2026-09-08.jpg"
+  },
+  "tofu": {
+    "file": "tofu.jpg",
+    "author": "Mojmir Churavy",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Horka_Litinova_Panev_Kureci_Maso_Zlaty_Klas_2025.jpg"
+  },
+  "mousse": {
+    "file": "mousse.jpg",
+    "author": "Msmirlie2863 at English Wikipedia",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Chocolate_Mousse_Pie_with_Chocolate_Covered_Strawberries.JPG"
+  },
+  "granola": {
+    "file": "granola.jpg",
+    "author": "Missvain",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Granola_and_yogurt_-_Bubbles_%2B_Brunch_2018_-_Sarah_Stierch_02.jpg"
+  },
+  "kasha": {
+    "file": "kasha.jpg",
+    "author": "Umuhiera",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Millet_porridge_with_kose.jpg"
+  },
+  "bruschetta": {
+    "file": "bruschetta.jpg",
+    "author": "Mutari",
+    "license": "Public domain",
+    "source": "https://commons.wikimedia.org/wiki/File:Pa_amb_tom%C3%A0quet_-_001.jpg"
+  },
+  "quesadilla": {
+    "file": "quesadilla.jpg",
+    "author": "Corn cheese",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Cheese_quesadilla.jpg"
+  },
+  "lavash": {
+    "file": "lavash.jpg",
+    "author": "Infrogmation of New Orleans",
+    "license": "CC BY 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Fresco_Lavash_Gyro_-_Maple_Street,_New_Orleans.jpg"
+  },
+  "mushrooms": {
+    "file": "mushrooms.jpg",
+    "author": "Daderot",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Hamburg_and_sauteed_mushrooms_on_crozets_au_sarrasin_and_other_little_pastas,_with_olive_oil_-_Massachusetts.jpg"
+  },
+  "cottage": {
+    "file": "cottage.jpg",
+    "author": "Yurii-mr",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Fest_Opischmya_13.jpg"
+  },
+  "muffins": {
+    "file": "muffins.jpg",
+    "author": "National Cancer Institute, Renee Comet (photographer)",
+    "license": "Public domain",
+    "source": "https://commons.wikimedia.org/wiki/File:Muffin_NIH.jpg"
+  },
+  "vareniki": {
+    "file": "vareniki.jpg",
+    "author": "File:Pierogi 07-01.JPG: Piotrus\nFile:Pierogarnia Stary Młyn9.jpg: Kinga1989\nderi",
+    "license": "CC BY 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Pierogi_01.jpg"
+  },
+  "whitefish": {
+    "file": "whitefish.jpg",
+    "author": "Daderot",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Cod_fillet_with_hot_sauce_on_a_bed_of_corn,_carrots,_mango,_and_squid_-_Massachusetts.jpg"
+  },
+  "icecream": {
+    "file": "icecream.jpg",
+    "author": "RegionVisitor90",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Port_Broughton_Hotel_20260127-123706.jpg"
+  },
+  "cheesecake": {
+    "file": "cheesecake.jpg",
+    "author": "Muago",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:New_York_cheesecake_3.jpg"
+  },
+  "energyballs": {
+    "file": "energyballs.jpg",
+    "author": "Toa Heftiba heftiba",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Energy_Balls_(Unsplash).jpg"
+  },
+  "overnightoats": {
+    "file": "overnightoats.jpg",
+    "author": "Flopoppe",
+    "license": "CC BY 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Customised_Muesli_Bowl.jpg"
+  },
+  "bowl": {
+    "file": "bowl.jpg",
+    "author": "TorbeyCharbel",
+    "license": "CC BY 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Healthy_quinoa_salad_with_dried_fruit.jpg"
+  },
+  "casserole": {
+    "file": "casserole.jpg",
+    "author": "FDominec",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Recipes_cottage_cheese_pie_named_misa.jpg"
   }
 }
