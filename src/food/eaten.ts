@@ -23,6 +23,8 @@ export type MealMark = "ate" | "own";
  * а «лёгкое / как в плане / плотное» ответит за секунду.
  */
 export type OwnSize = "light" | "usual" | "big";
+/** Еда, записанная словами, и прикидка калорий к ней. */
+export interface WrittenFood { text: string; kcal: number; protein: number }
 export const OWN_FACTOR: Record<OwnSize, number> = { light: 0.6, usual: 1, big: 1.5 };
 
 export interface DayEaten {
@@ -36,8 +38,10 @@ export interface DayEaten {
    * числом «переписывала» прошлое, и оценка расхода падала ровно на величину поправки.
    */
   dayKcal?: number;
+  /** Своя еда, описанная словами, — точнее, чем «лёгкое / плотное». Прикидка коуча. */
+  ownText?: Partial<Record<Slot, WrittenFood>>;
   /** Съеденное вне плана, записанное словами («шаурма и кола»): калории — прикидка коуча. */
-  extras?: { text: string; kcal: number; protein: number }[];
+  extras?: WrittenFood[];
   /** Сколько приёмов было в плане в момент отметки. Хранится, чтобы доля не поехала,
    *  когда человек потом сменит схему питания с четырёх приёмов на два. */
   planned: number;
@@ -50,9 +54,10 @@ export function toggleMark(cur: DayEaten | undefined, slot: Slot, mark: MealMark
   else marks[slot] = mark;
   // размер относится только к своей еде: сменили отметку — старый размер не должен всплыть
   const sizes = { ...(cur?.sizes ?? {}) };
-  if (marks[slot] !== "own") delete sizes[slot];
+  const ownText = { ...(cur?.ownText ?? {}) };
+  if (marks[slot] !== "own") { delete sizes[slot]; delete ownText[slot]; }
   const kcal = cur?.dayKcal ?? dayKcal;
-  return { ...cur, marks, sizes, planned: cur?.planned ?? planned, ...(kcal ? { dayKcal: kcal } : {}) };
+  return { ...cur, marks, sizes, ownText, planned: cur?.planned ?? planned, ...(kcal ? { dayKcal: kcal } : {}) };
 }
 
 /** «Весь день по плану» — одной кнопкой вместо пяти. Уже отмеченное не трогаем:
@@ -65,7 +70,22 @@ export function markAllAte(cur: DayEaten | undefined, slots: Slot[], planned: nu
 }
 
 export function setOwnSize(cur: DayEaten, slot: Slot, size: OwnSize): DayEaten {
-  return { ...cur, sizes: { ...(cur.sizes ?? {}), [slot]: size } };
+  // выбранный размер важнее прежнего описания: человек передумал, как это считать
+  const ownText = { ...(cur.ownText ?? {}) };
+  delete ownText[slot];
+  return { ...cur, sizes: { ...(cur.sizes ?? {}), [slot]: size }, ownText };
+}
+
+export function setOwnText(cur: DayEaten, slot: Slot, food: WrittenFood): DayEaten {
+  return { ...cur, ownText: { ...(cur.ownText ?? {}), [slot]: food } };
+}
+
+export function addExtra(cur: DayEaten | undefined, food: WrittenFood, planned: number): DayEaten {
+  return { marks: {}, ...cur, planned: cur?.planned ?? planned, extras: [...(cur?.extras ?? []), food] };
+}
+
+export function removeExtra(cur: DayEaten, index: number): DayEaten {
+  return { ...cur, extras: (cur.extras ?? []).filter((_, i) => i !== index) };
 }
 
 export interface EatenTotals {
@@ -88,10 +108,11 @@ export function eatenTotals(day: Day, eaten: DayEaten | undefined): EatenTotals 
     if (!mark) continue;
     marked++;
     if (mark === "own") {
-      // своя еда — прикидка от плановой порции; клетчатку по ней не выдумываем
+      // своя еда — описанная словами или прикидка от плановой порции; клетчатку не выдумываем
+      const written = eaten?.ownText?.[m.slot];
       const k = OWN_FACTOR[eaten?.sizes?.[m.slot] ?? "usual"];
-      kcal += m.recipe.kcal * m.servings * k;
-      protein += m.recipe.protein_g * m.servings * k;
+      kcal += written ? written.kcal : m.recipe.kcal * m.servings * k;
+      protein += written ? written.protein : m.recipe.protein_g * m.servings * k;
       estimated = true;
       continue;
     }

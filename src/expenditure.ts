@@ -80,12 +80,14 @@ export function expenditure(a: {
 
   // съеденное за день — плановая доля каждого приёма, своё — с поправкой на размер
   const intakes = logged.map(([iso, e]) => {
-    let part = 0;
+    let part = 0, written = 0;
     for (const [slot, mark] of Object.entries(e.marks) as [keyof typeof shares, string][]) {
+      const text = mark === "own" ? e.ownText?.[slot] : undefined;
+      if (text) { written += text.kcal; continue; }   // описано словами — берём прикидку как есть
       const k = mark === "own" ? OWN_FACTOR[e.sizes?.[slot] ?? "usual"] : 1;
       part += (shares[slot] ?? 0) * k;
     }
-    return (e.dayKcal ?? a.targetOf(iso)) * part + (e.extras ?? []).reduce((s, x) => s + x.kcal, 0);
+    return (e.dayKcal ?? a.targetOf(iso)) * part + written + (e.extras ?? []).reduce((s, x) => s + x.kcal, 0);
   });
   const n = intakes.length;
   const meanIntake = intakes.reduce((s, x) => s + x, 0) / n;
