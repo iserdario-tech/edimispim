@@ -4,7 +4,7 @@ import { planDay, parseHM, sleepDurationMin, streakDays } from "../index.js";
 import { toPlanView } from "./viewModel.js";
 import { loadDayDraft, saveDayDraft, targetsFor, type FoodSettings } from "./storage.js";
 import { enableNotifications, syncPushContext } from "./notifications.js";
-import { filterRecipes, generateAdaptedDay, expectedBedMin, diagnosePool, targetsForToday, prefersFamiliar, scheduleFor, applySwaps } from "../food/index.js";
+import { filterRecipes, generateAdaptedDay, nightChanges, expectedBedMin, diagnosePool, targetsForToday, prefersFamiliar, scheduleFor, applySwaps } from "../food/index.js";
 import type { Recipe, Slot } from "../food/types.js";
 import { eatenTotals, rebalance, type DayEaten, type MealMark, type OwnSize } from "../food/eaten.js";
 import { dayOptsFor, NO_COOK_MIN } from "./dayOpts.js";
@@ -152,14 +152,13 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
      * четверг показывал на двух экранах разную еду.
      */
     const planned = scheduleFor(today, pool, iso => targetsForToday(base, food.startISO, iso, food.pace).targets, optsOf);
-    const day = generateAdaptedDay(
-      safe, pool,
-      { ...opts, offset: planned.offset, avoid: planned.avoid, ...(planned.leftover ? { leftover: planned.leftover } : {}) },
-      { sleptMin, targetSleepMin: profile.targetSleepMin, quality },
-    );
+    const dayOpts = { ...opts, offset: planned.offset, avoid: planned.avoid, ...(planned.leftover ? { leftover: planned.leftover } : {}) };
+    const day = generateAdaptedDay(safe, pool, dayOpts, { sleptMin, targetSleepMin: profile.targetSleepMin, quality });
     // то, что человек поменял руками на экране «Еда», должно стоять и здесь
     applySwaps(day, swaps?.[today], pool, safe, food.mealCount);
-    return { day, safe, diagnosis, ramp };
+    // что поменялось из-за ночи — сравнение с днём после обычной ночи
+    const changes = day.simplified ? nightChanges(generateAdaptedDay(safe, pool, dayOpts), day) : [];
+    return { day, safe, diagnosis, ramp, changes };
   }, [food, isCheat, noCookDays, wokeHM, bedMin, today, sleptMin, profile.targetSleepMin, quality, ratings, swaps]);
 
   // факт против плана: что из сегодняшнего меню действительно съедено
@@ -326,6 +325,14 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
           {streak > 0 && <span className="streak">🔥 {streak} подряд</span>}
         </div>
         <p>{explanation.textRU}</p>
+        {/* Главное отличие приложения — еда под сон. Раньше от него оставалась метка
+            «упрощён», а что именно изменилось, человек не видел. */}
+        {foodDay && foodDay.changes.length > 0 && (
+          <>
+            <div className="why-changes-label">Что поменялось из-за ночи</div>
+            <ul className="why-changes">{foodDay.changes.map(c => <li key={c}>{c}</li>)}</ul>
+          </>
+        )}
         <p className="small muted">{view.readiness.whyRU}</p>
       </section>
 

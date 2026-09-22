@@ -12,6 +12,7 @@ import { plateau } from "../plateau.js";
 import { SleepSparkline, WeightChart } from "./Charts.js";
 import { tap } from "./haptics.js";
 import { stopBang, nightEating } from "../screening.js";
+import { sleepFoodLink, monthRecap } from "../sleep-food.js";
 
 /**
  * Итоги: где ты сейчас и что дальше.
@@ -48,6 +49,17 @@ export function Progress({ profile, history, food, weights, eaten, cheatDays, on
   const anchorInfo = useMemo(() => anchor(records, profile.targetSleepMin), [records, profile.targetSleepMin]);
   const step = useMemo(() => nextStep(records, !!food), [records, food]);
   const plateauInfo = useMemo(() => plateau(records, profile.targetSleepMin), [records, profile.targetSleepMin]);
+  // последние 60 дней: старые привычки не должны заслонять нынешние
+  const link = useMemo(
+    () => sleepFoodLink(records.filter(r => r.date >= plusDaysISO(today, -60)), profile.targetSleepMin),
+    [records, today, profile.targetSleepMin],
+  );
+  // итог ПРОШЛОГО месяца: текущий ещё не закончен
+  const prevMonth = useMemo(() => {
+    const d = new Date(today + "T12:00:00Z"); d.setUTCDate(0);
+    const ym = d.toISOString().slice(0, 7);
+    return { ym, name: d.toLocaleDateString("ru-RU", { month: "long", timeZone: "UTC" }), recap: monthRecap(records, ym) };
+  }, [records, today]);
 
   /**
    * Вердикты скрининга стыка. Считаются из сохранённых ответов, а не хранятся текстом:
@@ -117,6 +129,60 @@ export function Progress({ profile, history, food, weights, eaten, cheatDays, on
           <p className="small muted mt-2">Уже есть: {step.done} из {step.need}.</p>
         )}
       </section>
+
+      {/*
+        * Сон и еда у тебя — ради этой карточки приложение и просит отмечать и ночи, и еду.
+        * Полосы одного цвета: зелёный и оранжевый выносили бы приговор «хорошо / плохо»,
+        * а это наблюдение. Подписи стоят прямо у полос, поэтому цвет ничего не кодирует.
+        */}
+      {food && (
+        <section className="card">
+          <h3 className="card-h">Сон и еда у тебя</h3>
+          {link.ready ? (
+            <>
+              {([["После обычной ночи", link.good], ["После плохой ночи", link.rough]] as const).map(([ru, g]) => (
+                <div key={ru} className="link-bar">
+                  <div className="link-bar-head small">
+                    <span>{ru}</span>
+                    <b>{g.followed} из {g.total} дней по плану</b>
+                  </div>
+                  <div className="link-track" role="img" aria-label={`${ru}: ${g.followed} из ${g.total} дней по плану`}>
+                    <div className="link-fill" style={{ width: `${(g.followed / g.total) * 100}%` }} />
+                  </div>
+                </div>
+              ))}
+              <p className="small muted mt-2">
+                Это наблюдение, а не вывод о причинах: в плохие дни могло совпасть и что-то ещё.
+                Плохая ночь — оценка 1–2 или сна на час меньше цели.
+              </p>
+            </>
+          ) : (
+            <p className="small muted m-0">
+              Покажет, держится ли план после плохой ночи так же, как после обычной. Нужно хотя бы
+              по 3 дня с отметками еды после обычных и после плохих ночей — сейчас {link.good} и {link.rough}.
+            </p>
+          )}
+        </section>
+      )}
+
+      {prevMonth.recap && (
+        <section className="card">
+          <h3 className="card-h month-h">{prevMonth.name}</h3>
+          <div className="stat-grid">
+            <div><b>{prevMonth.recap.nights}</b><span>ночей отмечено</span></div>
+            <div>
+              <b>{prevMonth.recap.avgSleepMin != null
+                ? `${Math.floor(prevMonth.recap.avgSleepMin / 60)} ч ${prevMonth.recap.avgSleepMin % 60} мин` : "—"}</b>
+              <span>{prevMonth.recap.avgSleepMin != null ? "средний сон" : "сон: отбой не отмечался"}</span>
+            </div>
+            <div><b>{prevMonth.recap.followed} из {prevMonth.recap.marked}</b><span>дней еды по плану</span></div>
+            <div>
+              <b>{prevMonth.recap.weightFrom != null ? `${prevMonth.recap.weightFrom} → ${prevMonth.recap.weightTo}` : "—"}</b>
+              <span>{prevMonth.recap.weightFrom != null ? "кг за месяц" : "вес не записывался"}</span>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Где ты в лестнице. Без этого низкая цель выглядит как обещание, которое приложение
           почему-то не выполняет: в «Сегодня» одна цифра, в цели — другая. */}
