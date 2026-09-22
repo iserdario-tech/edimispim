@@ -1069,3 +1069,15 @@ input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.08); }
 /* в колонке рядом с фото три крупных чипа вставали столбиком — здесь они компактные */
 .own-size .chip { min-height: 32px; padding: 0 var(--sp-3); font-size: var(--t-footnote); }
 .own-size .chips { gap: var(--sp-1); }
+
+/* ─── Итоги: сон и еда, итог месяца ─── */
+.link-bar { display: grid; gap: var(--sp-1); margin-top: var(--sp-3); }
+.link-bar-head { display: flex; justify-content: space-between; gap: var(--sp-2); flex-wrap: wrap; }
+.link-bar-head b { font-weight: 600; }
+.link-track { height: 10px; border-radius: 5px; background: var(--surface-2); overflow: hidden; }
+.link-fill { height: 100%; border-radius: 4px; background: var(--accent); min-width: 4px; }
+.month-h::first-letter { text-transform: uppercase; }
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4) var(--sp-3); margin-top: var(--sp-2); }
+.stat-grid > div { display: grid; gap: 2px; min-width: 0; }
+.stat-grid b { font-size: var(--t-title2); line-height: 1.15; font-variant-numeric: tabular-nums; }
+.stat-grid span { font-size: var(--t-footnote); color: var(--fg-2); }

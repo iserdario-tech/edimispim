@@ -6,7 +6,7 @@ export {
   type DayRhythm, type DayOptions, type WeekOptions,
 } from "./planner";
 export {
-  generateAdaptedDay, isRoughNight, simplifyPool, ROUGH_SLEEP_DEFICIT_MIN,
+  generateAdaptedDay, isRoughNight, simplifyPool, nightChanges, ROUGH_SLEEP_DEFICIT_MIN,
   type NightSummary,
 } from "./adapt";
 export {
