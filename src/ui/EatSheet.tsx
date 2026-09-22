@@ -30,7 +30,8 @@ export function EatSheet({ title, onClose, onSave }: {
         method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text: q }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) setErr(data?.error ?? "Оценка сейчас недоступна.");
+      // старый воркер без /estimate отвечает 200 и не JSON — это тоже «недоступно», а не «≈ undefined»
+      if (!res.ok || !Number.isFinite(data?.kcal)) setErr(data?.error ?? "Оценка сейчас недоступна. Попробуй позже.");
       else setResult(data);
     } catch {
       setErr("Нет связи — проверь интернет и попробуй ещё раз.");
