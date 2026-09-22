@@ -77,6 +77,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
   const [cookWeekend, setCookWeekend] = useState<number | undefined>(initial?.cookMin?.weekend);
   const [leftovers, setLeftovers] = useState(!!initial?.leftovers);
   const [household, setHousehold] = useState(initial?.household ?? 1);
+  const [strength, setStrength] = useState(!!initial?.strength);
   // скрининг стыка — общий компонент с быстрым стартом
   const [junction, setJunction] = useState<JunctionValue>(() => junctionFrom(initial?.screening));
   const saved = initial?.constraints.dislikes ?? [];
@@ -126,6 +127,15 @@ export function FoodSetup({ initial, onDone, onCancel }: {
           <button className={activity === "medium" ? "chip on" : "chip"} onClick={() => setActivity("medium")}>Средний</button>
           <button className={activity === "high" ? "chip on" : "chip"} onClick={() => setActivity("high")}>На ногах</button>
         </div>
+        <label className="chk">
+          <input type="checkbox" checked={strength} onChange={e => setStrength(e.target.checked)} />
+          Регулярно делаю силовые — 2 раза в неделю и чаще
+        </label>
+        <p className="small muted">
+          Белок поднимется до 1.6 г на кг — каждый день одинаково, а не только в день тренировки.
+          Калории за тренировку не добавляем: вес зависит от среднего за неделю, а браслеты ошибаются
+          в расходе на 27–93%. Реальный расход приложение увидит по весу.
+        </p>
 
       </section>
 
@@ -296,6 +306,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
             : {}),
           ...(leftovers ? { leftovers: true } : {}),
           ...(household > 1 ? { household } : {}),
+          ...(strength ? { strength: true } : {}),
           // полные настройки открыты — карточка «донастрой» больше не нужна
           tuned: true,
           ...(initial?.kcalAdjust ? { kcalAdjust: initial.kcalAdjust } : {}),

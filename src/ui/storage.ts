@@ -1,6 +1,7 @@
 import type { Profile, DayLog, DayMode, DayToggles, ScreenerResult } from "../index.js";
 import type { Constraints, FoodProfile, MealCount, Screen, SafeTargets } from "../food/types.js";
 import { computeTargets, applySafety } from "../food/index.js";
+import { strengthProtein } from "../food/targets.js";
 import type { RampPace } from "../food/rampin.js";
 import type { DayEaten } from "../food/eaten.js";
 import type { StopBangAnswers, NesAnswers } from "../screening.js";
@@ -36,6 +37,8 @@ export interface FoodSettings {
   household?: number;
   /** Человек хоть раз открыл полные настройки еды — карточку «донастрой» больше не показываем. */
   tuned?: boolean;
+  /** Регулярные силовые (2+ раза в неделю): белок 1.6 г/кг каждый день, калории прежние. */
+  strength?: boolean;
   /** Поправка нормы калорий, принятая по реальному расходу (ккал в день, обычно отрицательная). */
   kcalAdjust?: number;
 }
@@ -47,8 +50,12 @@ export interface FoodSettings {
  * в трёх экранах, и когда к ней добавился скрининг, править пришлось все три.
  * Один вызов — один шанс забыть аргумент.
  */
-export const targetsFor = (food: FoodSettings): SafeTargets =>
-  applySafety(computeTargets(food.profile), food.profile, food.screen ?? {});
+export const targetsFor = (food: FoodSettings): SafeTargets => {
+  const t = applySafety(computeTargets(food.profile), food.profile, food.screen ?? {});
+  // силовые поднимают белок, но не ниже обычной нормы; калории не трогают — тренировки
+  // видны в весе, а браслеты ошибаются на 27–93% (research-2026-09-23, T1–T3)
+  return food.strength ? { ...t, proteinGTarget: Math.max(t.proteinGTarget, strengthProtein(food.profile)) } : t;
+};
 
 export interface StoredState {
   profile: Profile;
