@@ -19,7 +19,7 @@ import { loadState, saveState, exportAll, importAll, type FoodSettings, type Sto
 import { syncPushContext } from "./notifications.js";
 import { migrateAll } from "../migrate.js";
 import { localDateISO } from "../today-date.js";
-import { toggleMark, markAllAte, setOwnSize, type DayEaten, type MealMark, type OwnSize } from "../food/eaten.js";
+import { toggleMark, markAllAte, setOwnSize, setOwnText, addExtra, removeExtra, type DayEaten, type MealMark, type OwnSize, type WrittenFood } from "../food/eaten.js";
 import type { Slot } from "../food/types.js";
 import { readLS, writeLS } from "./localStore.js";
 import { BACKUP_KEY } from "./dataSafety.js";
@@ -155,6 +155,12 @@ export function App() {
     editEaten(date, cur => markAllAte(cur, slots, planned, dayKcal));
   const ownSize = (date: string, slot: Slot, size: OwnSize) =>
     editEaten(date, cur => setOwnSize(cur ?? { marks: {}, planned: 0 }, slot, size));
+  const ownWritten = (date: string, slot: Slot, food: WrittenFood) =>
+    editEaten(date, cur => setOwnText(cur ?? { marks: {}, planned: 0 }, slot, food));
+  const extraAdd = (date: string, food: WrittenFood, planned: number) =>
+    editEaten(date, cur => addExtra(cur, food, planned));
+  const extraRemove = (date: string, index: number) =>
+    editEaten(date, cur => removeExtra(cur ?? { marks: {}, planned: 0 }, index));
 
   /**
    * Оценка блюда. Повторное нажатие той же оценки снимает её: человек передумал —
@@ -358,6 +364,7 @@ export function App() {
           swaps={state.swaps}
           onMarkMeal={markMeal} onCheatDay={setCheatDay}
           onMarkAll={markAll} onOwnSize={ownSize}
+          onOwnWritten={ownWritten} onExtraAdd={extraAdd} onExtraRemove={extraRemove}
           noCookDays={state.noCookDays} onNoCook={setNoCook}
           onTuned={markTuned}
           onSetupFood={() => openOverlay("food")}

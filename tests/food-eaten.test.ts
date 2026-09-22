@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { toggleMark, eatenTotals, followedPlan, markAllAte, setOwnSize, type DayEaten } from "../src/food/eaten";
+import { toggleMark, eatenTotals, followedPlan, markAllAte, setOwnSize, setOwnText, addExtra, removeExtra, type DayEaten } from "../src/food/eaten";
 import { toDayRecords } from "../src/ui/dayRecords";
 import { plateau } from "../src/plateau";
 import type { Day } from "../src/food/types";
@@ -138,5 +138,33 @@ describe("«весь день по плану» и размер своей ед�
     e = setOwnSize(e, "lunch", "big");
     e = toggleMark(e, "lunch", "own", 4);
     expect(e.sizes?.lunch).toBeUndefined();
+  });
+});
+
+describe("записанное словами", () => {
+  it("своё с описанием считается по прикидке, а не по плану", () => {
+    let e = toggleMark(undefined, "lunch", "own", 4);
+    e = setOwnText(e, "lunch", { text: "шаурма", kcal: 560, protein: 28 });
+    const t = eatenTotals(day, e);
+    expect(t.kcal).toBe(560);
+    expect(t.protein).toBe(28);
+  });
+  it("еда вне плана прибавляется к дню", () => {
+    let e = toggleMark(undefined, "breakfast", "ate", 4);
+    e = addExtra(e, { text: "шоколадка", kcal: 250, protein: 3 }, 4);
+    expect(eatenTotals(day, e).kcal).toBe(650);
+    expect(eatenTotals(day, e).estimated).toBe(true);
+  });
+  it("запись вне плана можно убрать", () => {
+    let e = addExtra(undefined, { text: "а", kcal: 100, protein: 1 }, 4);
+    e = addExtra(e, { text: "б", kcal: 200, protein: 2 }, 4);
+    e = removeExtra(e, 0);
+    expect(e.extras).toEqual([{ text: "б", kcal: 200, protein: 2 }]);
+  });
+  it("снятая отметка «своё» забывает и описание", () => {
+    let e = toggleMark(undefined, "lunch", "own", 4);
+    e = setOwnText(e, "lunch", { text: "шаурма", kcal: 560, protein: 28 });
+    e = toggleMark(e, "lunch", "own", 4);
+    expect(e.ownText?.lunch).toBeUndefined();
   });
 });

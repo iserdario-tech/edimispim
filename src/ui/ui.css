@@ -1101,3 +1101,17 @@ input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.08); }
 .exp-figure { display: flex; align-items: baseline; gap: var(--sp-2); flex-wrap: wrap; margin-bottom: var(--sp-1); }
 .exp-figure b { font-size: var(--t-title1); font-variant-numeric: tabular-nums; }
 .exp-figure span { font-size: var(--t-footnote); color: var(--fg-2); }
+
+/* ─── «Что ты съел?» ─── */
+.eat-text {
+  width: 100%; box-sizing: border-box; margin: var(--sp-3) 0; padding: var(--sp-3);
+  border-radius: var(--r-control); border: var(--hairline) solid var(--border);
+  background: var(--surface); color: var(--fg); font: inherit; resize: none;
+}
+.eat-result { margin-top: var(--sp-2); padding: var(--sp-3) var(--sp-4); border-radius: var(--r-control); background: var(--surface); }
+.eat-result b { font-size: var(--t-title3); }
+.eat-result p { margin: var(--sp-1) 0 0; }
+.extras { list-style: none; padding: 0; margin: var(--sp-2) 0 0; display: grid; gap: var(--sp-1); }
+.extras li { display: flex; justify-content: space-between; gap: var(--sp-2); align-items: center; }
+.extras .linkbtn { padding: 0; min-height: 0; }
+.extra-add { padding-left: 0; margin-top: var(--sp-2); }

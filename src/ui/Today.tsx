@@ -6,7 +6,8 @@ import { loadDayDraft, saveDayDraft, targetsFor, type FoodSettings } from "./sto
 import { enableNotifications, syncPushContext } from "./notifications.js";
 import { filterRecipes, generateAdaptedDay, nightChanges, expectedBedMin, diagnosePool, targetsForToday, prefersFamiliar, scheduleFor, applySwaps } from "../food/index.js";
 import type { Recipe, Slot } from "../food/types.js";
-import { eatenTotals, rebalance, type DayEaten, type MealMark, type OwnSize } from "../food/eaten.js";
+import { eatenTotals, rebalance, type DayEaten, type MealMark, type OwnSize, type WrittenFood } from "../food/eaten.js";
+import { EatSheet } from "./EatSheet.js";
 import { dayOptsFor, NO_COOK_MIN } from "./dayOpts.js";
 import { SwipeRow } from "./SwipeRow.js";
 import { plusDaysISO } from "../today-date.js";
@@ -44,7 +45,7 @@ function crunchStr(hm: string): string {
 const todayLabel = (d: Date): string =>
   d.toLocaleDateString("ru-RU", { day: "numeric", month: "long", weekday: "long" });
 
-export function Today({ profile, history, screener, onLog, food, weights, eaten, ratings, cheatDays, swaps, onMarkMeal, onMarkAll, onOwnSize, onCheatDay, onSetupFood, backupAt, onBackup, noCookDays, onNoCook, onTuned }: {
+export function Today({ profile, history, screener, onLog, food, weights, eaten, ratings, cheatDays, swaps, onMarkMeal, onMarkAll, onOwnSize, onOwnWritten, onExtraAdd, onExtraRemove, onCheatDay, onSetupFood, backupAt, onBackup, noCookDays, onNoCook, onTuned }: {
   profile: Profile;
   history: DayLog[];
   screener?: ScreenerResult | null;
@@ -62,6 +63,10 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
   onMarkMeal?: (date: string, slot: Slot, mark: MealMark, planned: number, dayKcal?: number) => void;
   onMarkAll?: (date: string, slots: Slot[], planned: number, dayKcal?: number) => void;
   onOwnSize?: (date: string, slot: Slot, size: OwnSize) => void;
+  /** «Напиши, что съел» — своя еда словами и еда вне плана. */
+  onOwnWritten?: (date: string, slot: Slot, food: WrittenFood) => void;
+  onExtraAdd?: (date: string, food: WrittenFood, planned: number) => void;
+  onExtraRemove?: (date: string, index: number) => void;
   onCheatDay?: (date: string, on: boolean) => void;
   onSetupFood?: () => void;
   /** Когда последний раз сохраняли копию — для напоминания. */
@@ -81,6 +86,8 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
   const [mode, setMode] = useState<DayMode>(draft?.mode ?? "normal");
   const [openRecipe, setOpenRecipe] = useState<Meal | null>(null);
   const [markOpen, setMarkOpen] = useState(false);
+  // шторка «что съел»: для своего приёма (slot) или вне плана (null)
+  const [writing, setWriting] = useState<{ slot: Slot | null } | null>(null);
   const [crunchEndHM, setCrunchEndHM] = useState(draft?.crunchEndHM ?? "03:00");
   const [toggles, setToggles] = useState<DayToggles>(draft?.toggles ?? {});
   const loggedToday = history.find((h) => h.date === today);
@@ -406,6 +413,21 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
               {fact.estimated && " · своя еда — прикидкой"}
             </p>
           )}
+          {/* Съеденное вне плана: раньше ему некуда было попасть, и день выглядел лучше, чем был */}
+          {todayEaten?.extras?.length ? (
+            <ul className="extras small">
+              {todayEaten.extras.map((x, k) => (
+                <li key={k}>
+                  <span>Вне плана: {x.text} ≈ {x.kcal} ккал</span>
+                  {onExtraRemove && <button className="linkbtn small" aria-label={`Убрать «${x.text}»`}
+                    onClick={() => onExtraRemove(today, k)}>убрать</button>}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {onExtraAdd && (
+            <button className="linkbtn small extra-add" onClick={() => setWriting({ slot: null })}>+ съел что-то ещё</button>
+          )}
           {/* Вечером — одна кнопка вместо пяти отметок. Уже отмеченное она не трогает. */}
           {onMarkAll && unmarkedSlots.length > 0 && nowMin >= dinnerMin && (
             <button className="all-plan-btn" onClick={() => {
@@ -489,13 +511,22 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
                   <div className="small muted">Сколько примерно?</div>
                   <div className="chips">
                     {OWN_SIZES.map(([sz, ru]) => {
-                      const on = (todayEaten?.sizes?.[r.slot!] ?? "usual") === sz;
+                      const on = !todayEaten?.ownText?.[r.slot!] && (todayEaten?.sizes?.[r.slot!] ?? "usual") === sz;
                       return (
                         <button key={sz} className={on ? "chip on" : "chip"} aria-pressed={on}
                           onClick={() => { tap(); onOwnSize(today, r.slot!, sz); }}>{ru}</button>
                       );
                     })}
+                    {onOwnWritten && (
+                      <button className={todayEaten?.ownText?.[r.slot!] ? "chip on" : "chip"}
+                        onClick={() => setWriting({ slot: r.slot! })}>✎ написать</button>
+                    )}
                   </div>
+                  {todayEaten?.ownText?.[r.slot!] && (
+                    <div className="small muted">
+                      «{todayEaten.ownText[r.slot!]!.text}» ≈ {todayEaten.ownText[r.slot!]!.kcal} ккал
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -503,6 +534,15 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
           </li>
         ))}
       </ol>
+
+      {writing && foodDay && (
+        <EatSheet title={writing.slot ? "Что ты съел вместо плана?" : "Что ты съел ещё?"}
+          onClose={() => setWriting(null)}
+          onSave={food => {
+            if (writing.slot) onOwnWritten?.(today, writing.slot, food);
+            else onExtraAdd?.(today, food, foodDay.day.meals.length);
+          }} />
+      )}
 
       {openRecipe && (
         <Sheet title={openRecipe.recipe.name} onClose={() => setOpenRecipe(null)}>
