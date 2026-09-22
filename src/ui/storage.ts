@@ -28,6 +28,16 @@ export interface FoodSettings {
    * один раз, а не расползаются копиями по хранилищу.
    */
   screening?: { stopBang?: StopBangAnswers; nes?: NesAnswers };
+  /** Сколько минут на готовку: в будни и в выходные. Пусто — без ограничений. */
+  cookMin?: { weekday?: number; weekend?: number };
+  /** Готовить на два дня: обед — остатки вчерашнего ужина. */
+  leftovers?: boolean;
+  /** На сколько человек готовить. Калории — на одного, продукты — на всех. */
+  household?: number;
+  /** Человек хоть раз открыл полные настройки еды — карточку «донастрой» больше не показываем. */
+  tuned?: boolean;
+  /** Поправка нормы калорий, принятая по реальному расходу (ккал в день, обычно отрицательная). */
+  kcalAdjust?: number;
 }
 
 /**
@@ -61,6 +71,8 @@ export interface StoredState {
    * привязано к календарю: замена в четверг остаётся заменой в четверг.
    */
   swaps?: Record<string, Record<string, string>>;
+  /** Дни «сегодня не готовлю»: меню дня собирается из блюд до десяти минут. */
+  noCookDays?: string[];
 }
 // выбранный на сегодня контекст (режим + переключатели), чтобы не терялся при перезапуске PWA
 export interface DayDraft { date: string; mode: DayMode; crunchEndHM: string; toggles: DayToggles }

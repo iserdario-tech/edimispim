@@ -58,6 +58,8 @@ export interface ScheduledDay {
   /** Что передать планировщику, чтобы получить ровно этот день (нужно для адаптации под сон). */
   offset: number;
   avoid: string[];
+  /** Вчерашний ужин, ставший обедом, — чтобы адаптация под сон собрала тот же день. */
+  leftover?: Recipe;
 }
 
 type DayOpts = Omit<DayOptions, "offset" | "avoid">;
@@ -79,14 +81,20 @@ export function planBlock(
    * лучше, где-то на два хуже, а счёт вдвое дороже. Осталось как есть.
    */
   const avoid: string[] = [];
+  let prevDinner: Recipe | undefined;
   for (let i = 0; i < 7; i++) {
     const n = start + i;
     const date = isoOfDay(n);
     const targets = targetsOf(date);
     const taken = [...avoid];
-    const day = generateDay(targets, pool, { ...optsOf(date), offset: n, avoid: taken });
-    out.push({ iso: date, day, targets, offset: n, avoid: taken });
+    const opts = optsOf(date);
+    // ponytail: первый день блока остатков не получает — ужин прошлого блока пришлось бы
+    // планировать заново; один обед в неделю готовится как обычно
+    const leftover = opts.leftovers ? prevDinner : undefined;
+    const day = generateDay(targets, pool, { ...opts, offset: n, avoid: taken, ...(leftover ? { leftover } : {}) });
+    out.push({ iso: date, day, targets, offset: n, avoid: taken, ...(leftover ? { leftover } : {}) });
     for (const m of day.meals) avoid.push(m.recipe.id);
+    prevDinner = day.meals.find(m => m.slot === "dinner")?.recipe;
   }
   return out;
 }

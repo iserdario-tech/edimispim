@@ -186,6 +186,18 @@ export function App() {
     });
   };
 
+  /** «Сегодня не готовлю» — по датам, как читмил: «Еда» и «Сегодня» должны видеть одно и то же. */
+  const setNoCook = (date: string, on: boolean) => {
+    setState((prev) => {
+      if (!prev) return prev;
+      const rest = (prev.noCookDays ?? []).filter(d => d !== date);
+      const noCookDays = (on ? [...rest, date] : rest).sort().slice(-60);
+      const next = { ...prev, noCookDays };
+      persist(next);
+      return next;
+    });
+  };
+
   /**
    * Ручная замена блюда. Хранится по дате и приёму: меню привязано к календарю,
    * поэтому замена в четверг должна остаться заменой в четверг, а не «в первом дне списка».
@@ -299,6 +311,7 @@ export function App() {
           swaps={state.swaps}
           onMarkMeal={markMeal} onCheatDay={setCheatDay}
           onMarkAll={markAll} onOwnSize={ownSize}
+          noCookDays={state.noCookDays} onNoCook={setNoCook}
           onSetupFood={() => openOverlay("food")}
           backupAt={backupAt} onBackup={backup}
         />
@@ -309,6 +322,7 @@ export function App() {
           ratings={state.ratings} onRate={rateDish}
           swaps={state.swaps} onSwap={saveSwap}
           onSetupFood={() => openOverlay("food")}
+          noCookDays={state.noCookDays}
         />
       )}
       {tab === "progress" && (

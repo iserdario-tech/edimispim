@@ -6,7 +6,8 @@ import { loadDayDraft, saveDayDraft, targetsFor, type FoodSettings } from "./sto
 import { enableNotifications, syncPushContext } from "./notifications.js";
 import { filterRecipes, generateAdaptedDay, expectedBedMin, diagnosePool, targetsForToday, prefersFamiliar, scheduleFor, applySwaps } from "../food/index.js";
 import type { Recipe, Slot } from "../food/types.js";
-import { eatenTotals, type DayEaten, type MealMark, type OwnSize } from "../food/eaten.js";
+import { eatenTotals, rebalance, type DayEaten, type MealMark, type OwnSize } from "../food/eaten.js";
+import { dayOptsFor, NO_COOK_MIN } from "./dayOpts.js";
 import { SwipeRow } from "./SwipeRow.js";
 import { plusDaysISO } from "../today-date.js";
 import recipesJson from "../food/data/recipes.json";
@@ -42,7 +43,7 @@ function crunchStr(hm: string): string {
 const todayLabel = (d: Date): string =>
   d.toLocaleDateString("ru-RU", { day: "numeric", month: "long", weekday: "long" });
 
-export function Today({ profile, history, screener, onLog, food, weights, eaten, ratings, cheatDays, swaps, onMarkMeal, onMarkAll, onOwnSize, onCheatDay, onSetupFood, backupAt, onBackup }: {
+export function Today({ profile, history, screener, onLog, food, weights, eaten, ratings, cheatDays, swaps, onMarkMeal, onMarkAll, onOwnSize, onCheatDay, onSetupFood, backupAt, onBackup, noCookDays, onNoCook }: {
   profile: Profile;
   history: DayLog[];
   screener?: ScreenerResult | null;
@@ -65,6 +66,9 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
   /** Когда последний раз сохраняли копию — для напоминания. */
   backupAt?: string | null;
   onBackup?: () => void;
+  /** Дни «не готовлю» и переключатель — хранятся по датам, как читмил: «Еда» должна их видеть. */
+  noCookDays?: string[];
+  onNoCook?: (date: string, on: boolean) => void;
 }) {
   // «сейчас» обязано идти вперёд, пока экран открыт: у PWA он живёт часами без перезагрузки
   const now = useNow();
@@ -84,6 +88,7 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
   const [savedMsg, setSavedMsg] = useState("");
   const notifOn = typeof Notification !== "undefined" && Notification.permission === "granted";
   const isCheat = !!cheatDays?.includes(today);
+  const noCook = !!noCookDays?.includes(today);
   // Safari стирает данные сайта после недели простоя, установленное приложение — нет
   const [installHint, setInstallHint] = useState(() => isIOS() && !isStandalone() && !readLS(INSTALL_HINT_KEY, false));
   const daysWithData = new Set([...history.map(h => h.date), ...Object.keys(eaten ?? {})]).size;
@@ -136,34 +141,37 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
     // вниз или выставить взаимоисключающие ограничения. Возвращаем день без приёмов,
     // чтобы экран показал разбор причины, а не предложил заполнить форму заново.
     const diagnosis = diagnosePool(pool, food.mealCount);
-    const opts = {
-      rhythm: { wakeMin: parseHM(wokeHM), bedMin }, mealCount: food.mealCount,
-      familiar: prefersFamiliar(ramp),
-      liked: rated.filter(([, v]) => v === 1).map(([id]) => id),
-    };
+    const liked = rated.filter(([, v]) => v === 1).map(([id]) => id);
+    const rhythm = { wakeMin: parseHM(wokeHM), bedMin };
+    // настройки у каждой даты свои — ровно те же, что строит вкладка «Еда»
+    const optsOf = (iso: string) => dayOptsFor(food, iso, rhythm, liked, noCookDays);
+    const opts = optsOf(today);
     /*
      * День берётся из того же календарного плана, что и вкладка «Еда»: раньше здесь
      * номером дня служил день недели, а там — индекс в семидневке, и один и тот же
      * четверг показывал на двух экранах разную еду.
      */
-    const planned = scheduleFor(today, pool, iso => targetsForToday(base, food.startISO, iso, food.pace).targets, () => opts);
+    const planned = scheduleFor(today, pool, iso => targetsForToday(base, food.startISO, iso, food.pace).targets, optsOf);
     const day = generateAdaptedDay(
       safe, pool,
-      { ...opts, offset: planned.offset, avoid: planned.avoid },
+      { ...opts, offset: planned.offset, avoid: planned.avoid, ...(planned.leftover ? { leftover: planned.leftover } : {}) },
       { sleptMin, targetSleepMin: profile.targetSleepMin, quality },
     );
     // то, что человек поменял руками на экране «Еда», должно стоять и здесь
     applySwaps(day, swaps?.[today], pool, safe, food.mealCount);
     return { day, safe, diagnosis, ramp };
-  }, [food, isCheat, wokeHM, bedMin, today, sleptMin, profile.targetSleepMin, quality, ratings, swaps]);
-
-  const rows = useMemo(() => {
-    if (!foodDay) return view.rows;
-    return mergeTimeline(view.rows, mealRows(foodDay.day, bedMin, nowMin));
-  }, [view.rows, foodDay, bedMin, nowMin]);
+  }, [food, isCheat, noCookDays, wokeHM, bedMin, today, sleptMin, profile.targetSleepMin, quality, ratings, swaps]);
 
   // факт против плана: что из сегодняшнего меню действительно съедено
   const todayEaten = eaten?.[today];
+  // остаток дня подстраивается под съеденное: плотный обед — ужин поменьше
+  const balanced = useMemo(() => (foodDay ? rebalance(foodDay.day, todayEaten) : null), [foodDay, todayEaten]);
+
+  const rows = useMemo(() => {
+    if (!foodDay || !balanced) return view.rows;
+    return mergeTimeline(view.rows, mealRows(balanced.day, bedMin, nowMin));
+  }, [view.rows, foodDay, balanced, bedMin, nowMin]);
+
   const fact = useMemo(
     () => (foodDay ? eatenTotals(foodDay.day, todayEaten) : null),
     [foodDay, todayEaten],
@@ -385,6 +393,8 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
             )}
           </div>
           {foodDay.day.simplified && <span className="tag">упрощён после плохой ночи</span>}
+          {noCook && <span className="tag">сегодня без готовки — блюда до {NO_COOK_MIN} минут</span>}
+          {balanced?.noteRU && <p className="small muted mt-2">{balanced.noteRU}</p>}
           {foodDay.ramp.active && (
             <p className="small muted mt-2">
               Вход в режим: день {foodDay.ramp.day} из {foodDay.ramp.total}. Сегодня норма выше
@@ -497,7 +507,7 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
 
       {openRecipe && (
         <Sheet title={openRecipe.recipe.name} onClose={() => setOpenRecipe(null)}>
-          <MealIngredients meal={openRecipe} />
+          <MealIngredients meal={openRecipe} household={food?.household ?? 1} />
         </Sheet>
       )}
 
@@ -539,6 +549,12 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
           </div>
 
           <div className="day-group">
+            {onNoCook && food && !isCheat && (
+              <button className={noCook ? "chip on wide" : "chip wide"} aria-pressed={noCook}
+                onClick={() => { tap(); onNoCook(today, !noCook); }}>
+                🥪 Сегодня не готовлю
+              </button>
+            )}
             {onCheatDay && (
               <button className={isCheat ? "chip on wide" : "chip wide"}
                 onClick={() => { tap(); onCheatDay(today, !isCheat); }}>
