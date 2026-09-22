@@ -30,28 +30,38 @@ export interface DayEaten {
   marks: Partial<Record<Slot, MealMark>>;
   /** Размер своей еды по слотам. Нет записи — «как в плане». */
   sizes?: Partial<Record<Slot, OwnSize>>;
+  /**
+   * Калорийность плана этого дня в момент первой отметки. Норма потом может поменяться —
+   * по реальному расходу, — а съедено было по тогдашней: без этого поправка нормы задним
+   * числом «переписывала» прошлое, и оценка расхода падала ровно на величину поправки.
+   */
+  dayKcal?: number;
+  /** Съеденное вне плана, записанное словами («шаурма и кола»): калории — прикидка коуча. */
+  extras?: { text: string; kcal: number; protein: number }[];
   /** Сколько приёмов было в плане в момент отметки. Хранится, чтобы доля не поехала,
    *  когда человек потом сменит схему питания с четырёх приёмов на два. */
   planned: number;
 }
 
 /** Отметить приём. Повторное нажатие той же отметкой снимает её — это же переключатель. */
-export function toggleMark(cur: DayEaten | undefined, slot: Slot, mark: MealMark, planned: number): DayEaten {
+export function toggleMark(cur: DayEaten | undefined, slot: Slot, mark: MealMark, planned: number, dayKcal?: number): DayEaten {
   const marks = { ...(cur?.marks ?? {}) };
   if (marks[slot] === mark) delete marks[slot];
   else marks[slot] = mark;
   // размер относится только к своей еде: сменили отметку — старый размер не должен всплыть
   const sizes = { ...(cur?.sizes ?? {}) };
   if (marks[slot] !== "own") delete sizes[slot];
-  return { ...cur, marks, sizes, planned: cur?.planned ?? planned };
+  const kcal = cur?.dayKcal ?? dayKcal;
+  return { ...cur, marks, sizes, planned: cur?.planned ?? planned, ...(kcal ? { dayKcal: kcal } : {}) };
 }
 
 /** «Весь день по плану» — одной кнопкой вместо пяти. Уже отмеченное не трогаем:
  *  если обед был своим, вечерняя кнопка не имеет права переписать это в «съел». */
-export function markAllAte(cur: DayEaten | undefined, slots: Slot[], planned: number): DayEaten {
+export function markAllAte(cur: DayEaten | undefined, slots: Slot[], planned: number, dayKcal?: number): DayEaten {
   const marks = { ...(cur?.marks ?? {}) };
   for (const s of slots) marks[s] ??= "ate";
-  return { ...cur, marks, planned: cur?.planned ?? planned };
+  const kcal = cur?.dayKcal ?? dayKcal;
+  return { ...cur, marks, planned: cur?.planned ?? planned, ...(kcal ? { dayKcal: kcal } : {}) };
 }
 
 export function setOwnSize(cur: DayEaten, slot: Slot, size: OwnSize): DayEaten {
@@ -90,6 +100,8 @@ export function eatenTotals(day: Day, eaten: DayEaten | undefined): EatenTotals 
     protein += m.recipe.protein_g * m.servings;
     fiber += m.recipe.fiber_g * m.servings;
   }
+  // записанное словами вне плана — тоже прикидка
+  for (const x of eaten?.extras ?? []) { kcal += x.kcal; protein += x.protein; estimated = true; }
   return { kcal: Math.round(kcal), protein: Math.round(protein), fiber: Math.round(fiber), ate, marked, estimated };
 }
 

@@ -149,10 +149,10 @@ export function App() {
       return next;
     });
   };
-  const markMeal = (date: string, slot: Slot, mark: MealMark, planned: number) =>
-    editEaten(date, cur => toggleMark(cur, slot, mark, planned));
-  const markAll = (date: string, slots: Slot[], planned: number) =>
-    editEaten(date, cur => markAllAte(cur, slots, planned));
+  const markMeal = (date: string, slot: Slot, mark: MealMark, planned: number, dayKcal?: number) =>
+    editEaten(date, cur => toggleMark(cur, slot, mark, planned, dayKcal));
+  const markAll = (date: string, slots: Slot[], planned: number, dayKcal?: number) =>
+    editEaten(date, cur => markAllAte(cur, slots, planned, dayKcal));
   const ownSize = (date: string, slot: Slot, size: OwnSize) =>
     editEaten(date, cur => setOwnSize(cur ?? { marks: {}, planned: 0 }, slot, size));
 
@@ -186,6 +186,17 @@ export function App() {
       const rest = (prev.cheatDays ?? []).filter(d => d !== date);
       const cheatDays = (on ? [...rest, date] : rest).sort().slice(-180);
       const next = { ...prev, cheatDays };
+      persist(next);
+      return next;
+    });
+  };
+
+  /** Поправка нормы по реальному расходу: шаг прибавляется к прежней; 0 — сбросить. */
+  const adjustKcal = (step: number) => {
+    setState((prev) => {
+      if (!prev?.food) return prev;
+      const kcalAdjust = step === 0 ? 0 : (prev.food.kcalAdjust ?? 0) + step;
+      const next = { ...prev, food: { ...prev.food, kcalAdjust, kcalAdjustAt: localDateISO() } };
       persist(next);
       return next;
     });
@@ -366,7 +377,7 @@ export function App() {
         <Progress
           profile={state.profile} history={state.history} food={state.food}
           weights={state.weights} eaten={state.eaten} cheatDays={state.cheatDays}
-          onAddWeight={addWeight}
+          onAddWeight={addWeight} onAdjustKcal={adjustKcal}
         />
       )}
       {tab === "coach" && (
