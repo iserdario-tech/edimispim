@@ -220,7 +220,7 @@ export interface DayOptions {
  * Блюда, укладывающиеся во время на готовку, — по каждому типу приёма отдельно.
  * Если быстрых блюд какого-то типа нет вовсе, тип остаётся целиком: пустой приём хуже долгого.
  */
-function withinCookTime(pool: Recipe[], max?: number): Recipe[] {
+export function withinCookTime(pool: Recipe[], max?: number): Recipe[] {
   if (max === undefined) return pool;
   const out: Recipe[] = [];
   for (const t of new Set(pool.map(r => r.meal_type))) {

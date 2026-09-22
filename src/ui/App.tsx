@@ -149,10 +149,10 @@ export function App() {
       return next;
     });
   };
-  const markMeal = (date: string, slot: Slot, mark: MealMark, planned: number, dayKcal?: number) =>
-    editEaten(date, cur => toggleMark(cur, slot, mark, planned, dayKcal));
-  const markAll = (date: string, slots: Slot[], planned: number, dayKcal?: number) =>
-    editEaten(date, cur => markAllAte(cur, slots, planned, dayKcal));
+  const markMeal = (date: string, slot: Slot, mark: MealMark, planned: number, dayKcal?: number, portion?: number) =>
+    editEaten(date, cur => toggleMark(cur, slot, mark, planned, dayKcal, portion));
+  const markAll = (date: string, slots: Slot[], planned: number, dayKcal?: number, portions?: Partial<Record<Slot, number>>) =>
+    editEaten(date, cur => markAllAte(cur, slots, planned, dayKcal, portions));
   const ownSize = (date: string, slot: Slot, size: OwnSize) =>
     editEaten(date, cur => setOwnSize(cur ?? { marks: {}, planned: 0 }, slot, size));
   const ownWritten = (date: string, slot: Slot, food: WrittenFood) =>

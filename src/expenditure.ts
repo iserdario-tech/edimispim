@@ -55,7 +55,10 @@ export function expenditure(a: {
   lastAdjustISO?: string;
 }): Expenditure {
   const today = dayN(a.today);
-  const start = a.startISO ? dayN(a.startISO) : today;
+  // у настроек, перенесённых из oheedet, даты старта нет — считаем от первой записи,
+  // иначе «через 28 дней» не наступало бы никогда
+  const first = [...a.weights.map(w => w.date), ...Object.keys(a.eaten)].sort()[0];
+  const start = a.startISO ? dayN(a.startISO) : first ? dayN(first) : today;
   if (today - start < FIRST_ESTIMATE_DAY) return { status: "wait", daysLeft: FIRST_ESTIMATE_DAY - (today - start) };
 
   const from = Math.max(start + SKIP_FIRST_DAYS, today - WINDOW_DAYS + 1);
@@ -84,7 +87,7 @@ export function expenditure(a: {
     for (const [slot, mark] of Object.entries(e.marks) as [keyof typeof shares, string][]) {
       const text = mark === "own" ? e.ownText?.[slot] : undefined;
       if (text) { written += text.kcal; continue; }   // описано словами — берём прикидку как есть
-      const k = mark === "own" ? OWN_FACTOR[e.sizes?.[slot] ?? "usual"] : 1;
+      const k = mark === "own" ? OWN_FACTOR[e.sizes?.[slot] ?? "usual"] : e.portion?.[slot] ?? 1;
       part += (shares[slot] ?? 0) * k;
     }
     return (e.dayKcal ?? a.targetOf(iso)) * part + written + (e.extras ?? []).reduce((s, x) => s + x.kcal, 0);

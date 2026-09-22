@@ -18,7 +18,7 @@ import { IconChevron, IconSwap } from "./Icons.js";
 import { photoFor, photoUrl } from "../food/photos.js";
 import { tap } from "./haptics.js";
 import { Sheet } from "./Sheet.js";
-import { dayOptsFor } from "./dayOpts.js";
+import { dayOptsFor, poolForDate } from "./dayOpts.js";
 
 const RECIPES = recipesJson as Recipe[];
 /**
@@ -92,7 +92,7 @@ export function Food({ profile, food, ratings, onRate, swaps, onSwap, onSetupFoo
     const rampOf = (iso: string) => targetsForToday(safe, food.startISO, iso, food.pace);
     const days = planWindow(today, 7, pool,
       iso => rampOf(iso).targets,
-      iso => dayOptsFor(food, iso, { wakeMin: parseHM(profile.anchorWakeHM), bedMin }, liked, noCookDays),
+      iso => dayOptsFor(food, iso, { wakeMin: parseHM(profile.anchorWakeHM), bedMin }, liked, noCookDays, safe),
     ).map(s => {
       // ручные замены накладываются последними: иначе при каждом открытии экрана
       // возвращалось бы то, что планировщик выбрал сам
@@ -123,7 +123,7 @@ export function Food({ profile, food, ratings, onRate, swaps, onSwap, onSetupFoo
     const d = plan.days[dayIdx];
     if (!d) return;
     const slot = d.day.meals[index]?.slot;
-    if (swapDish(d.day, index, d.targets, plan.pool, food.mealCount, pantry)) {
+    if (swapDish(d.day, index, d.targets, poolForDate(plan.pool, food, d.date, noCookDays), food.mealCount, pantry)) {
       const now = d.day.meals.find(m => m.slot === slot);
       if (now && slot) onSwap?.(d.date, slot, now.recipe.id);
       setRev(r => r + 1);
@@ -133,7 +133,7 @@ export function Food({ profile, food, ratings, onRate, swaps, onSwap, onSetupFoo
   const optionsFor = (dayIdx: number, index: number) => {
     const d = plan?.days[dayIdx];
     if (!d || !food) return [];
-    return swapOptions(d.day, index, d.targets, plan!.pool, food.mealCount, pantry);
+    return swapOptions(d.day, index, d.targets, poolForDate(plan!.pool, food, d.date, noCookDays), food.mealCount, pantry);
   };
   const chooseSwap = (dayIdx: number, index: number, recipe: Recipe) => {
     const d = plan?.days[dayIdx];
@@ -153,7 +153,7 @@ export function Food({ profile, food, ratings, onRate, swaps, onSwap, onSetupFoo
     let changed = false;
     for (let i = 0; i < d.day.meals.length; i++) {
       const slot = d.day.meals[i]?.slot;
-      if (swapDish(d.day, i, d.targets, plan.pool, food.mealCount, pantry)) {
+      if (swapDish(d.day, i, d.targets, poolForDate(plan.pool, food, d.date, noCookDays), food.mealCount, pantry)) {
         const now = d.day.meals.find(m => m.slot === slot);
         if (now && slot) onSwap?.(d.date, slot, now.recipe.id);
         changed = true;

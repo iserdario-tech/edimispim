@@ -2,16 +2,15 @@ import React, { useEffect, useMemo, useState } from "react";
 import type { Profile, DayLog, DayMode, DayToggles, ScreenerResult } from "../index.js";
 import { planDay, parseHM, sleepDurationMin, streakDays } from "../index.js";
 import { toPlanView } from "./viewModel.js";
-import { loadDayDraft, saveDayDraft, targetsFor, type FoodSettings } from "./storage.js";
+import { loadDayDraft, saveDayDraft, type FoodSettings } from "./storage.js";
 import { enableNotifications, syncPushContext } from "./notifications.js";
-import { filterRecipes, generateAdaptedDay, nightChanges, expectedBedMin, diagnosePool, targetsForToday, prefersFamiliar, scheduleFor, applySwaps } from "../food/index.js";
-import type { Recipe, Slot } from "../food/types.js";
+import { expectedBedMin } from "../food/index.js";
+import type { Slot } from "../food/types.js";
 import { eatenTotals, rebalance, type DayEaten, type MealMark, type OwnSize, type WrittenFood } from "../food/eaten.js";
 import { EatSheet } from "./EatSheet.js";
-import { dayOptsFor, NO_COOK_MIN } from "./dayOpts.js";
+import { NO_COOK_MIN } from "./dayOpts.js";
 import { SwipeRow } from "./SwipeRow.js";
 import { plusDaysISO } from "../today-date.js";
-import recipesJson from "../food/data/recipes.json";
 import { mealRows, mergeTimeline } from "./mealRows.js";
 import { tap } from "./haptics.js";
 import { explain } from "../explain.js";
@@ -26,8 +25,6 @@ import { MealIngredients } from "./Grocery.js";
 import type { Meal } from "../food/types.js";
 import { isStandalone, isIOS, backupDue, daysSince, INSTALL_HINT_KEY } from "./dataSafety.js";
 import { readLS, writeLS } from "./localStore.js";
-
-const RECIPES = recipesJson as Recipe[];
 
 const QUALITY_RU = [[1, "ужасно"], [2, "плохо"], [3, "норм"], [4, "хорошо"], [5, "отлично"]] as const;
 const OWN_SIZES = [["light", "лёгкое"], ["usual", "как в плане"], ["big", "плотное"]] as const;
@@ -60,8 +57,8 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
   /** Ручные замены блюд по датам — накладываются поверх календарного плана,
    *  иначе «Сегодня» показывало бы не то, что человек выбрал на экране «Еда». */
   swaps?: Record<string, Record<string, string>>;
-  onMarkMeal?: (date: string, slot: Slot, mark: MealMark, planned: number, dayKcal?: number) => void;
-  onMarkAll?: (date: string, slots: Slot[], planned: number, dayKcal?: number) => void;
+  onMarkMeal?: (date: string, slot: Slot, mark: MealMark, planned: number, dayKcal?: number, portion?: number) => void;
+  onMarkAll?: (date: string, slots: Slot[], planned: number, dayKcal?: number, portions?: Partial<Record<Slot, number>>) => void;
   onOwnSize?: (date: string, slot: Slot, size: OwnSize) => void;
   /** «Напиши, что съел» — своя еда словами и еда вне плана. */
   onOwnWritten?: (date: string, slot: Slot, food: WrittenFood) => void;
@@ -159,12 +156,20 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
     () => (foodDay ? eatenTotals(foodDay.day, todayEaten) : null),
     [foodDay, todayEaten],
   );
+  // факт есть и когда отмечена только еда вне плана: утренняя шоколадка тоже съедена
+  const hasFact = !!fact && (fact.marked > 0 || fact.kcal > 0);
   const unmarkedSlots = foodDay ? foodDay.day.meals.map(m => m.slot).filter(sl => !todayEaten?.marks[sl]) : [];
   const dinnerMin = foodDay?.day.meals.find(m => m.slot === "dinner")?.timeMin ?? 19 * 60;
+  // какая доля плановой порции стоит сейчас: после пересчёта дня ужин мог стать ×0.7
+  const portionOf = (slot: Slot): number => {
+    const plan = foodDay?.day.meals.find(m => m.slot === slot)?.servings;
+    const now = balanced?.day.meals.find(m => m.slot === slot)?.servings;
+    return plan && now ? Math.round((now / plan) * 100) / 100 : 1;
+  };
   const markMeal = (slot: Slot, mark: MealMark) => {
     if (!onMarkMeal || !foodDay) return;
     tap();
-    onMarkMeal(today, slot, mark, foodDay.day.meals.length, foodDay.day.totals.kcal);
+    onMarkMeal(today, slot, mark, foodDay.day.meals.length, foodDay.day.totals.kcal, portionOf(slot));
   };
 
   /**
@@ -375,9 +380,9 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
             */}
           <div className="day-summary-card">
             <div className="day-figure">
-              <b>{fact && fact.marked > 0 ? `${fact.estimated ? "≈" : ""}${fact.kcal}` : foodDay.day.totals.kcal}</b>
+              <b>{hasFact ? `${fact!.estimated ? "≈" : ""}${fact!.kcal}` : foodDay.day.totals.kcal}</b>
               <span>
-                {fact && fact.marked > 0
+                {hasFact
                   ? `из ${foodDay.day.totals.kcal} ккал съедено`
                   : `ккал на сегодня · белок ${foodDay.day.totals.protein} г`}
               </span>
@@ -432,7 +437,8 @@ export function Today({ profile, history, screener, onLog, food, weights, eaten,
           {onMarkAll && unmarkedSlots.length > 0 && nowMin >= dinnerMin && (
             <button className="all-plan-btn" onClick={() => {
               tap();
-              onMarkAll(today, unmarkedSlots, foodDay.day.meals.length, foodDay.day.totals.kcal);
+              onMarkAll(today, unmarkedSlots, foodDay.day.meals.length, foodDay.day.totals.kcal,
+                Object.fromEntries(unmarkedSlots.map(sl => [sl, portionOf(sl)])));
             }}>✓ Весь день по плану</button>
           )}
           {foodDay.diagnosis.messageRU && (
