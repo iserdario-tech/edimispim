@@ -1081,3 +1081,20 @@ input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.08); }
 .stat-grid > div { display: grid; gap: 2px; min-width: 0; }
 .stat-grid b { font-size: var(--t-title2); line-height: 1.15; font-variant-numeric: tabular-nums; }
 .stat-grid span { font-size: var(--t-footnote); color: var(--fg-2); }
+
+/* ─── Быстрый старт ─── */
+.quick { display: flex; flex-direction: column; gap: var(--sp-3); }
+.quick h1 { margin: var(--sp-2) 0 0; }
+.quick .primary { margin-top: var(--sp-2); }
+.quick .linkbtn { align-self: flex-start; }
+.quick-dots { display: flex; gap: 6px; margin-top: var(--sp-4); }
+.quick-dots span { width: 8px; height: 8px; border-radius: 4px; background: var(--surface-2); transition: width .2s var(--spring); }
+.quick-dots span.done { background: var(--accent); }
+.quick-dots span.on { width: 24px; background: var(--accent); }
+.quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 var(--sp-3); }
+.share-row { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; margin-top: var(--sp-3); }
+.share-row .linkbtn { padding-left: 0; }
+/* подсказки коуча — одной прокручиваемой строкой, чтобы не съедать переписку */
+.coach-hints { display: flex; gap: var(--sp-2); overflow-x: auto; margin: var(--sp-3) calc(-1 * var(--sp-4)) 0; padding: 0 var(--sp-4) var(--sp-1); scrollbar-width: none; }
+.coach-hints::-webkit-scrollbar { display: none; }
+.coach-hints .chip { flex: 0 0 auto; white-space: nowrap; }

@@ -1,6 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import type { Profile, ScreenerResult, DayLog } from "../index.js";
 import { Onboarding } from "./Onboarding.js";
+import { QuickStart } from "./QuickStart.js";
+import { todayFoodDay } from "./todayPlan.js";
+import { eatenTotals, rebalance } from "../food/eaten.js";
+import { expectedBedMin } from "../food/index.js";
+import { parseHM, fmtHM, sleepDurationMin } from "../index.js";
 import { Today } from "./Today.js";
 import { Food } from "./Food.js";
 import { Progress } from "./Progress.js";
@@ -186,6 +191,16 @@ export function App() {
     });
   };
 
+  /** Карточка «донастрой» закрыта без правки настроек — больше не показываем. */
+  const markTuned = () => {
+    setState((prev) => {
+      if (!prev?.food) return prev;
+      const next = { ...prev, food: { ...prev.food, tuned: true } };
+      persist(next);
+      return next;
+    });
+  };
+
   /** «Сегодня не готовлю» — по датам, как читмил: «Еда» и «Сегодня» должны видеть одно и то же. */
   const setNoCook = (date: string, on: boolean) => {
     setState((prev) => {
@@ -250,9 +265,30 @@ export function App() {
   useSwipeBack(!!state && (editing || editingFood), back);
 
 
-  if (!state || editing) {
+  // Новый человек — быстрый старт: три шага и сразу день с едой. Полная форма сна
+  // осталась для правки из «Я».
+  if (!state) {
     return <>
-      {state && <ScreenHeader title="Сон" onBack={back} />}
+      <QuickStart onRestore={() => fileRef.current?.click()}
+        onDone={(profile, screener, quickFood) => {
+          const picked = pickUpOldApps();
+          // перенесённое из oheedet полнее быстрого старта: там уже есть ограничения и скрининг
+          const food = picked.food ?? quickFood;
+          update({
+            profile, history: picked.history, screener, food,
+            ...(picked.weights.length ? { weights: picked.weights } : {}),
+          });
+          setTab("today");
+          void syncPushContext(profile);
+        }} />
+      <input ref={fileRef} type="file" accept="application/json,.json" hidden
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) restore(f); e.target.value = ""; }} />
+    </>;
+  }
+
+  if (editing) {
+    return <>
+      <ScreenHeader title="Сон" onBack={back} />
       <Onboarding initial={state?.profile} onRestore={() => fileRef.current?.click()}
         onDone={(profile: Profile, screener: ScreenerResult) => {
       const picked = state
@@ -312,6 +348,7 @@ export function App() {
           onMarkMeal={markMeal} onCheatDay={setCheatDay}
           onMarkAll={markAll} onOwnSize={ownSize}
           noCookDays={state.noCookDays} onNoCook={setNoCook}
+          onTuned={markTuned}
           onSetupFood={() => openOverlay("food")}
           backupAt={backupAt} onBackup={backup}
         />
@@ -374,6 +411,7 @@ function coachContext(state: StoredState): string {
     `Обычный подъём: ${state.profile.anchorWakeHM}. Цель сна: ${(state.profile.targetSleepMin / 60).toFixed(1)} ч.`,
     last ? `Последняя отмеченная ночь ${last.date}: подъём ${last.wokeHM}, качество ${last.quality}/5${last.hadAlcohol ? ", был алкоголь" : ""}.` : "Ночи пока не отмечались.",
     state.food ? `Питание настроено: ${state.food.mealCount} ${state.food.mealCount < 5 ? "приёма" : "приёмов"} в день.` : "Питание пока не настроено.",
+    ...todayMenuRU(state),
     weights.length >= 2
       ? `Вес: с ${weights[0]!.kg} до ${weights[weights.length - 1]!.kg} кг за ${weights.length} замеров.`
       : "",
@@ -381,4 +419,49 @@ function coachContext(state: StoredState): string {
       ? `ВАЖНО, анкета показала признаки, требующие врача: ${state.screener.messagesRU.join(" ")}`
       : "",
   ].filter(Boolean).join("\n");
+}
+
+const SLOT_RU: Record<string, string> = { breakfast: "завтрак", lunch: "обед", dinner: "ужин", dessert: "сладкое", snack: "перекус" };
+const SIZE_RU: Record<string, string> = { light: "лёгкое", usual: "как в плане", big: "плотное" };
+
+/**
+ * Сегодняшнее меню и что из него съедено — чтобы коуч отвечал про этот день.
+ * На «чем заменить ужин» без меню он мог сказать только «чем-нибудь белковым».
+ */
+function todayMenuRU(state: StoredState): string[] {
+  if (!state.food) return [];
+  const today = localDateISO();
+  if (state.cheatDays?.includes(today)) return ["Сегодня человек объявил читмил: калории не считаем, меню нет."];
+  const log = state.history.find(h => h.date === today);
+  const p = state.profile;
+  const fd = todayFoodDay({
+    food: state.food, today,
+    wokeHM: log?.wokeHM ?? p.anchorWakeHM,
+    bedMin: expectedBedMin(parseHM(p.anchorWakeHM), p.targetSleepMin),
+    night: {
+      targetSleepMin: p.targetSleepMin,
+      ...(log ? { quality: log.quality } : {}),
+      ...(log?.bedHM ? { sleptMin: sleepDurationMin(log, p.targetSleepMin) } : {}),
+    },
+    ratings: state.ratings, swaps: state.swaps, noCookDays: state.noCookDays,
+  });
+  if (!fd.day.meals.length) return ["Меню на сегодня не собралось: ограничения выели все блюда."];
+  const eaten = state.eaten?.[today];
+  const { day, noteRU } = rebalance(fd.day, eaten);
+  const fact = eatenTotals(fd.day, eaten);
+  const lines = day.meals.map(m => {
+    const mark = eaten?.marks[m.slot];
+    const status = mark === "ate" ? " [съел]" : mark === "own" ? ` [ел своё, ${SIZE_RU[eaten?.sizes?.[m.slot] ?? "usual"]}]` : "";
+    return `${fmtHM(m.timeMin)} ${SLOT_RU[m.slot] ?? m.slot} — ${m.recipe.name}, ${Math.round(m.recipe.kcal * m.servings)} ккал${m.leftover ? ", остатки вчерашнего ужина" : ""}${status}`;
+  });
+  return [
+    `Меню на сегодня (цель ${fd.day.totals.kcal} ккал, белок ${fd.safe.proteinGTarget} г):`,
+    ...lines,
+    fact.marked
+      ? `Съедено ${fact.estimated ? "примерно " : ""}${fact.kcal} ккал, белок ${fact.protein} г; осталось около ${Math.max(0, fd.day.totals.kcal - fact.kcal)} ккал.`
+      : "Из сегодняшнего меню пока ничего не отмечено.",
+    ...(fd.changes.length ? [`День перестроен после плохой ночи: ${fd.changes.join("; ")}.`] : []),
+    ...(state.noCookDays?.includes(today) ? ["Сегодня человек не готовит: блюда до 10 минут."] : []),
+    ...(noteRU ? [noteRU] : []),
+  ];
 }
