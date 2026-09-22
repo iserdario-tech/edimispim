@@ -73,6 +73,10 @@ export function FoodSetup({ initial, onDone, onCancel }: {
   const [cookware, setCookware] = useState<string[]>(initial?.constraints.cookware ?? ["stove", "oven", "microwave"]);
   const [allergens, setAllergens] = useState<string[]>(initial?.constraints.allergens ?? []);
   const [pace, setPace] = useState<RampPace>(initial?.pace ?? DEFAULT_PACE);
+  const [cookWeekday, setCookWeekday] = useState<number | undefined>(initial?.cookMin?.weekday);
+  const [cookWeekend, setCookWeekend] = useState<number | undefined>(initial?.cookMin?.weekend);
+  const [leftovers, setLeftovers] = useState(!!initial?.leftovers);
+  const [household, setHousehold] = useState(initial?.household ?? 1);
   // скрининг стыка: «ворота» открывают остальные вопросы, чтобы форма не пугала длиной
   const sb = initial?.screening?.stopBang;
   const ne = initial?.screening?.nes;
@@ -167,8 +171,43 @@ export function FoodSetup({ initial, onDone, onCancel }: {
         </div>
       </section>
 
+      {/* Готовка — отдельно от техники: будни у большинства короче выходных, и бигос
+          на полтора часа в среду был гарантированным срывом плана. */}
       <section className="card">
-        <h3 className="card-h">5 · Чего не будет в меню</h3>
+        <h3 className="card-h">5 · Готовка</h3>
+        <p className="small muted">Долгие блюда уйдут на выходные — или туда, где времени нет ограничений.</p>
+        {([["В будни", cookWeekday, setCookWeekday], ["В выходные", cookWeekend, setCookWeekend]] as const).map(([ru, v, set]) => (
+          <div key={ru} className="day-group">
+            <div className="day-group-label small muted">{ru}</div>
+            <div className="seg" role="group" aria-label={`Время на готовку ${ru.toLowerCase()}`}>
+              {([[15, "15 мин"], [30, "30 мин"], [45, "45 мин"], [undefined, "сколько надо"]] as const).map(([m, label]) => (
+                <button key={label} className={v === m ? "seg-item on" : "seg-item"}
+                  aria-pressed={v === m} onClick={() => set(m)}>{label}</button>
+              ))}
+            </div>
+          </div>
+        ))}
+        <label className="chk">
+          <input type="checkbox" checked={leftovers} onChange={e => setLeftovers(e.target.checked)} />
+          Готовлю ужин на два дня — обед назавтра из остатков
+        </label>
+        <p className="small muted">Час готовки в день превращается в час через день, и половина покупок совпадает.</p>
+        <div className="day-group">
+          <div className="day-group-label small muted">Готовлю на</div>
+          <div className="seg" role="group" aria-label="На сколько человек готовить">
+            {[1, 2, 3, 4].map(n => (
+              <button key={n} className={household === n ? "seg-item on" : "seg-item"}
+                aria-pressed={household === n} onClick={() => setHousehold(n)}>
+                {n === 1 ? "себя" : `${n} чел.`}
+              </button>
+            ))}
+          </div>
+          <p className="small muted">Калории считаются только на тебя, продукты в списке покупок — на всех.</p>
+        </div>
+      </section>
+
+      <section className="card">
+        <h3 className="card-h">6 · Чего не будет в меню</h3>
         <p className="small muted">Аллергии исключаются жёстко, нелюбимое — тоже.</p>
         <div className="chips">
           {ALLERGENS.map(([key, ru]) => (
@@ -191,7 +230,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
       </section>
 
       <section className="card">
-        <h3 className="card-h">6 · Бюджет</h3>
+        <h3 className="card-h">7 · Бюджет</h3>
         <p className="small muted">
           «Небольшой» оставит блюда повыгоднее по цене за грамм белка — неделя выйдет
           примерно на тысячу рублей дешевле. Цель по калориям и белку при этом та же.
@@ -206,7 +245,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
       </section>
 
       <section className="card">
-        <h3 className="card-h">7 · Как входить в режим</h3>
+        <h3 className="card-h">8 · Как входить в режим</h3>
         <p className="small muted">
           С первого дня есть на полном дефиците — самая частая причина бросить на первой неделе.
           Поэтому начинаем с того калоража, на котором ты и так живёшь, и спускаемся к цели
@@ -235,7 +274,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
         большинству эта часть формы стоит пяти секунд.
       */}
       <section className="card">
-        <h3 className="card-h">8 · Короткая проверка</h3>
+        <h3 className="card-h">9 · Короткая проверка</h3>
         <p className="small muted">
           Два вопроса про сон и еду вместе. Это не диагноз — приложение ничего не лечит
           и никуда не отправляет данные, а при тревожных ответах просто советует врача
@@ -308,6 +347,14 @@ export function FoodSetup({ initial, onDone, onCancel }: {
           },
           mealCount,
           pace,
+          ...(cookWeekday !== undefined || cookWeekend !== undefined
+            ? { cookMin: { ...(cookWeekday !== undefined ? { weekday: cookWeekday } : {}), ...(cookWeekend !== undefined ? { weekend: cookWeekend } : {}) } }
+            : {}),
+          ...(leftovers ? { leftovers: true } : {}),
+          ...(household > 1 ? { household } : {}),
+          // полные настройки открыты — карточка «донастрой» больше не нужна
+          tuned: true,
+          ...(initial?.kcalAdjust ? { kcalAdjust: initial.kcalAdjust } : {}),
           // дата старта ставится один раз: правка формы не должна начинать лестницу заново
           startISO: initial?.startISO ?? localDateISO(),
           screening: {

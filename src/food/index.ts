@@ -17,7 +17,7 @@ export {
   planBlock, planWindow, scheduleFor, applySwaps, dayNumber, isoOfDay,
   type ScheduledDay, type DaySwaps,
 } from "./schedule";
-export { buildGroceryList } from "./grocery";
+export { buildGroceryList, scaleGrocery } from "./grocery";
 export type * from "./types";
 export { diagnosePool, type PoolDiagnosis } from "./diagnose";
 export { PRICES, priceFor, costOf, coverage, PRICES_SOURCE, PRICES_DATE } from "./prices";

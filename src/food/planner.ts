@@ -192,6 +192,30 @@ export interface DayOptions {
    * снимается: пустой приём хуже повтора.
    */
   avoid?: string[];
+  /**
+   * Сколько минут есть на готовку в этот день. Будни у большинства короче выходных:
+   * бигос на полтора часа в среду — гарантированный срыв плана, а в субботу — нормальный ужин.
+   */
+  maxCookMin?: number;
+  /** Готовить на два дня: обед берётся из вчерашнего ужина. */
+  leftovers?: boolean;
+  /** Вчерашний ужин — он и станет сегодняшним обедом (ставит планировщик недели). */
+  leftover?: Recipe;
+}
+
+/**
+ * Блюда, укладывающиеся во время на готовку, — по каждому типу приёма отдельно.
+ * Если быстрых блюд какого-то типа нет вовсе, тип остаётся целиком: пустой приём хуже долгого.
+ */
+function withinCookTime(pool: Recipe[], max?: number): Recipe[] {
+  if (max === undefined) return pool;
+  const out: Recipe[] = [];
+  for (const t of new Set(pool.map(r => r.meal_type))) {
+    const ofType = pool.filter(r => r.meal_type === t);
+    const quick = ofType.filter(r => (r.time_min ?? 0) <= max);
+    out.push(...(quick.length ? quick : ofType));
+  }
+  return out;
 }
 
 /**
@@ -330,6 +354,8 @@ function preferLiked(options: Recipe[], liked: string[] | undefined, offset: num
  * Сладкое вписано в дневную норму, поэтому не ломает дефицит.
  */
 export function generateDay(targets: Targets, pool: Recipe[], opts: DayOptions): Day {
+  // лимит времени режет пул целиком — иначе добор клетчатки и белка вернул бы долгие блюда
+  pool = withinCookTime(pool, opts.maxCookMin);
   const count = opts.mealCount ?? DEFAULT_MEAL_COUNT;
   const offset = opts.offset ?? 0;
   const scheme = SCHEMES[count];
@@ -344,6 +370,14 @@ export function generateDay(targets: Targets, pool: Recipe[], opts: DayOptions):
 
   for (const [type, share] of Object.entries(mains) as [MealType, number][]) {
     const slotKcal = mainTarget * share;
+    // остатки вчерашнего ужина: готовить сегодня обед не надо, порция — под долю обеда
+    // Только если это нормальная порция (до ×2, как и везде в планировщике): остатки
+    // лёгкого салата на обед превращались в «×2.6» — это уже не остатки, а новая готовка.
+    const leftServings = opts.leftover ? +(slotKcal / opts.leftover.kcal).toFixed(1) : 0;
+    if (type === "lunch" && opts.leftover && leftServings >= FIT_MIN && leftServings <= PORTION_MAX) {
+      meals.push({ recipe: opts.leftover, servings: leftServings, timeMin: times.lunch ?? 0, slot: "lunch", leftover: true });
+      continue;
+    }
     // после плохой ночи рамка по размеру порции шире: важнее найти блюдо побыстрее
     const fit = fittingOptions(byType(type), slotKcal, opts.roughNight);
     const good = proteinRich(fit, type, r => Math.max(0.5, +(slotKcal / r.kcal).toFixed(1)));
@@ -429,6 +463,7 @@ function swapForFiber(
   day.meals.forEach((meal, index) => {
     const share = mains[meal.recipe.meal_type as MealType];
     if (share === undefined || touched.has(index)) return;  // сладкое и уже заменённое не трогаем
+    if (meal.leftover) return;                                // остатки уже приготовлены вчера
     // блюдо, которое человек отметил «нравится», автоматика не выкидывает: он поставил его сам,
     // и молча подменить его ради пары граммов клетчатки — значит обесценить его выбор
     if (liked.includes(meal.recipe.id)) return;
@@ -505,6 +540,7 @@ function swapForProtein(
   const candidates: { index: number; recipe: Recipe; servings: number; gain: number }[] = [];
   day.meals.forEach((meal, index) => {
     if (mains[meal.recipe.meal_type as MealType] === undefined) return;   // сладкое не трогаем
+    if (meal.leftover) return;                                            // остатки не подменяем
     if (liked.includes(meal.recipe.id)) return;                           // любимое не подменяем
     const kcalShare = meal.recipe.kcal * meal.servings;
     for (const candidate of pool) {
@@ -544,8 +580,10 @@ function swapForProtein(
  * Урок oheedet: добор по абсолюту раздувал день до +35% и ломал дефицит.
  */
 function addProteinTopUp(day: Day, targets: Targets): void {
-  if (day.totals.protein >= targets.proteinGTarget || !day.meals.length) return;
-  const m = day.meals.reduce((a, b) =>
+  // остатки уже приготовлены вчера — их порцию добор не раздувает
+  const open = day.meals.filter(x => !x.leftover);
+  if (day.totals.protein >= targets.proteinGTarget || !open.length) return;
+  const m = open.reduce((a, b) =>
     b.recipe.protein_g / b.recipe.kcal > a.recipe.protein_g / a.recipe.kcal ? b : a);
   const room = Math.max(0, targets.kcalTarget * 1.08 - day.totals.kcal);
   const byProtein = (targets.proteinGTarget - day.totals.protein) / m.recipe.protein_g;

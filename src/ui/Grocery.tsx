@@ -230,7 +230,7 @@ export function GroceryBlock({ grocery, pantry, onPantry, dayLabels }: {
  * человек видит «Гочжан-свинина с кимчи», а что с ней делать, не написано.
  * Количества в составе умножены на размер порции, шаги — как в рецепте.
  */
-export function MealIngredients({ meal, rating, onRate, links = false }: {
+export function MealIngredients({ meal, rating, onRate, links = false, household = 1 }: {
   meal: Meal;
   rating?: 1 | -1;
   onRate?: (id: string, value: 1 | -1) => void;
@@ -238,12 +238,14 @@ export function MealIngredients({ meal, rating, onRate, links = false }: {
    *  уводил из приложения в магазин новой вкладкой, и приложение терялось. Покупают
    *  из списка покупок — там ссылки и остались. */
   links?: boolean;
+  /** На сколько человек готовить: количество продуктов умножается, калории — нет. */
+  household?: number;
 }) {
   const shopId = readLS(SHOP_KEY, DEFAULT_SHOP_ID);
   const shop = shopById(shopId);
   // жидкости показываем объёмом и здесь: «100 мл молока» привычнее, чем «103 г»
   const ings = (meal.recipe.ingredients ?? []).map(i => {
-    const qty = i.qty * meal.servings;
+    const qty = i.qty * meal.servings * household;
     return isLiquid(i.name)
       ? { name: i.name, qty: +mlOf(i.name, qty, i.unit).toFixed(1), unit: "мл" }
       : { name: i.name, qty: +qty.toFixed(1), unit: i.unit };
@@ -279,7 +281,10 @@ export function MealIngredients({ meal, rating, onRate, links = false }: {
 
       {ings.length > 0 && (
         <>
-          <div className="small muted">Продукты на эту порцию{links ? ` · «${shop.name}»` : ""}</div>
+          <div className="small muted">
+            {household > 1 ? `Продукты на ${household} порции — твоя и ещё ${household - 1}` : "Продукты на эту порцию"}
+            {links ? ` · «${shop.name}»` : ""}
+          </div>
           <ul>
             {ings.map((i, k) => {
               const href = itemLink(i.name, shopId);

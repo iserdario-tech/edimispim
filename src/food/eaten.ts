@@ -110,3 +110,45 @@ export function followedPlan(eaten: DayEaten | undefined): boolean | undefined {
   if (ate + own === 0) return undefined;
   return ate / eaten.planned >= FOLLOWED_SHARE;
 }
+
+/**
+ * День подстраивается под то, что уже съедено.
+ *
+ * План на утро не знает, что обед оказался плотнее или завтрак пропал. Без этого человек,
+ * съевший на обед вдвое больше, получал вечером тот же полный ужин — и либо перебирал,
+ * либо бросал план как «уже всё равно сорвался». Поправка идёт мягко: порции оставшихся
+ * приёмов меняются не больше чем на 30% — ужин в полпорции уже не ужин.
+ *
+ * Непомеченные приёмы ДО последней отметки считаются съеденными по плану: скорее всего
+ * их просто забыли отметить, а считать их пропуском значило бы раздуть вечер.
+ *
+ * ponytail: отмеченный «съел» приём считается по плановой порции, даже если перед этим
+ * её уменьшили — хранить порцию в момент отметки, если расхождение станет заметным.
+ */
+const REBALANCE_MIN = 0.7, REBALANCE_MAX = 1.3, REBALANCE_STEP = 0.1;
+
+export function rebalance(day: Day, eaten: DayEaten | undefined): { day: Day; noteRU?: string } {
+  const marks = eaten?.marks ?? {};
+  const lastMarked = day.meals.reduce((last, m, i) => (marks[m.slot] ? i : last), -1);
+  if (lastMarked < 0) return { day };
+  const rest = day.meals.slice(lastMarked + 1).filter(m => !marks[m.slot]);
+  const restKcal = rest.reduce((s, m) => s + m.recipe.kcal * m.servings, 0);
+  if (!rest.length || restKcal <= 0) return { day };
+
+  const assumed = day.meals.slice(0, lastMarked).filter(m => !marks[m.slot])
+    .reduce((s, m) => s + m.recipe.kcal * m.servings, 0);
+  const left = day.totals.kcal - eatenTotals(day, eaten).kcal - assumed;
+  const k = Math.min(REBALANCE_MAX, Math.max(REBALANCE_MIN, left / restKcal));
+  if (Math.abs(k - 1) < REBALANCE_STEP) return { day };
+
+  const restSet = new Set(rest);
+  const meals = day.meals.map(m => restSet.has(m)
+    ? { ...m, servings: Math.max(0.5, Math.round(m.servings * k * 10) / 10) }
+    : m);
+  return {
+    day: { ...day, meals },
+    noteRU: k < 1
+      ? "Порции на остаток дня уменьшены: съедено больше плана."
+      : "Порции на остаток дня чуть больше: до этого съедено меньше плана.",
+  };
+}

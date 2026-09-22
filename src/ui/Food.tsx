@@ -3,7 +3,7 @@ import type { Profile } from "../index.js";
 import { parseHM, fmtHM } from "../index.js";
 import { targetsFor, type FoodSettings } from "./storage.js";
 import {
-  buildGroceryList, expectedBedMin, planWindow,
+  buildGroceryList, scaleGrocery, expectedBedMin, planWindow,
   filterRecipes, swapDish, swapOptions, swapTo, applySwaps, targetsForToday, prefersFamiliar,
 } from "../food/index.js";
 import type { Recipe } from "../food/types.js";
@@ -18,6 +18,7 @@ import { IconChevron, IconSwap } from "./Icons.js";
 import { photoFor, photoUrl } from "../food/photos.js";
 import { tap } from "./haptics.js";
 import { Sheet } from "./Sheet.js";
+import { dayOptsFor } from "./dayOpts.js";
 
 const RECIPES = recipesJson as Recipe[];
 /**
@@ -45,7 +46,7 @@ const dayLabel = (iso: string, offset: number): string => {
  * Apple про это говорит прямо: ограничивать число одновременно видимых контролов,
  * второстепенное убирать вглубь, частые действия держать под рукой.
  */
-export function Food({ profile, food, ratings, onRate, swaps, onSwap, onSetupFood }: {
+export function Food({ profile, food, ratings, onRate, swaps, onSwap, onSetupFood, noCookDays }: {
   profile: Profile;
   food?: FoodSettings;
   ratings?: Record<string, 1 | -1>;
@@ -54,6 +55,8 @@ export function Food({ profile, food, ratings, onRate, swaps, onSwap, onSetupFoo
   swaps?: Record<string, Record<string, string>>;
   onSwap?: (date: string, slot: string, recipeId: string) => void;
   onSetupFood: () => void;
+  /** Дни «не готовлю» — меню этих дат собрано из быстрых блюд, как и на «Сегодня». */
+  noCookDays?: string[];
 }) {
   const [openDays, setOpenDays] = useState<Set<number>>(() => new Set([0]));
   const [openMeal, setOpenMeal] = useState<string | null>(null);
@@ -89,10 +92,7 @@ export function Food({ profile, food, ratings, onRate, swaps, onSwap, onSetupFoo
     const rampOf = (iso: string) => targetsForToday(safe, food.startISO, iso, food.pace);
     const days = planWindow(today, 7, pool,
       iso => rampOf(iso).targets,
-      iso => ({
-        rhythm: { wakeMin: parseHM(profile.anchorWakeHM), bedMin },
-        mealCount: food.mealCount, familiar: prefersFamiliar(rampOf(iso).ramp), liked,
-      }),
+      iso => dayOptsFor(food, iso, { wakeMin: parseHM(profile.anchorWakeHM), bedMin }, liked, noCookDays),
     ).map(s => {
       // ручные замены накладываются последними: иначе при каждом открытии экрана
       // возвращалось бы то, что планировщик выбрал сам
@@ -101,8 +101,9 @@ export function Food({ profile, food, ratings, onRate, swaps, onSwap, onSetupFoo
     });
     const week = days.map(d => d.day);
     const todayRamp = targetsForToday(safe, food.startISO, today, food.pace);
-    return { days, week, grocery: buildGroceryList(week), safe, pool, ramp: todayRamp.ramp };
-  }, [food, profile, today, ratings, swaps]);
+    // продукты — на всех за столом, калории — на одного
+    return { days, week, grocery: scaleGrocery(buildGroceryList(week), food.household ?? 1), safe, pool, ramp: todayRamp.ramp };
+  }, [food, profile, today, ratings, swaps, noCookDays]);
 
   const toggleDay = (i: number) => setOpenDays(prev => {
     const next = new Set(prev);
@@ -245,7 +246,7 @@ export function Food({ profile, food, ratings, onRate, swaps, onSwap, onSetupFoo
                         </button>
                         <span className="small muted meal-meta">
                           {Math.round(m.recipe.kcal * m.servings)} ккал
-                          {m.recipe.time_min ? ` · ${m.recipe.time_min} мин` : ""}
+                          {m.leftover ? " · остатки ужина" : m.recipe.time_min ? ` · ${m.recipe.time_min} мин` : ""}
                         </span>
                       </span>
                       <button className="swap-btn" title="Заменить блюдо"
@@ -282,7 +283,7 @@ export function Food({ profile, food, ratings, onRate, swaps, onSwap, onSetupFoo
                             белок {Math.round(m.recipe.protein_g * m.servings)} г
                             {m.recipe.time_min ? ` · ${m.recipe.time_min} мин` : ""}
                           </div>
-                          <MealIngredients meal={m} rating={ratings?.[m.recipe.id]} onRate={onRate} />
+                          <MealIngredients meal={m} rating={ratings?.[m.recipe.id]} onRate={onRate} household={food?.household ?? 1} />
                         </Sheet>
                       )}
                     </li>
