@@ -230,10 +230,14 @@ export function GroceryBlock({ grocery, pantry, onPantry, dayLabels }: {
  * человек видит «Гочжан-свинина с кимчи», а что с ней делать, не написано.
  * Количества в составе умножены на размер порции, шаги — как в рецепте.
  */
-export function MealIngredients({ meal, rating, onRate }: {
+export function MealIngredients({ meal, rating, onRate, links = false }: {
   meal: Meal;
   rating?: 1 | -1;
   onRate?: (id: string, value: 1 | -1) => void;
+  /** Ссылки на магазин у продуктов. В рецепте по умолчанию выключены: тап по «молоку»
+   *  уводил из приложения в магазин новой вкладкой, и приложение терялось. Покупают
+   *  из списка покупок — там ссылки и остались. */
+  links?: boolean;
 }) {
   const shopId = readLS(SHOP_KEY, DEFAULT_SHOP_ID);
   const shop = shopById(shopId);
@@ -275,15 +279,17 @@ export function MealIngredients({ meal, rating, onRate }: {
 
       {ings.length > 0 && (
         <>
-          <div className="small muted">Продукты на эту порцию · «{shop.name}»</div>
+          <div className="small muted">Продукты на эту порцию{links ? ` · «${shop.name}»` : ""}</div>
           <ul>
             {ings.map((i, k) => {
               const href = itemLink(i.name, shopId);
               return (
                 <li key={k}>
-                  <a className="shop-link" href={href} target="_blank" rel="noopener noreferrer">
-                    {i.name}<span className="shop-go" aria-hidden="true">→</span>
-                  </a>
+                  {links ? (
+                    <a className="shop-link" href={href} target="_blank" rel="noopener noreferrer">
+                      {i.name}<span className="shop-go" aria-hidden="true">→</span>
+                    </a>
+                  ) : <span className="ing-name">{i.name}</span>}
                   <span className="small muted">{amountRU(i.qty, i.unit)}</span>
                 </li>
               );

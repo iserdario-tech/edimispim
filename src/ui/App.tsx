@@ -16,6 +16,8 @@ import { migrateAll } from "../migrate.js";
 import { localDateISO } from "../today-date.js";
 import { toggleMark, type MealMark } from "../food/eaten.js";
 import type { Slot } from "../food/types.js";
+import { readLS, writeLS } from "./localStore.js";
+import { BACKUP_KEY } from "./dataSafety.js";
 
 /**
  * Данные из pospat и oheedet лежат на том же origin — подхватываем их, а не просим вводить заново.
@@ -74,6 +76,7 @@ export function App() {
   const [saveFailed, setSaveFailed] = useState(false);
   const persist = (next: StoredState): void => { setSaveFailed(!saveState(next)); };
   const fileRef = useRef<HTMLInputElement>(null);
+  const [backupAt, setBackupAt] = useState<string | null>(() => readLS<string | null>(BACKUP_KEY, null));
 
   useEffect(() => {
     if (state) return;
@@ -212,6 +215,9 @@ export function App() {
     const a = document.createElement("a");
     a.href = url; a.download = `edim-spim-копия-${localDateISO()}.json`;
     a.click(); URL.revokeObjectURL(url);
+    // отметка для напоминания «копии N дней»: скачал — значит, сохранил
+    const today = localDateISO();
+    writeLS(BACKUP_KEY, today); setBackupAt(today);
   };
   const restore = async (file: File) => {
     const restored = importAll(await file.text());
@@ -287,6 +293,7 @@ export function App() {
           swaps={state.swaps}
           onMarkMeal={markMeal} onCheatDay={setCheatDay}
           onSetupFood={() => openOverlay("food")}
+          backupAt={backupAt} onBackup={backup}
         />
       )}
       {tab === "food" && (

@@ -2,27 +2,11 @@ import React, { useState } from "react";
 import type { Profile, ScreenerResult, ScreenerAnswers, Chronotype } from "../index.js";
 import { runScreener } from "../index.js";
 import { buildProfile, formFromProfile, isValidTime, type OnboardingForm } from "./onboardingModel.js";
+import { isStandalone } from "./dataSafety.js";
 
 const emptyScreener: ScreenerAnswers = {
   loudSnoringWithPauses: false, daytimeSleepyDespiteEnoughSleep: false,
   legUrgeToMoveEvening: false, insomnia3xWeek3Months: false, lowMood2Weeks: false, selfHarmThoughts: false,
-};
-
-/**
- * Запущено ли приложение с домашнего экрана, а не из браузера.
- *
- * Это не косметика: у установленной на «Домой» PWA на iOS **своё хранилище**, отдельное
- * от Safari. Проверено в симуляторе iOS 27 — приложение, установленное после прохождения
- * настройки в Safari, открылось с чистого листа. Значит и данные pospat/oheedet,
- * которые миграция подхватывает из общего origin, сюда сами не попадут.
- *
- * Человек, который этого не знает, увидит пустоту и решит, что потерял всё.
- */
-const isStandalone = (): boolean => {
-  try {
-    return window.matchMedia?.("(display-mode: standalone)").matches
-      || (window.navigator as { standalone?: boolean }).standalone === true;
-  } catch { return false; }
 };
 
 export function Onboarding({ initial, onDone, onRestore }: {
