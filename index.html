@@ -6,7 +6,9 @@
          Отзумленная страница шире экрана, и всё «съезжает»: закреплённые панели считают
          ширину от макета, а не от того, что видно, — кнопка отправки уезжала за край. -->
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
-    <meta name="theme-color" content="#000000" />
+    <!-- цвет полосы над страницей — как фон приложения; ручной выбор темы правит его из Shell -->
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#F2F2F7" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <title>edim & spim</title>
   </head>

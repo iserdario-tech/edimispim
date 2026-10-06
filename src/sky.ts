@@ -20,9 +20,10 @@ export function skyFor(minuteOfDay: number, dark: boolean): { phase: SkyPhase; n
   return { phase, night: dark, glow: GLOW[phase] };
 }
 
-/** CSS-свечение: цвет сверху по центру, к середине экрана растворяется в фоне. */
+/** CSS-свечение: цвет сверху по центру, к середине экрана растворяется в фоне.
+ *  Координаты — от верха подложки .s-sky, которая начинается на 120px выше экрана. */
 export function skyGlow(hex: string, dark: boolean): string {
   const n = parseInt(hex.slice(1), 16);
   const rgb = `${n >> 16}, ${(n >> 8) & 255}, ${n & 255}`;
-  return `radial-gradient(140% 42% at 50% -8%, rgba(${rgb}, ${dark ? 0.4 : 0.25}) 0%, rgba(${rgb}, 0) 72%)`;
+  return `radial-gradient(140% 380px at 50% 50px, rgba(${rgb}, ${dark ? 0.4 : 0.25}) 0%, rgba(${rgb}, 0) 72%)`;
 }
