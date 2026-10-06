@@ -25,7 +25,7 @@ export function Onboarding({ initial, onDone, onRestore }: {
 
   return (
     <main className="wrap">
-      <h1>Настройка</h1>
+      <h1>Настройки сна</h1>
       <p className="muted">Пара вопросов — и построим твой план дня.</p>
 
       {/* Видно только тем, кто открыл приложение с домашнего экрана: у установленной
@@ -38,7 +38,7 @@ export function Onboarding({ initial, onDone, onRestore }: {
             Данные из Safari сюда сами не переедут, их нужно перенести файлом.
           </p>
           <p className="small muted">
-            В Safari открой тот же адрес → «Я» → «Сохранить». Потом вернись сюда и загрузи файл.
+            В Safari открой тот же адрес → «Я» → «Копия данных» → «Сохранить копию». Потом вернись сюда и загрузи файл.
           </p>
           <button className="chip" onClick={onRestore}>Загрузить копию</button>
         </section>
@@ -50,15 +50,15 @@ export function Onboarding({ initial, onDone, onRestore }: {
       <label className="fld">Обычное время, когда ложишься спать
         <input type="time" value={form.bedHM} onChange={e=>set({ bedHM: e.target.value })} />
       </label>
-      <label className="fld">Когда тебя по природе тянет спать и вставать
+      <label className="fld">Ты сова или жаворонок?
         <select value={form.chronotype} onChange={e=>set({ chronotype: e.target.value as Chronotype })}>
-          <option value="early">Рано ложусь и рано встаю (жаворонок)</option>
-          <option value="intermediate">Как большинство, средне</option>
-          <option value="late">Поздно ложусь, тяжело вставать рано (сова)</option>
+          <option value="early">Жаворонок: рано ложусь и рано встаю</option>
+          <option value="intermediate">Ни то ни другое</option>
+          <option value="late">Сова: поздно ложусь, рано вставать тяжело</option>
         </select>
       </label>
       <p className="muted small">Ориентируйся на выходные без будильника: когда сам засыпаешь и просыпаешься.</p>
-      <label className="fld">Сколько кофеина обычно за раз
+      <label className="fld">Сколько кофе обычно за раз
         <select value={form.caffeineMg} onChange={e=>set({ caffeineMg: Number(e.target.value) })}>
           <option value={0}>Не пью кофеин</option>
           <option value={35}>Кола или зелёный чай (~35 мг)</option>
@@ -69,9 +69,9 @@ export function Onboarding({ initial, onDone, onRestore }: {
       </label>
       <p className="muted small">Не знаешь мг — просто выбери, что похоже на твою чашку.</p>
       <label className="chk"><input type="checkbox" checked={form.caffeineRegular}
-        onChange={e=>set({ caffeineRegular: e.target.checked })} /> Пью кофеин ежедневно</label>
+        onChange={e=>set({ caffeineRegular: e.target.checked })} /> Пью кофе или чай каждый день</label>
       <label className="chk"><input type="checkbox" checked={form.napPossible}
-        onChange={e=>set({ napPossible: e.target.checked })} /> Могу вздремнуть днём</label>
+        onChange={e=>set({ napPossible: e.target.checked })} /> Есть возможность поспать днём</label>
       <h2>Короткая проверка здоровья</h2>
       <label className="chk"><input type="checkbox" checked={scr.loudSnoringWithPauses}
         onChange={e=>setS({ loudSnoringWithPauses: e.target.checked })} /> Громкий храп с паузами дыхания</label>
@@ -95,7 +95,7 @@ export function Onboarding({ initial, onDone, onRestore }: {
       <button className="primary"
         disabled={!isValidTime(form.wakeHM) || !isValidTime(form.bedHM)}
         onClick={() => onDone(buildProfile(form), runScreener(scr))}>
-        Построить план
+        Сохранить
       </button>
       <p className="disclaimer">«edim & spim» — не медицинское приложение. При нарушениях сна или питания обратись к врачу.</p>
     </main>
