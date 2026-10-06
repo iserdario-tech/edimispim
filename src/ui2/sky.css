@@ -1,15 +1,19 @@
 /*
- * edim & spim 2.0 — визуальная система «Небо».
+ * edim & spim 2.0 — визуальная система, схема «Чёрный и система».
  *
- * Всё под классом `.v2`, чтобы не задевать старый интерфейс, пока он жив.
- * Пять размеров текста (34 / 22 / 17 / 15 / 13), один тип карточки — стекло,
- * цвет фона — небо текущего часа (src/sky.ts). Спека: docs/superpowers/specs/2026-10-06-edimspim-2.0-design.md §9.
+ * Фон однотонный: чёрный в тёмной теме, системный серый в светлой (как «Здоровье» Apple).
+ * Карточки сплошные; стекло — только у того, что плавает над контентом (панель вкладок,
+ * «?», «+», шторки): под ними проезжает лента, и размытие видно. На чёрном фоне стекло
+ * у карточек выглядело бы обычным серым. Время суток — свечение сверху «Суток» (src/sky.ts).
+ * Цвет — по смыслу: еда оранжевая, сон индиго, «готово» зелёное — системные цвета Apple.
+ * Пять размеров текста: 34 / 22 / 17 / 15 / 13.
  */
 .v2 {
-  --ink: #0F1730; --ink2: #4A5578; --line: rgba(15, 23, 48, .10);
-  --food: #F26B1D; --food-ink: #C2410C; --sleep: #5B4BE0; --ok: #2BB673;
-  --glass: rgba(255, 255, 255, .74); --glass-strong: rgba(255, 255, 255, .9);
-  --shadow: 0 6px 20px rgba(15, 23, 48, .10);
+  --bg: #F2F2F7; --ink: #000; --ink2: #6C6C70; --on-ink: #fff; --line: rgba(60, 60, 67, .18);
+  --food: #FF9500; --food-ink: #B85C00; --sleep: #5856D6; --sleep-ink: #5856D6; --ok: #34C759;
+  --card: #fff; --fill: #E5E5EA; --fill-soft: rgba(120, 120, 128, .12); --seg-on: #fff;
+  --glass: rgba(255, 255, 255, .72); --shadow: 0 4px 18px rgba(0, 0, 0, .10);
+  --sheet-glass: rgba(242, 242, 247, .92);
   --t1: 34px; --t2: 22px; --t3: 17px; --t4: 15px; --t5: 13px;
   --round: ui-rounded, "SF Pro Rounded", -apple-system, system-ui, sans-serif;
   --text: -apple-system, system-ui, "SF Pro Text", "Inter", sans-serif;
@@ -19,15 +23,17 @@
   min-height: 100dvh; position: relative; -webkit-tap-highlight-color: transparent;
 }
 .v2.night {
-  --ink: #F3F5FF; --ink2: #A9B1D6; --line: rgba(255, 255, 255, .12);
-  --food-ink: #FFB48A; --glass: rgba(42, 47, 92, .62); --glass-strong: rgba(42, 47, 92, .92);
-  --shadow: 0 6px 20px rgba(0, 0, 0, .3);
+  --bg: #000; --ink: #fff; --ink2: #98989F; --on-ink: #000; --line: rgba(84, 84, 88, .6);
+  --food: #FF9F0A; --food-ink: #FF9F0A; --sleep: #5E5CE6; --sleep-ink: #7D7AFF; --ok: #30D158;
+  --card: #1C1C1E; --fill: #2C2C2E; --fill-soft: rgba(118, 118, 128, .24); --seg-on: #636366;
+  --glass: rgba(37, 37, 40, .62); --shadow: 0 4px 18px rgba(0, 0, 0, .5);
+  --sheet-glass: rgba(28, 28, 30, .93);
 }
 /* :where — нулевая специфичность: общее правило не перебивает цвет конкретных кнопок */
 .v2 :where(button) { font: inherit; color: inherit; }
 
-/* небо */
-.s-sky { position: fixed; inset: 0; z-index: -1; transition: background 1.2s ease; }
+/* фон и свечение неба */
+.s-sky { position: fixed; inset: 0; z-index: -1; background-color: var(--bg); }
 
 /* экран */
 .s-screen {
@@ -44,58 +50,53 @@
 .s-muted { color: var(--ink2); font-size: var(--t4); }
 .s-small { color: var(--ink2); font-size: var(--t5); }
 
-/* одна карточка на всё приложение */
-.s-card {
-  background: var(--glass); border-radius: 20px; padding: 16px; box-shadow: var(--shadow);
-  -webkit-backdrop-filter: blur(20px) saturate(1.4); backdrop-filter: blur(20px) saturate(1.4);
-  margin-top: 16px;
-}
+/* одна карточка на всё приложение — сплошная */
+.s-card { background: var(--card); border-radius: 20px; padding: 16px; margin-top: 16px; }
 
 /* кнопки */
 .s-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   min-height: 48px; padding: 0 20px; border: 0; border-radius: 24px; cursor: pointer;
-  background: var(--ink); color: var(--glass-strong); font: 600 var(--t3) var(--round);
+  background: var(--ink); color: var(--on-ink); font: 600 var(--t3) var(--round);
   transition: transform .15s ease;
 }
 .s-btn:active { transform: scale(.96); }
 .s-btn.food { background: var(--food); color: #fff; }
-.s-btn.ghost { background: var(--glass); color: var(--ink); }
+.s-btn.ghost { background: var(--fill); color: var(--ink); }
 .s-pill {
   min-height: 36px; padding: 0 16px; border-radius: 18px; border: 0; cursor: pointer;
-  background: var(--glass-strong); color: var(--ink); font-size: var(--t4); font-weight: 500;
+  background: var(--fill); color: var(--ink); font-size: var(--t4); font-weight: 500;
 }
-.s-pill.on { background: var(--ink); color: var(--glass-strong); }
+.s-pill.on { background: var(--ink); color: var(--on-ink); }
 
-/* навигация: три вкладки, «?» и «+» */
+/* навигация: три вкладки, «?» и «+» — стекло: под ними проезжает лента */
 .s-tabbar {
   position: fixed; left: 16px; bottom: calc(18px + var(--safe-b)); z-index: 50;
   display: flex; gap: 4px; padding: 6px; border-radius: 31px;
-  background: var(--glass); box-shadow: var(--shadow);
-  -webkit-backdrop-filter: blur(24px) saturate(1.6); backdrop-filter: blur(24px) saturate(1.6);
+  background: var(--glass); box-shadow: var(--shadow), inset 0 0 0 .5px var(--line);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8); backdrop-filter: blur(24px) saturate(1.8);
 }
 .s-tab {
   min-width: 76px; height: 50px; border-radius: 25px; border: 0; background: transparent; cursor: pointer;
   font-size: var(--t4); color: var(--ink);
 }
-.s-tab.on { background: rgba(15, 23, 48, .08); font-weight: 600; }
-.v2.night .s-tab.on { background: rgba(255, 255, 255, .14); }
+.s-tab.on { background: var(--fill-soft); font-weight: 600; }
 .s-ask {
   position: fixed; left: calc(16px + 250px + 9px); bottom: calc(21px + var(--safe-b)); z-index: 50;
   width: 56px; height: 56px; border-radius: 28px; border: 0; cursor: pointer;
-  background: var(--glass); box-shadow: var(--shadow); font: 700 var(--t2) var(--round); color: var(--ink);
-  -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px);
+  background: var(--glass); box-shadow: var(--shadow), inset 0 0 0 .5px var(--line); font: 700 var(--t2) var(--round); color: var(--ink);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8); backdrop-filter: blur(24px) saturate(1.8);
 }
 .s-fab {
   position: fixed; right: 16px; bottom: calc(92px + var(--safe-b)); z-index: 50;
   width: 56px; height: 56px; border-radius: 28px; border: 0; cursor: pointer;
   background: var(--food); color: #fff; font: 500 30px/1 var(--round);
-  box-shadow: 0 8px 22px rgba(242, 107, 29, .4); transition: transform .2s var(--spring);
+  box-shadow: 0 8px 22px rgba(255, 149, 0, .35); transition: transform .2s var(--spring);
 }
 .s-fab:active { transform: scale(.9); }
 
 @media (prefers-reduced-motion: reduce) {
-  .s-sky, .s-fab, .s-btn { transition: none; }
+  .s-fab, .s-btn { transition: none; }
 }
 /* на широком экране кнопки держатся колонки контента (520px), а не краёв окна */
 @media (min-width: 600px) {
@@ -108,9 +109,8 @@
 .s-head { display: flex; align-items: center; gap: 10px; }
 .s-i {
   width: 30px; height: 30px; border-radius: 15px; border: 0; cursor: pointer; flex: none;
-  background: var(--glass-strong); color: var(--sleep); font: 700 var(--t4) var(--round);
+  background: var(--fill); color: var(--sleep-ink); font: 700 var(--t4) var(--round);
 }
-.v2.night .s-i { color: #C9C2FF; }
 
 .s-faces { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
 .s-face {
@@ -119,7 +119,7 @@
 }
 .s-face-emoji {
   width: 52px; height: 52px; border-radius: 26px; display: grid; place-items: center; font-size: 26px;
-  background: var(--glass-strong); transition: transform .2s var(--spring);
+  background: var(--fill); transition: transform .2s var(--spring);
 }
 .s-face:active .s-face-emoji { transform: scale(.88); }
 .s-face-ru { font-size: var(--t5); color: var(--ink2); }
@@ -137,11 +137,11 @@
 .s-time { font: 600 var(--t2)/1 var(--round); font-variant-numeric: tabular-nums; color: var(--ink); }
 .s-plate {
   position: relative; width: 56px; height: 56px; border-radius: 28px; display: grid; place-items: center;
-  background: #fff; box-shadow: 0 0 0 3px var(--food); font-size: 24px; transition: transform .25s var(--spring);
+  background: var(--card); box-shadow: 0 0 0 3px var(--food); font-size: 24px; transition: transform .25s var(--spring);
 }
 /* absolute, а не 100% в сетке: Safari считал высоту по самой картинке, и фото вылезало из круга */
 .s-plate img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-.s-plate.sleep { box-shadow: 0 0 0 3px var(--sleep); background: var(--glass-strong); }
+.s-plate.sleep { box-shadow: 0 0 0 3px var(--sleep); background: var(--card); }
 .s-plate.big { width: 60px; height: 60px; }
 .s-row-btn:active .s-plate { transform: scale(.92); }
 .s-done {
@@ -158,7 +158,6 @@
   position: absolute; left: 0; top: -12px; height: 26px; padding: 0 12px; border-radius: 13px;
   display: inline-flex; align-items: center; background: var(--food); color: #fff; font: 600 var(--t5) var(--round);
 }
-.v2.night .s-now, .v2.night .s-now span { background: var(--sleep); }
 .s-own { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0 134px; }
 .s-own .s-pill { min-height: 32px; font-size: var(--t5); }
 .s-sheet-actions { display: flex; gap: 8px; margin-bottom: 12px; }
@@ -171,14 +170,14 @@
 .s-why-src { margin-top: 20px; }
 .s-bar { display: grid; grid-template-columns: 84px 1fr 96px; align-items: center; gap: 10px; min-height: 32px; font-size: var(--t4); }
 .s-bar-track { height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
-.s-bar-track span { display: block; height: 100%; border-radius: 4px; background: #5B4BE0; min-width: 0; }
+.s-bar-track span { display: block; height: 100%; border-radius: 4px; background: var(--sleep); min-width: 0; }
 .s-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
 .s-chips .s-pill { background: var(--surface-2); color: var(--fg); }
 .s-chips .s-pill.on { background: var(--fg); color: var(--bg); }
 .s-field { display: grid; gap: 6px; font-size: var(--t4); color: var(--fg-2); margin: 10px 0; }
 .s-field input {
   min-height: 48px; padding: 0 14px; border-radius: 14px; border: 1px solid var(--separator);
-  font: 500 var(--t3) var(--text); color: var(--fg); background: #fff;
+  font: 500 var(--t3) var(--text); color: var(--fg); background: var(--surface);
 }
 .s-form { display: grid; gap: 4px; }
 .s-form .s-btn { margin-top: 12px; }
@@ -191,12 +190,16 @@
 .s-tile b { font: 600 var(--t3) var(--round); color: var(--fg); margin-top: 8px; }
 .s-tile span:last-child { font-size: var(--t5); color: var(--fg-2); }
 .s-tile-ico { font-size: 26px; line-height: 1; }
-.s-tile.food { background: rgba(242, 107, 29, .12); }
-.s-tile.sleep { background: rgba(91, 75, 224, .10); }
-.s-tile.ok { background: rgba(43, 182, 115, .12); }
+.s-tile.food { background: rgba(255, 149, 0, .16); }
+.s-tile.sleep { background: rgba(94, 92, 230, .18); }
+.s-tile.ok { background: rgba(52, 199, 89, .16); }
 
-/* шторка поверх неба: текст и пилюли внутри — по теме устройства */
-.v2 .sheet { color: var(--fg); }
+/* шторка: текст и пилюли внутри — по теме устройства; сама шторка — стекло,
+   сквозь неё размыто виден экран, с которого её открыли */
+.v2 .sheet {
+  color: var(--fg); background: var(--sheet-glass);
+  -webkit-backdrop-filter: blur(30px) saturate(1.8); backdrop-filter: blur(30px) saturate(1.8);
+}
 .v2 .sheet .s-pill { background: var(--surface-2); color: var(--fg); }
 .v2 .sheet .s-pill.on { background: var(--fg); color: var(--bg); }
 .v2 .sheet .s-btn { background: var(--fg); color: var(--bg); }
@@ -209,13 +212,13 @@
 /* ─── «Еда» и «В магазине» ─── */
 .s-head-between { justify-content: space-between; }
 .s-search { font-size: var(--t3); color: var(--ink); }
-.s-seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; padding: 3px; margin-top: 16px; border-radius: 20px; background: var(--glass); }
+.s-seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; padding: 3px; margin-top: 16px; border-radius: 20px; background: var(--fill-soft); }
 .s-seg button { min-height: 36px; border: 0; border-radius: 17px; background: transparent; font-weight: 600; font-size: var(--t4); cursor: pointer; }
-.s-seg button.on { background: var(--ink); color: var(--glass-strong); }
+.s-seg button.on { background: var(--seg-on); color: var(--ink); box-shadow: 0 2px 6px rgba(0, 0, 0, .12); }
 .s-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 12px; }
 .s-week button {
   display: grid; justify-items: center; gap: 2px; padding: 8px 0; border: 0; border-radius: 14px; cursor: pointer;
-  background: var(--glass); transition: transform .2s var(--spring);
+  background: var(--card); transition: transform .2s var(--spring);
 }
 .s-week button span { font-size: var(--t5); color: var(--ink2); }
 .s-week button b { font: 600 var(--t3) var(--round); }
@@ -230,7 +233,7 @@
 .s-meal-done { color: var(--ok); font-weight: 700; }
 .s-shop {
   width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px;
-  padding: 14px 18px; border: 0; border-radius: 20px; background: var(--ink); color: var(--glass-strong); text-align: left; cursor: pointer;
+  padding: 14px 18px; border: 0; border-radius: 20px; background: var(--ink); color: var(--on-ink); text-align: left; cursor: pointer;
   font-size: var(--t2);
 }
 .s-shop > span:first-child { display: grid; gap: 2px; }
@@ -245,14 +248,14 @@
 .s-chips-row { display: flex; gap: 6px; overflow-x: auto; margin: 14px -20px 0; padding: 0 20px 4px; scrollbar-width: none; }
 .s-chips-row::-webkit-scrollbar { display: none; }
 .s-chips-row .s-pill { flex: none; }
-.s-progress { height: 8px; border-radius: 4px; background: var(--glass); overflow: hidden; margin-top: 8px; }
+.s-progress { height: 8px; border-radius: 4px; background: var(--fill); overflow: hidden; margin-top: 8px; }
 .s-progress span { display: block; height: 100%; background: var(--ok); border-radius: 4px; transition: width .3s ease; }
 .s-aisle { margin-top: 20px; }
 .s-aisle-h { font-size: var(--t5); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--ink2); margin: 0 0 8px; }
-.s-buy { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 8px; min-height: 52px; padding: 0 12px 0 4px; margin-top: 6px; border-radius: 14px; background: var(--glass-strong); transition: opacity .2s; }
+.s-buy { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 8px; min-height: 52px; padding: 0 12px 0 4px; margin-top: 6px; border-radius: 14px; background: var(--card); transition: opacity .2s; }
 .s-buy.done { opacity: .55; }
 .s-buy.done .s-buy-name { text-decoration: line-through; }
-.s-check { width: 30px; height: 30px; margin-left: 8px; border-radius: 15px; border: 2px solid rgba(15, 23, 48, .25); background: transparent; color: #fff; font: 700 15px var(--round); cursor: pointer; transition: transform .2s var(--spring); }
+.s-check { width: 30px; height: 30px; margin-left: 8px; border-radius: 15px; border: 2px solid var(--fg-3); background: transparent; color: #fff; font: 700 15px var(--round); cursor: pointer; transition: transform .2s var(--spring); }
 .s-check.on { background: var(--ok); border-color: var(--ok); animation: s-pop .3s var(--spring); }
 .s-buy-name { color: var(--ink); text-decoration: none; font-size: var(--t3); }
 .s-buy-qty { font-size: var(--t4); color: var(--ink2); text-align: right; display: grid; }
@@ -260,10 +263,7 @@
 .s-wide { width: 100%; margin-top: 20px; }
 .s-shops { margin: 20px 0 0; }
 .s-legacy { margin-top: 16px; }
-.s-legacy .card {
-  margin: 0; border-radius: 20px; background: var(--glass); box-shadow: var(--shadow);
-  -webkit-backdrop-filter: blur(20px) saturate(1.4); backdrop-filter: blur(20px) saturate(1.4);
-}
+.s-legacy .card { margin: 0; border-radius: 20px; background: var(--card); box-shadow: none; }
 
 /* ─── «Я» ─── */
 .s-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
@@ -292,7 +292,7 @@
 .s-story-card {
   width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px;
   padding: 14px 18px; border: 0; border-radius: 20px; text-align: left; cursor: pointer; color: #fff;
-  background: linear-gradient(135deg, #2A2F5C, #5B4BE0 60%, #FFB48A);
+  background: linear-gradient(120deg, #3634A3 0%, #5E5CE6 55%, #FF9F0A 125%);
   font-size: var(--t2);
 }
 .s-story-card > span:first-child { display: grid; gap: 2px; }
@@ -301,34 +301,34 @@
 .s-story {
   position: fixed; inset: 0; z-index: 300; display: flex; flex-direction: column; color: #fff;
   padding: calc(env(safe-area-inset-top, 0px) + 12px) 20px calc(env(safe-area-inset-bottom, 0px) + 20px);
-  background: linear-gradient(180deg, #2A2F5C 0%, #5B4BE0 55%, #FFB48A 100%);
+  background: linear-gradient(180deg, #000 0%, #1E1D4F 45%, #5E5CE6 85%, #FF9F0A 125%);
   animation: fade-in .25s ease both;
 }
 .s-story-bars { display: grid; grid-auto-flow: column; gap: 6px; }
 .s-story-bars span { height: 4px; border-radius: 2px; background: rgba(255, 255, 255, .35); }
 .s-story-bars span.on { background: #fff; }
-.s-story-top { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-size: var(--t4); color: #E3E6FA; }
+.s-story-top { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-size: var(--t4); color: rgba(255, 255, 255, .75); }
 .s-story-top button { border: 0; background: rgba(255, 255, 255, .18); color: #fff; width: 32px; height: 32px; border-radius: 16px; cursor: pointer; }
 .s-story-tap { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 12px; cursor: pointer; }
 .s-story-title { font: 600 var(--t2) var(--round); }
 .s-story-big { font: 700 64px/1 var(--round); letter-spacing: -.02em; }
-.s-story-sub { font-size: var(--t3); line-height: 1.4; color: #EEF0FF; max-width: 34ch; }
+.s-story-sub { font-size: var(--t3); line-height: 1.4; color: rgba(255, 255, 255, .85); max-width: 34ch; }
 .s-story-cols { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; height: 180px; margin-top: 24px; }
 .s-story-col { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 8px; }
 .s-story-col span { width: 100%; border-radius: 10px; background: #fff; }
 .s-story-col i { font-style: normal; font-size: var(--t5); }
 .s-story-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .s-story-actions .s-btn.ghost { background: rgba(255, 255, 255, .18); color: #fff; }
-.s-story-actions .s-btn:not(.ghost) { background: #fff; color: #0F1730; }
+.s-story-actions .s-btn:not(.ghost) { background: #fff; color: #000; }
 
 /* ─── установка ─── */
 .s-install { display: grid; gap: 4px; }
 .s-app-icon {
   width: 96px; height: 96px; margin: 24px auto 8px; border-radius: 24px; display: grid; place-items: center;
-  color: #fff; font: 700 30px var(--round); background: linear-gradient(180deg, #1A1F3D, #F26B1D 55%, #FFE3C7);
+  color: #fff; font: 700 30px var(--round); background: linear-gradient(180deg, #000, #3634A3 55%, #FF9F0A);
 }
 .s-center { text-align: center; }
 .s-block { display: block; width: 100%; margin-top: 12px; padding: 8px; }
 .s-steps { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 12px; }
 .s-steps li { display: grid; grid-template-columns: 36px 1fr; align-items: center; gap: 12px; font-weight: 500; }
-.s-steps span { width: 36px; height: 36px; border-radius: 18px; display: grid; place-items: center; background: rgba(242, 107, 29, .14); color: var(--food-ink); font-weight: 700; }
+.s-steps span { width: 36px; height: 36px; border-radius: 18px; display: grid; place-items: center; background: rgba(255, 149, 0, .16); color: var(--food-ink); font-weight: 700; }
