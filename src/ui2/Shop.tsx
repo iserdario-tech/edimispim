@@ -46,7 +46,7 @@ export function Shop({ week, onBack }: { week: WeekModel; onBack: () => void }) 
   return (
     <main className="s-screen">
       <button className="s-back" onClick={onBack}>‹ Еда</button>
-      <h1 className="s-title">В магазине</h1>
+      <h1 className="s-title">Покупки</h1>
       <div className="s-seg">
         <button className={view === "buy" ? "on" : ""} onClick={() => setView("buy")}>Купить</button>
         <button className={view === "home" ? "on" : ""} onClick={() => setView("home")}>Дома есть</button>
@@ -54,13 +54,14 @@ export function Shop({ week, onBack }: { week: WeekModel; onBack: () => void }) 
 
       {view === "home" ? <div className="s-legacy"><Fridge pantry={week.pantry} onPantry={week.savePantry} pool={plan.pool} /></div> : (
         <>
+          <p className="s-small s-shops">Купить на:</p>
           <div className="s-chips-row">
-            <button className={scope === "week" ? "s-pill on" : "s-pill"} onClick={() => setScope("week")}>неделя</button>
+            <button className={scope === "week" ? "s-pill on" : "s-pill"} onClick={() => setScope("week")}>неделю</button>
             {plan.days.slice(0, 7).map((_, i) => (
               <button key={i} className={scope === i ? "s-pill on" : "s-pill"} onClick={() => setScope(i)}>{label(i)}</button>
             ))}
           </div>
-          <p className="s-sub">взял {done} из {lines.length}</p>
+          <p className="s-sub">в корзине {done} из {lines.length}</p>
           <div className="s-progress"><span style={{ width: `${lines.length ? (done / lines.length) * 100 : 0}%` }} /></div>
 
           {groups.map(g => (

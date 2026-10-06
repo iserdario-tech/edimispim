@@ -48,7 +48,7 @@ export function PlusSheet({ app, day, onClose, initial = null }: { app: AppModel
             </button>
           )}
           <button className="s-tile sleep" onClick={() => setMode("write")}>
-            <span className="s-tile-ico">✎</span><b>Написать</b><span>«шаурма и кола» — прикину калории</span>
+            <span className="s-tile-ico">✎</span><b>Съел своё</b><span>напиши словами — посчитаю калории</span>
           </button>
           <button className="s-tile ok" onClick={() => setMode("weight")}>
             <span className="s-tile-ico">⚖</span><b>Вес</b><span>{lastKg ? `последний — ${lastKg.kg} кг` : "ещё не записывал"}</span>

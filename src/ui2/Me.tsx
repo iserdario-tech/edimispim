@@ -19,6 +19,11 @@ import type { Profile } from "../index.js";
 import type { AppModel } from "./Shell.js";
 import type { DayModel } from "./useDay.js";
 
+const DNI: Record<string, string> = { one: "день", few: "дня", many: "дней", other: "дня" };
+const RU_PLURAL = new Intl.PluralRules("ru");
+/** 1 день, 2 дня, 5 дней */
+const dni = (n: number) => DNI[RU_PLURAL.select(n)]!;
+
 type MeSheet = null | "weight" | "sleep" | "stories" | "backup" | "notif" | "theme" | "about";
 
 /** Понедельник недели даты (ISO). */
@@ -75,27 +80,27 @@ export function Me({ app, day, onSettings, onStory, onRestore, onTour }: {
   const tdee = exp ? (exp.r.status === "ready" || exp.r.status === "uncertain" ? exp.r.tdee : exp.formula) : null;
 
   const ROWS: [MeSheet | "sleep-settings" | "food-settings" | "tour", string, string, string][] = [
-    ["weight", "⚖", "Вес и расход", lastKg ? `${lastKg} кг · ${exp?.r.status === "ready" ? "расход по данным" : "расход по формуле"}` : "записать первый вес"],
+    ["weight", "⚖", "Вес и калории", lastKg ? `${lastKg} кг · трата ${exp?.r.status === "ready" ? "по твоим данным" : "по формуле"}` : "записать первый вес"],
     ["sleep", "☾", "Сон и режим", "ложишься ли в одно время, сон и еда"],
-    ["stories", "▤", "Истории недель", "каждый понедельник — новая"],
+    ["stories", "▤", "Итоги недель", "каждый понедельник — новый"],
     ["sleep-settings", "⏰", "Настройки сна", `подъём ${state.profile.anchorWakeHM}`],
     ["food-settings", "🍽", "Настройки еды", state.food ? `${state.food.mealCount} приёма · ${state.food.household && state.food.household > 1 ? `на ${state.food.household}` : "на себя"}` : "не настроено"],
     ["backup", "⤓", "Копия данных", app.backupAt ? `последняя ${app.backupAt.split("-").reverse().slice(0, 2).join(".")}` : "ещё не делал"],
     ["notif", "🔔", "Напоминания", notifOn() ? "заранее: еда, кофе, сон" : "выключены"],
     ["theme", "◐", "Оформление", { auto: "как в системе", light: "светлое", dark: "тёмное" }[readTheme()]],
     ["tour", "?", "Как устроено приложение", "кнопки и экраны за минуту"],
-    ["about", "ℹ", "О приложении", "наука, фото, честная рамка"],
+    ["about", "ℹ", "О приложении", "наука и фото"],
   ];
 
   return (
     <main className="s-screen">
       <h1 className="s-title">Я</h1>
-      <p className="s-sub">{daysWith ? `${daysWith} дн. с приложением` : "первый день"}{day.streak ? ` · серия ${day.streak}` : ""}</p>
+      <p className="s-sub">{daysWith ? `${daysWith} ${dni(daysWith)} с приложением` : "первый день"}{day.streak ? ` · отмечаешь ${day.streak} ${dni(day.streak)} подряд` : ""}</p>
 
       <div className="s-stats">
         <div className="s-card s-stat"><b>{lastKg ?? "—"}</b><span>кг сейчас</span></div>
-        <div className="s-card s-stat"><b>{state.food?.profile.goalWeightKg ?? "—"}</b><span>цель</span></div>
-        <div className="s-card s-stat"><b>{tdee ? `≈${tdee.toLocaleString("ru-RU")}` : "—"}</b><span>расход</span></div>
+        <div className="s-card s-stat"><b>{state.food?.profile.goalWeightKg ?? "—"}</b><span>кг цель</span></div>
+        <div className="s-card s-stat"><b>{tdee ? `≈${tdee.toLocaleString("ru-RU")}` : "—"}</b><span>тратишь ккал/день</span></div>
       </div>
 
       <div className="s-card s-list">
@@ -117,7 +122,7 @@ export function Me({ app, day, onSettings, onStory, onRestore, onTour }: {
       {sheet === "weight" && <WeightSheet app={app} exp={exp} records={records} onClose={() => setSheet(null)} />}
       {sheet === "sleep" && <SleepSheet app={app} day={day} records={records} onClose={() => setSheet(null)} />}
       {sheet === "stories" && (
-        <Sheet title="Истории недель" onClose={() => setSheet(null)}>
+        <Sheet title="Итоги недель" onClose={() => setSheet(null)}>
           {(() => {
             const weeks = Array.from({ length: 10 }, (_, i) => plusDaysISO(mondayOf(day.today), -7 * (i + 1)))
               .filter(m => weekStory(records, m, state.profile.targetSleepMin));
@@ -173,7 +178,7 @@ function WeightSheet({ app, exp, records, onClose }: {
   const delta = weights.length >= 2 ? Math.round((weights.at(-1)!.kg - weights[0]!.kg) * 10) / 10 : null;
   const r = exp?.r;
   return (
-    <Sheet title="Вес и расход" onClose={onClose}>
+    <Sheet title="Вес и калории" onClose={onClose}>
       <form className="s-inline" onSubmit={e => { e.preventDefault(); const v = +kg.replace(",", "."); if (v >= 30 && v <= 300) { tap(); app.actions.addWeight(v); setKg(""); } }}>
         <input type="text" inputMode="decimal" value={kg} placeholder={weights.at(-1) ? String(weights.at(-1)!.kg) : "кг"} onChange={e => setKg(e.target.value)} aria-label="Вес, кг" />
         <button className="s-btn food" type="submit" disabled={!kg}>Записать</button>
@@ -183,7 +188,7 @@ function WeightSheet({ app, exp, records, onClose }: {
 
       {r && (
         <>
-          <h3 className="s-why-h">Твой реальный расход</h3>
+          <h3 className="s-why-h">Сколько ты тратишь на самом деле</h3>
           {r.status === "wait" && <p className="s-muted">Пока по формуле: ≈ {exp!.formula} ккал. Через {r.daysLeft} дн. посчитаю по твоим данным — взвешивайся 4 раза в неделю и отмечай все приёмы.</p>}
           {r.status === "data" && <p className="s-muted">Не хватает записей за 4 недели: взвешиваний {r.weighIns} из {r.weighInsNeed}, недель с 5+ записанными днями — {r.weeksLogged} из {r.weeks}. Пока по формуле: ≈ {exp!.formula} ккал.</p>}
           {r.status === "uncertain" && <p className="s-muted">≈ {r.tdee} ккал, но разброс ±{r.ci} — рано менять норму. Чаще взвешивайся.</p>}
@@ -242,10 +247,10 @@ function SleepSheet({ app, day, records, onClose }: { app: AppModel; day: DayMod
         </>
       )}
 
-      <h3 className="s-why-h">Заметили</h3>
+      <h3 className="s-why-h">Что заметили у тебя</h3>
       {day.effects.some(e => e.ready)
         ? <ul className="s-why-list">{day.effects.filter(e => e.ready).map(e => <li key={e.factor}>{e.textRU}</li>)}</ul>
-        : <p className="s-muted">Отвечай утром на «Вчера было?» — после 5 «да» и 5 «нет» здесь появится, как ужин, кофе и алкоголь влияют на твой сон.</p>}
+        : <p className="s-muted">Отвечай утром на «Что было вчера?» — после 5 «да» и 5 «нет» здесь появится, как ужин, кофе и алкоголь влияют на твой сон.</p>}
 
       {recap && (
         <>

@@ -69,7 +69,7 @@ export function weekStory(records: DayRecord[], mondayISO: string, targetSleepMi
     quality: r.sleep.quality, targetSleepMin, ...(mins[i] !== null ? { sleptMin: mins[i]! } : {}),
   }) ? DOW[i] : null)).filter((x): x is string => !!x);
   slides.push({
-    kind: "noticed", title: "Заметили",
+    kind: "noticed", title: "Что заметили",
     big: rough.length ? `${rough.length} ${rough.length === 1 ? "плохая ночь" : rough.length < 5 ? "плохие ночи" : "плохих ночей"}` : "Ровная неделя",
     sub: rough.length ? `${rough.join(", ")} — в эти дни план был проще, калории те же` : "ни одной плохой ночи — так держать",
   });
