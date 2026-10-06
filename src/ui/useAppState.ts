@@ -1,20 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
-import type { Profile, ScreenerResult, DayLog } from "../index.js";
-import { Onboarding } from "./Onboarding.js";
-import { QuickStart } from "./QuickStart.js";
+import { useEffect, useState } from "react";
+import type { Yesterday } from "../effects.js";
+import type { DayLog } from "../index.js";
 import { todayFoodDay } from "./todayPlan.js";
 import { eatenTotals, rebalance } from "../food/eaten.js";
 import { expectedBedMin } from "../food/index.js";
 import { parseHM, fmtHM, sleepDurationMin } from "../index.js";
-import { Today } from "./Today.js";
-import { Food } from "./Food.js";
-import { Progress } from "./Progress.js";
-import { Profile as ProfileScreen } from "./Profile.js";
-import { FoodSetup } from "./FoodSetup.js";
-import { Coach } from "./Coach.js";
-import { Nav, type Tab } from "./Nav.js";
-import { useSwipeBack } from "./useSwipeBack.js";
-import { ScreenHeader } from "./ScreenHeader.js";
 import { loadState, saveState, exportAll, importAll, type FoodSettings, type StoredState } from "./storage.js";
 import { syncPushContext } from "./notifications.js";
 import { migrateAll } from "../migrate.js";
@@ -36,7 +26,7 @@ import { BACKUP_KEY } from "./dataSafety.js";
  * Заодно возвращён скрининг питания из oheedet: на нём стоят guardrails безопасности
  * (мягкий дефицит при красных флагах), и без него они не срабатывали никогда.
  */
-function pickUpOldApps(): {
+export function pickUpOldApps(): {
   food?: FoodSettings;
   weights: { date: string; kg: number }[];
   history: DayLog[];
@@ -62,25 +52,24 @@ function pickUpOldApps(): {
   return { food, weights, history, notesRU: m.notesRU };
 }
 
-export function App() {
+/**
+ * Состояние приложения и все действия над ним — без единого экрана.
+ *
+ * Вынесено из App, когда появился второй интерфейс (2.0): оба должны писать в одно
+ * хранилище одними и теми же функциями, иначе отметка «съел» в новом интерфейсе
+ * и в старом считалась бы по-разному.
+ */
+export function useAppState() {
   const [state, setState] = useState<StoredState | null>(() => loadState());
-  const [tab, setTab] = useState<Tab>("today");
-  const [editing, setEditing] = useState(false);
-  const [editingFood, setEditingFood] = useState(false);
-  // откуда пришли на вложенный экран — туда и вернём, а не на первый раздел
-  const [returnTab, setReturnTab] = useState<Tab>("today");
   const [migrationNote, setMigrationNote] = useState("");
   /**
    * Не удалось записать на диск.
    *
    * `saveState` умеет отвечать «не вышло» — место кончилось или Safari в приватном режиме
-   * запрещает запись вовсе. Отвечать-то он отвечал, но ответ никто не читал: человек
-   * отмечал ночь, видел «Сохранено ✓» и терял данные при следующем запуске. Молча терять
-   * чужие данные нельзя, поэтому теперь об этом говорится прямо.
+   * запрещает запись вовсе. Молча терять чужие данные нельзя, поэтому об этом говорится прямо.
    */
   const [saveFailed, setSaveFailed] = useState(false);
   const persist = (next: StoredState): void => { setSaveFailed(!saveState(next)); };
-  const fileRef = useRef<HTMLInputElement>(null);
   const [backupAt, setBackupAt] = useState<string | null>(() => readLS<string | null>(BACKUP_KEY, null));
 
   useEffect(() => {
@@ -89,29 +78,6 @@ export function App() {
     // ночи сна — самое ценное из перенесённого, и заметку они заслуживают наравне с весом
     if (picked.weights.length || picked.history.length || picked.food) setMigrationNote(picked.notesRU.join(" "));
   }, [state]);
-
-  const overlay = editing || editingFood;
-  const closeOverlay = () => { setEditing(false); setEditingFood(false); };
-
-  const openOverlay = (which: "sleep" | "food") => {
-    setReturnTab(tab);
-    if (which === "sleep") setEditing(true); else setEditingFood(true);
-    // отдельная запись в истории: системная «назад» и свайп закроют экран,
-    // а не выбросят человека из приложения
-    history.pushState({ overlay: which }, "");
-  };
-
-  useEffect(() => {
-    const onPop = () => closeOverlay();
-    addEventListener("popstate", onPop);
-    return () => removeEventListener("popstate", onPop);
-  }, []);
-
-  const back = () => {
-    closeOverlay();
-    setTab(returnTab);
-    if (history.state?.overlay) history.back();
-  };
 
   const update = (next: StoredState) => { persist(next); setState(next); };
 
@@ -277,149 +243,32 @@ export function App() {
     alert("Данные восстановлены ✓");
   };
 
-  // свайп от левого края закрывает вложенный экран — до кнопки в углу одной рукой не дотянуться
+  /** «Вчера было?» — ответ на один вопрос; повторный тот же ответ снимает его. */
+  const setYesterday = (date: string, key: keyof Yesterday, value: boolean) => {
+    setState((prev) => {
+      if (!prev) return prev;
+      const all = { ...(prev.yesterday ?? {}) };
+      const cur = { ...(all[date] ?? {}) };
+      if (cur[key] === value) delete cur[key]; else cur[key] = value;
+      all[date] = cur;
+      const kept = Object.keys(all).sort().slice(-180);
+      const next = { ...prev, yesterday: Object.fromEntries(kept.map(d => [d, all[d]!])) };
+      persist(next);
+      return next;
+    });
+  };
 
-  useSwipeBack(!!state && (editing || editingFood), back);
-
-
-  // Новый человек — быстрый старт: три шага и сразу день с едой. Полная форма сна
-  // осталась для правки из «Я».
-  if (!state) {
-    return <>
-      <QuickStart onRestore={() => fileRef.current?.click()}
-        onDone={(profile, screener, quickFood) => {
-          const picked = pickUpOldApps();
-          // перенесённое из oheedet полнее быстрого старта: там уже есть ограничения и скрининг
-          const food = picked.food ?? quickFood;
-          update({
-            profile, history: picked.history, screener, food,
-            ...(picked.weights.length ? { weights: picked.weights } : {}),
-          });
-          setTab("today");
-          void syncPushContext(profile);
-        }} />
-      <input ref={fileRef} type="file" accept="application/json,.json" hidden
-        onChange={(e) => { const f = e.target.files?.[0]; if (f) restore(f); e.target.value = ""; }} />
-    </>;
-  }
-
-  if (editing) {
-    return <>
-      <ScreenHeader title="Сон" onBack={back} />
-      <Onboarding initial={state?.profile} onRestore={() => fileRef.current?.click()}
-        onDone={(profile: Profile, screener: ScreenerResult) => {
-      const picked = state
-        ? { food: state.food, weights: state.weights ?? [], history: state.history }
-        : pickUpOldApps();
-      const food = state?.food ?? picked.food;
-      const weights = state?.weights ?? picked.weights;
-      update({
-        profile,
-        history: state?.history ?? picked.history,   // ночи из pospat, а не пустой массив
-        screener,
-        ...(food ? { food } : {}),
-        ...(weights.length ? { weights } : {}),
-      });
-      setEditing(false);
-      setTab(returnTab);
-      void syncPushContext(profile);
-    }} />
-      {/* Поле выбора файла нужно и здесь: основное живёт в ветке с готовым состоянием,
-          а «Загрузить копию» на онбординге как раз для тех, у кого состояния ещё нет. */}
-      <input ref={fileRef} type="file" accept="application/json,.json" hidden
-        onChange={(e) => { const f = e.target.files?.[0]; if (f) restore(f); e.target.value = ""; }} />
-    </>;
-  }
-
-  if (editingFood) {
-    return <>
-      <ScreenHeader title="Еда" onBack={back} />
-      <FoodSetup initial={state.food} onCancel={back}
-        onDone={(food) => { update({ ...state, food }); closeOverlay(); setTab(returnTab); }} />
-    </>;
-  }
-
-  return (
-    <>
-      {saveFailed && (
-        <div className="wrap wrap-flush">
-          <p className="note-warn small">
-            Не удалось сохранить данные на этом устройстве: закончилось место или браузер
-            работает в приватном режиме. Всё, что видно на экране, пропадёт при перезапуске —
-            сделай копию через «Профиль → Сохранить копию».
-          </p>
-        </div>
-      )}
-      {migrationNote && tab === "today" && (
-        <div className="wrap wrap-flush">
-          <p className="muted small">📦 {migrationNote}</p>
-        </div>
-      )}
-
-      {tab === "today" && (
-        <Today
-          profile={state.profile} history={state.history} screener={state.screener}
-          onLog={saveLog} food={state.food} weights={state.weights}
-          eaten={state.eaten} ratings={state.ratings} cheatDays={state.cheatDays}
-          swaps={state.swaps}
-          onMarkMeal={markMeal} onCheatDay={setCheatDay}
-          onMarkAll={markAll} onOwnSize={ownSize}
-          onOwnWritten={ownWritten} onExtraAdd={extraAdd} onExtraRemove={extraRemove}
-          noCookDays={state.noCookDays} onNoCook={setNoCook}
-          onTuned={markTuned}
-          onSetupFood={() => openOverlay("food")}
-          backupAt={backupAt} onBackup={backup}
-        />
-      )}
-      {tab === "food" && (
-        <Food
-          profile={state.profile} food={state.food}
-          ratings={state.ratings} onRate={rateDish}
-          swaps={state.swaps} onSwap={saveSwap}
-          onSetupFood={() => openOverlay("food")}
-          noCookDays={state.noCookDays}
-        />
-      )}
-      {tab === "progress" && (
-        <Progress
-          profile={state.profile} history={state.history} food={state.food}
-          weights={state.weights} eaten={state.eaten} cheatDays={state.cheatDays}
-          onAddWeight={addWeight} onAdjustKcal={adjustKcal}
-        />
-      )}
-      {tab === "coach" && (
-        <main className="wrap chat-screen">
-          {/* Заголовок такой же, как на остальных вкладках: раздел без Large Title
-              выпадал из системы и читался как чужой экран внутри приложения. */}
-          <h1 className="page-title">
-            Вопрос
-            <span className="page-sub">отвечает по научной базе, видит твои дела и не заменяет врача</span>
-          </h1>
-          <Coach contextRU={coachContext(state)} />
-        </main>
-      )}
-      {tab === "profile" && (
-        <ProfileScreen
-          food={state.food} screener={state.screener}
-          ratings={state.ratings} onRate={rateDish}
-          onEditSleep={() => openOverlay("sleep")}
-          onEditFood={() => openOverlay("food")}
-          onBackup={backup} onRestore={restore}
-        />
-      )}
-
-      <input ref={fileRef} type="file" accept="application/json,.json" hidden
-        onChange={(e) => { const f = e.target.files?.[0]; if (f) restore(f); e.target.value = ""; }} />
-      {/* Смена вкладки показывает раздел с начала. Без этого страница удерживала прежнюю
-          прокрутку: с середины «Еды» человек попадал в середину «Итогов» и видел не заголовок,
-          а обрывок карточки. Разделы независимы — общей позиции у них быть не может. */}
-      <Nav tab={tab} onChange={(t) => { setTab(t); window.scrollTo({ top: 0 }); }} />
-    </>
-  );
+  return {
+    state, update, saveFailed, backupAt, migrationNote,
+    actions: {
+      saveLog, markMeal, markAll, ownSize, ownWritten, extraAdd, extraRemove, rateDish, setCheatDay,
+      adjustKcal, markTuned, setNoCook, saveSwap, addWeight, backup, restore, setYesterday,
+    },
+  };
 }
 
 /** Короткая сводка «как дела сейчас» — чтобы коуч отвечал про этого человека, а не вообще. */
-function coachContext(state: StoredState): string {
+export function coachContext(state: StoredState): string {
   const last = state.history[state.history.length - 1];
   const weights = state.weights ?? [];
   return [
