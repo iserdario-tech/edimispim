@@ -258,7 +258,7 @@
 .s-buy-qty { font-size: var(--t4); color: var(--ink2); text-align: right; display: grid; }
 .s-buy-qty small { font-size: var(--t5); }
 .s-wide { width: 100%; margin-top: 20px; }
-.s-shops { align-items: center; margin-top: 16px; }
+.s-shops { margin: 20px 0 0; }
 .s-legacy { margin-top: 16px; }
 .s-legacy .card {
   margin: 0; border-radius: 20px; background: var(--glass); box-shadow: var(--shadow);

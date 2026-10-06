@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Sheet } from "../ui/Sheet.js";
 import { regularityScore } from "../index.js";
 import type { DayToggles } from "../index.js";

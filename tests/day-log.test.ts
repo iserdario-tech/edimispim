@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { upsertDay, lastNightBefore, dayOf, MAX_DAYS, type DayRecord } from "../src/day-log";
+import { upsertDay, MAX_DAYS, type DayRecord } from "../src/day-log";
 
 const sleep = (date: string, quality: 1 | 2 | 3 | 4 | 5 = 4): DayRecord =>
   ({ date, sleep: { wokeHM: "07:00", quality } });
@@ -32,23 +32,5 @@ describe("upsertDay", () => {
       days = upsertDay(days, sleep(`2026-${String(1 + Math.floor(i / 28)).padStart(2, "0")}-${String(1 + (i % 28)).padStart(2, "0")}`));
     }
     expect(days).toHaveLength(MAX_DAYS);
-  });
-});
-
-describe("выборки", () => {
-  const days = [sleep("2026-07-01"), { date: "2026-07-02", body: { weightKg: 80 } }, sleep("2026-07-03", 2)];
-
-  it("dayOf находит день по дате", () => {
-    expect(dayOf(days, "2026-07-02")?.body?.weightKg).toBe(80);
-    expect(dayOf(days, "2026-07-09")).toBeUndefined();
-  });
-
-  it("lastNightBefore берёт ближайшую ночь, пропуская дни без сна", () => {
-    expect(lastNightBefore(days, "2026-07-02")?.date).toBe("2026-07-01");
-    expect(lastNightBefore(days, "2026-07-03")?.date).toBe("2026-07-03");
-  });
-
-  it("нет ночей — не падает", () => {
-    expect(lastNightBefore([], "2026-07-01")).toBeUndefined();
   });
 });

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import type { Profile, ScreenerResult, ScreenerAnswers, Chronotype } from "../index.js";
 import { runScreener } from "../index.js";
 import { buildProfile, formFromProfile, isValidTime, type OnboardingForm } from "./onboardingModel.js";

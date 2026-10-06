@@ -1,4 +1,3 @@
-import React from "react";
 import { nightEating, type StopBangAnswers, type NesAnswers } from "../screening.js";
 
 /**
