@@ -21,7 +21,7 @@ export function lightWindows(args: {
       };
   const dip: PlanWindow = {
     kind: "afternoon_dip", startMin: wakeMin + 9 * 60, available: true,
-    title: "Дневная вялость", detail: "Выйди на свет, подвигайся или прогуляйся — это бодрит лучше позднего кофе.",
+    title: "Если клонит в сон", detail: "Выйди на свет, подвигайся или прогуляйся — это бодрит лучше позднего кофе.",
     why: "После обеда часто клонит в сон; свет и движение бодрят и не мешают ночному сну", refs: ["T7", "T13"],
   };
   return [morning, dip];

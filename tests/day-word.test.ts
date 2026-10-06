@@ -35,7 +35,7 @@ describe("слово дня", () => {
   });
   it("свободный день сильнее всего", () => {
     expect(dayWord({ ...base, nowMin: hm(21, 40), cheat: true, rough: true }))
-      .toEqual({ word: "Свободный день", sub: "калории сегодня не считаем", phase: "day" });
+      .toEqual({ word: "Ем без плана", sub: "меню и счёт калорий сегодня выключены", phase: "day" });
   });
   it("допоздна и отсыпаюсь", () => {
     expect(dayWord({ ...base, mode: "crunch" }).word).toBe("Долгий день");

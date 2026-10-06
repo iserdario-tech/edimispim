@@ -120,7 +120,7 @@ export function Day({ app, day, now, onWhy, story }: { app: AppModel; day: DayMo
 
       {askYesterday && (
         <section className="s-card">
-          <h2 className="s-h2">Вчера было?</h2>
+          <h2 className="s-h2">Что было вчера?</h2>
           {YESTERDAY.map(([k, ru]) => (
             <div key={k} className="s-yn">
               <span>{ru}</span>
@@ -172,7 +172,7 @@ export function Day({ app, day, now, onWhy, story }: { app: AppModel; day: DayMo
                       const on = !eaten?.ownText?.[r.slot!] && (eaten?.sizes?.[r.slot!] ?? "usual") === sz;
                       return <button key={sz} className={on ? "s-pill on" : "s-pill"} onClick={() => { tap(); a.ownSize(day.today, r.slot!, sz as OwnSize); }}>{ru}</button>;
                     })}
-                    <button className={eaten?.ownText?.[r.slot] ? "s-pill on" : "s-pill"} onClick={() => setWriting(r.slot!)}>✎ написать</button>
+                    <button className={eaten?.ownText?.[r.slot] ? "s-pill on" : "s-pill"} onClick={() => setWriting(r.slot!)}>✎ написать, что ел</button>
                   </div>
                 )}
               </li>
@@ -183,7 +183,7 @@ export function Day({ app, day, now, onWhy, story }: { app: AppModel; day: DayMo
 
       {eaten?.extras?.length ? (
         <section className="s-card">
-          <h2 className="s-h2">Вне плана</h2>
+          <h2 className="s-h2">Съел вне плана</h2>
           {eaten.extras.map((x, k) => (
             <div key={k} className="s-yn">
               <span>{x.text} · ≈{x.kcal} ккал</span>
@@ -212,7 +212,7 @@ export function Day({ app, day, now, onWhy, story }: { app: AppModel; day: DayMo
 
       {day.word.phase === "evening" && day.fact && day.foodDay && (
         <section className="s-card">
-          <h2 className="s-h2">День закрыт</h2>
+          <h2 className="s-h2">Итог дня</h2>
           <p className="s-muted">
             {day.fact.marked} из {planned} приёмов · {day.fact.estimated ? "≈" : ""}{day.fact.kcal} из {day.foodDay.day.totals.kcal} ккал · белок {day.fact.protein} г
           </p>

@@ -34,7 +34,7 @@ const SLIDES: { kicker: string; title: string; text: string; demo: ReactNode }[]
   {
     kicker: "Кнопка i", title: "Почему день такой",
     text: "Что поменялось из-за ночи и из чего сложился план. Там же — переключатели на сегодня.",
-    demo: <><Dot c="i" k="i" /><div className="s-tour-chips"><Chip c="Не готовлю" /><Chip c="Свободный день" /><Chip c="Долгий день" /></div></>,
+    demo: <><Dot c="i" k="i" /><div className="s-tour-chips"><Chip c="Не готовлю" /><Chip c="Ем без плана" /><Chip c="Работаю допоздна" /></div></>,
   },
   {
     kicker: "+ и ?", title: "Записать и спросить",
@@ -43,17 +43,17 @@ const SLIDES: { kicker: string; title: string; text: string; demo: ReactNode }[]
   },
   {
     kicker: "Еда", title: "Меню на неделю и покупки",
-    text: "↻ — заменить блюдо, лупа — все блюда, «В магазине» — список по отделам магазина.",
-    demo: <div className="s-tour-pair"><span><Dot c="↻" /><i>заменить</i></span><span><Dot c={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.5 15.5 21 21" /></svg>} /><i>все блюда</i></span><span><Chip c="В магазине →" k="light" /></span></div>,
+    text: "↻ — заменить блюдо, лупа — все блюда, «Список покупок» — по отделам магазина.",
+    demo: <div className="s-tour-pair"><span><Dot c="↻" /><i>заменить</i></span><span><Dot c={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.5 15.5 21 21" /></svg>} /><i>все блюда</i></span><span><Chip c="Список покупок →" k="light" /></span></div>,
   },
   {
     kicker: "Я", title: "Вес, сон и настройки",
-    text: "Вес и реальный расход, режим сна, истории недель, настройки и копия данных.",
-    demo: <div className="s-tour-stats"><span><b>92</b>кг</span><span><b>82</b>цель</span><span><b>≈1858</b>расход</span></div>,
+    text: "Вес и сколько калорий тратишь, режим сна, итоги недель, настройки и копия данных.",
+    demo: <div className="s-tour-stats"><span><b>92</b>кг</span><span><b>82</b>цель</span><span><b>≈1858</b>ккал в день</span></div>,
   },
   {
     kicker: "Каждое утро", title: "Два тапа — и приложение учится",
-    text: "Ответь «Как спал?» и «Вчера было?». Через 1–2 недели увидишь, что влияет именно на твой сон.",
+    text: "Ответь «Как спал?» и «Что было вчера?». Через 1–2 недели увидишь, что влияет именно на твой сон.",
     demo: <div className="s-tour-faces">{["😩", "😕", "🙂", "😊", "😴"].map(f => <Dot key={f} c={f} />)}</div>,
   },
 ];
