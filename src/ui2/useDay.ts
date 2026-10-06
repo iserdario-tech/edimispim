@@ -10,10 +10,16 @@ import { mealRows, mergeTimeline, type TimelineRow } from "../ui/mealRows.js";
 import { todayFoodDay } from "../ui/todayPlan.js";
 import { toDayRecords } from "../ui/dayRecords.js";
 import { explain } from "../explain.js";
-import { localDateISO, localMinutes } from "../today-date.js";
+import { localDateISO, localMinutes, plusDaysISO } from "../today-date.js";
+import type { Meal } from "../food/types.js";
+import type { PushMeal } from "../push.js";
 import { dayWord } from "../dayWord.js";
 import { streakWithFreezes } from "../streak2.js";
 import { personalEffects } from "../effects.js";
+
+const toPush = (meals: Meal[]): PushMeal[] => meals.map(m => ({
+  slot: m.slot, timeMin: m.timeMin, name: m.recipe.name, cookMin: m.recipe.time_min ?? 0, ...(m.leftover ? { leftover: true } : {}),
+}));
 
 /** "03:00" после полуночи → "27:00": движок сна считает минуты от полуночи дня. */
 const crunchStr = (hm: string): string => {
@@ -39,12 +45,6 @@ export function useDay(state: StoredState, now: Date) {
   const [crunchEndHM, setCrunchEndHM] = useState(draft?.crunchEndHM ?? "03:00");
   const [toggles, setToggles] = useState<DayToggles>(draft?.toggles ?? {});
   useEffect(() => { saveDayDraft({ date: today, mode, crunchEndHM, toggles }); }, [today, mode, crunchEndHM, toggles]);
-  useEffect(() => {
-    const id = setTimeout(() => void syncPushContext(profile, {
-      date: today, mode, toggles, ...(mode === "crunch" ? { crunchUntilHM: crunchStr(crunchEndHM) } : {}),
-    }), 800);
-    return () => clearTimeout(id);
-  }, [profile, today, mode, crunchEndHM, toggles]);
 
   const logged = history.find(h => h.date === today);
   const wokeHM = logged?.wokeHM ?? profile.anchorWakeHM;
@@ -75,6 +75,24 @@ export function useDay(state: StoredState, now: Date) {
     () => (balanced ? mergeTimeline(view.rows, mealRows(balanced.day, bedMin, nowMin)) : view.rows),
     [view.rows, balanced, bedMin, nowMin],
   );
+  // Серверу пушей — план дня и меню на сегодня и завтра: напоминание «пора готовить»
+  // считается от времени готовки блюда, а меню живёт только на телефоне.
+  useEffect(() => {
+    const id = setTimeout(() => {
+      const tomorrow = plusDaysISO(today, 1);
+      const next = state.food ? todayFoodDay({
+        food: state.food, today: tomorrow, wokeHM: profile.anchorWakeHM,
+        bedMin: expectedBedMin(parseHM(profile.anchorWakeHM), profile.targetSleepMin),
+        ratings: state.ratings, swaps: state.swaps, noCookDays: state.noCookDays,
+        night: { targetSleepMin: profile.targetSleepMin },
+      }) : null;
+      void syncPushContext(profile, {
+        date: today, mode, toggles, ...(mode === "crunch" ? { crunchUntilHM: crunchStr(crunchEndHM) } : {}),
+      }, { meals: { [today]: toPush(balanced?.day.meals ?? []), [tomorrow]: toPush(next?.day.meals ?? []) } });
+    }, 800);
+    return () => clearTimeout(id);
+  }, [profile, today, mode, crunchEndHM, toggles, balanced, state.food, state.ratings, state.swaps, state.noCookDays]);
+
   const fact = foodDay ? eatenTotals(foodDay.day, eaten) : null;
   const dinner = foodDay?.day.meals.find(m => m.slot === "dinner");
 

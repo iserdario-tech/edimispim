@@ -1,0 +1,89 @@
+import { useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { tap } from "../ui/haptics.js";
+
+/** Тур показан — больше сам не открывается; пройти заново — «Я → Как устроено приложение». */
+export const TOUR_KEY = "edimispim.tourSeen";
+
+const Dot = ({ c, k = "" }: { c: ReactNode; k?: string }) => <span className={"s-tour-dot " + k}>{c}</span>;
+const Chip = ({ c, k = "" }: { c: string; k?: string }) => <span className={"s-tour-chip " + k}>{c}</span>;
+const Row = ({ t, dot, k, what }: { t: string; dot: string; k: string; what: string }) => (
+  <div className="s-tour-row"><b>{t}</b><Dot c={dot} k={k} /><span>{what}</span></div>
+);
+
+/**
+ * Каждая карточка — что это, зачем и копия настоящей кнопки, чтобы потом узнать её на экране.
+ * Текст — не больше двух строк: тур читают один раз, на бегу.
+ */
+const SLIDES: { kicker: string; title: string; text: string; demo: ReactNode }[] = [
+  {
+    kicker: "edim & spim", title: "Сон и еда — одни сутки",
+    text: "Как ты спал — меняет еду на день. Что и когда ты ешь — меняет сон. Приложение ведёт оба сразу.",
+    demo: <><Row t="23:00" dot="🛌" k="sleep" what="Отбой" /><Row t="07:00" dot="☀️" k="sleep" what="Подъём и свет" /><Row t="07:30" dot="🍳" k="food" what="Завтрак под твою ночь" /></>,
+  },
+  {
+    kicker: "Сутки", title: "Главный экран",
+    text: "Сверху — слово дня и что будет дальше. Ниже лента: время → дело. Прошедшее бледнеет.",
+    demo: <><span className="s-tour-small">вторник, 6 октября</span><b className="s-tour-word">Обычный день</b><span className="s-tour-next">Ужин в 20:00 · через 2 ч</span></>,
+  },
+  {
+    kicker: "Лента", title: "Отмечай еду одним движением",
+    text: "Смахни строку влево — «съел», вправо — «ел своё». Тап по строке — рецепт и продукты.",
+    demo: <div className="s-tour-swipe"><Chip c="← съел ✓" k="ok" /><Dot c="🍲" k="food" /><Chip c="своё →" k="food" /></div>,
+  },
+  {
+    kicker: "Кнопка i", title: "Почему день такой",
+    text: "Что поменялось из-за ночи и из чего сложился план. Там же — переключатели на сегодня.",
+    demo: <><Dot c="i" k="i" /><div className="s-tour-chips"><Chip c="Не готовлю" /><Chip c="Свободный день" /><Chip c="Долгий день" /></div></>,
+  },
+  {
+    kicker: "+ и ?", title: "Записать и спросить",
+    text: "«+» — съел, своё словами, вес, ночь. «?» — вопрос коучу: он видит твой день и меню.",
+    demo: <div className="s-tour-pair"><span><Dot c="+" k="plus" /><i>записать</i></span><span><Dot c="?" /><i>спросить</i></span></div>,
+  },
+  {
+    kicker: "Еда", title: "Меню на неделю и покупки",
+    text: "↻ — заменить блюдо, лупа — все блюда, «В магазине» — список по отделам магазина.",
+    demo: <div className="s-tour-pair"><span><Dot c="↻" /><i>заменить</i></span><span><Dot c={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.5 15.5 21 21" /></svg>} /><i>все блюда</i></span><span><Chip c="В магазине →" k="light" /></span></div>,
+  },
+  {
+    kicker: "Я", title: "Вес, сон и настройки",
+    text: "Вес и реальный расход, режим сна, истории недель, настройки и копия данных.",
+    demo: <div className="s-tour-stats"><span><b>92</b>кг</span><span><b>82</b>цель</span><span><b>≈1858</b>расход</span></div>,
+  },
+  {
+    kicker: "Каждое утро", title: "Два тапа — и приложение учится",
+    text: "Ответь «Как спал?» и «Вчера было?». Через 1–2 недели увидишь, что влияет именно на твой сон.",
+    demo: <div className="s-tour-faces">{["😩", "😕", "🙂", "😊", "😴"].map(f => <Dot key={f} c={f} />)}</div>,
+  },
+];
+
+/** «Как устроено приложение» — полноэкранные карточки, как история недели. */
+export function Tour({ onClose }: { onClose: () => void }) {
+  const [i, setI] = useState(0);
+  const s = SLIDES[i]!;
+  const last = i === SLIDES.length - 1;
+  const next = () => { tap(); if (last) onClose(); else setI(i + 1); };
+  const prev = () => { tap(); if (i > 0) setI(i - 1); };
+
+  return createPortal(
+    <div className="s-story" role="dialog" aria-label={`Как устроено приложение: ${s.title}`}>
+      <div className="s-story-bars">{SLIDES.map((_, k) => <span key={k} className={k <= i ? "on" : ""} />)}</div>
+      <div className="s-story-top">
+        <span>{i + 1} из {SLIDES.length}</span>
+        <button aria-label="Закрыть" onClick={onClose}>✕</button>
+      </div>
+      <div className="s-story-tap" onClick={e => (e.clientX > window.innerWidth / 3 ? next() : prev())}>
+        <div className="s-story-title">{s.kicker}</div>
+        <div className="s-tour-h">{s.title}</div>
+        <div className="s-story-sub">{s.text}</div>
+        <div className="s-tour-demo" aria-hidden="true">{s.demo}</div>
+      </div>
+      <div className="s-story-actions">
+        <button className="s-btn ghost" onClick={onClose}>{last ? "Закрыть" : "Пропустить"}</button>
+        <button className="s-btn" onClick={next}>{last ? "Начать" : "Дальше →"}</button>
+      </div>
+    </div>,
+    document.body,
+  );
+}

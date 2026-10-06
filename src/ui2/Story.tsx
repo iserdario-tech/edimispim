@@ -58,9 +58,9 @@ async function shareSlide(s: Slide, label: string): Promise<void> {
     c.width = 1080; c.height = 1350;
     const g = c.getContext("2d")!;
     const grad = g.createLinearGradient(0, 0, 0, c.height);
-    grad.addColorStop(0, "#2A2F5C"); grad.addColorStop(0.55, "#5B4BE0"); grad.addColorStop(1, "#FFB48A");
+    grad.addColorStop(0, "#000000"); grad.addColorStop(0.45, "#1E1D4F"); grad.addColorStop(0.85, "#5E5CE6"); grad.addColorStop(1, "#C77A1A");
     g.fillStyle = grad; g.fillRect(0, 0, c.width, c.height);
-    g.fillStyle = "#E3E6FA"; g.font = "500 44px -apple-system, system-ui, sans-serif"; g.fillText(label, 80, 140);
+    g.fillStyle = "rgba(255,255,255,.75)"; g.font = "500 44px -apple-system, system-ui, sans-serif"; g.fillText(label, 80, 140);
     g.fillStyle = "#FFFFFF"; g.font = "600 64px -apple-system, system-ui, sans-serif"; g.fillText(s.title, 80, 360);
     g.font = "700 150px -apple-system, system-ui, sans-serif"; g.fillText(s.big, 80, 540);
     g.font = "400 46px -apple-system, system-ui, sans-serif";
