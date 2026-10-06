@@ -1,0 +1,97 @@
+/*
+ * edim & spim 2.0 — визуальная система «Небо».
+ *
+ * Всё под классом `.v2`, чтобы не задевать старый интерфейс, пока он жив.
+ * Пять размеров текста (34 / 22 / 17 / 15 / 13), один тип карточки — стекло,
+ * цвет фона — небо текущего часа (src/sky.ts). Спека: docs/superpowers/specs/2026-10-06-edimspim-2.0-design.md §9.
+ */
+.v2 {
+  --ink: #0F1730; --ink2: #4A5578; --line: rgba(15, 23, 48, .10);
+  --food: #F26B1D; --food-ink: #C2410C; --sleep: #5B4BE0; --ok: #2BB673;
+  --glass: rgba(255, 255, 255, .74); --glass-strong: rgba(255, 255, 255, .9);
+  --shadow: 0 6px 20px rgba(15, 23, 48, .10);
+  --t1: 34px; --t2: 22px; --t3: 17px; --t4: 15px; --t5: 13px;
+  --round: ui-rounded, "SF Pro Rounded", -apple-system, system-ui, sans-serif;
+  --text: -apple-system, system-ui, "SF Pro Text", "Inter", sans-serif;
+  --spring: cubic-bezier(.34, 1.56, .64, 1);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  color: var(--ink); font-family: var(--text); font-size: var(--t3);
+  min-height: 100dvh; position: relative; -webkit-tap-highlight-color: transparent;
+}
+.v2.night {
+  --ink: #F3F5FF; --ink2: #A9B1D6; --line: rgba(255, 255, 255, .12);
+  --food-ink: #FFB48A; --glass: rgba(42, 47, 92, .62); --glass-strong: rgba(42, 47, 92, .92);
+  --shadow: 0 6px 20px rgba(0, 0, 0, .3);
+}
+/* :where — нулевая специфичность: общее правило не перебивает цвет конкретных кнопок */
+.v2 :where(button) { font: inherit; color: inherit; }
+
+/* небо */
+.s-sky { position: fixed; inset: 0; z-index: -1; transition: background 1.2s ease; }
+
+/* экран */
+.s-screen {
+  max-width: 520px; margin: 0 auto;
+  padding: calc(env(safe-area-inset-top, 0px) + 20px) 20px calc(150px + var(--safe-b));
+}
+.s-date { font-size: var(--t5); color: var(--ink2); }
+.s-title { font: 700 var(--t1)/1.12 var(--round); letter-spacing: -.01em; margin: 2px 0 0; }
+.s-sub { font-size: var(--t3); color: var(--ink2); margin: 6px 0 0; }
+.s-next { font: 600 var(--t3)/1.3 var(--round); color: var(--food-ink); margin: 6px 0 0; }
+.s-h2 { font: 700 var(--t2)/1.2 var(--round); margin: 0 0 12px; }
+.s-muted { color: var(--ink2); font-size: var(--t4); }
+.s-small { color: var(--ink2); font-size: var(--t5); }
+
+/* одна карточка на всё приложение */
+.s-card {
+  background: var(--glass); border-radius: 20px; padding: 16px; box-shadow: var(--shadow);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4); backdrop-filter: blur(20px) saturate(1.4);
+  margin-top: 16px;
+}
+
+/* кнопки */
+.s-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 48px; padding: 0 20px; border: 0; border-radius: 24px; cursor: pointer;
+  background: var(--ink); color: var(--glass-strong); font: 600 var(--t3) var(--round);
+  transition: transform .15s ease;
+}
+.s-btn:active { transform: scale(.96); }
+.s-btn.food { background: var(--food); color: #fff; }
+.s-btn.ghost { background: var(--glass); color: var(--ink); }
+.s-pill {
+  min-height: 36px; padding: 0 16px; border-radius: 18px; border: 0; cursor: pointer;
+  background: var(--glass-strong); color: var(--ink); font-size: var(--t4); font-weight: 500;
+}
+.s-pill.on { background: var(--ink); color: var(--glass-strong); }
+
+/* навигация: три вкладки, «?» и «+» */
+.s-tabbar {
+  position: fixed; left: 16px; bottom: calc(18px + var(--safe-b)); z-index: 50;
+  display: flex; gap: 4px; padding: 6px; border-radius: 31px;
+  background: var(--glass); box-shadow: var(--shadow);
+  -webkit-backdrop-filter: blur(24px) saturate(1.6); backdrop-filter: blur(24px) saturate(1.6);
+}
+.s-tab {
+  min-width: 76px; height: 50px; border-radius: 25px; border: 0; background: transparent; cursor: pointer;
+  font-size: var(--t4); color: var(--ink);
+}
+.s-tab.on { background: rgba(15, 23, 48, .08); font-weight: 600; }
+.v2.night .s-tab.on { background: rgba(255, 255, 255, .14); }
+.s-ask {
+  position: fixed; left: calc(16px + 250px + 9px); bottom: calc(21px + var(--safe-b)); z-index: 50;
+  width: 56px; height: 56px; border-radius: 28px; border: 0; cursor: pointer;
+  background: var(--glass); box-shadow: var(--shadow); font: 700 var(--t2) var(--round); color: var(--ink);
+  -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px);
+}
+.s-fab {
+  position: fixed; right: 16px; bottom: calc(92px + var(--safe-b)); z-index: 50;
+  width: 56px; height: 56px; border-radius: 28px; border: 0; cursor: pointer;
+  background: var(--food); color: #fff; font: 500 30px/1 var(--round);
+  box-shadow: 0 8px 22px rgba(242, 107, 29, .4); transition: transform .2s var(--spring);
+}
+.s-fab:active { transform: scale(.9); }
+
+@media (prefers-reduced-motion: reduce) {
+  .s-sky, .s-fab, .s-btn { transition: none; }
+}

@@ -2,6 +2,8 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { readTheme, applyTheme } from "./theme.js";
 import { App } from "./App.js";
+import { Shell } from "../ui2/Shell.js";
+import "../ui2/sky.css";
 import { askPersistentStorage } from "./dataSafety.js";
 import "./ui.css";
 
@@ -74,6 +76,17 @@ if ("serviceWorker" in navigator) {
 // просим браузер не стирать данные; в Safari ненадёжно, но безвредно
 askPersistentStorage();
 
+/*
+ * 2.0 включается флагом, пока идёт сборка: `?v2` — включить, `?v1` — вернуть старый вид.
+ * Флаг временный: когда все экраны 2.0 готовы, старый интерфейс удаляется целиком.
+ */
+const params = new URLSearchParams(location.search);
+try {
+  if (params.has("v2")) localStorage.setItem("edimispim.v2", "1");
+  if (params.has("v1")) localStorage.removeItem("edimispim.v2");
+} catch { /* приватный режим */ }
+const v2 = (() => { try { return localStorage.getItem("edimispim.v2") === "1"; } catch { return false; } })();
+
 createRoot(document.getElementById("root")!).render(
-  <React.StrictMode><App /></React.StrictMode>
+  <React.StrictMode>{v2 ? <Shell /> : <App />}</React.StrictMode>
 );
