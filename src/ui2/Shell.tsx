@@ -21,6 +21,10 @@ import { plusDaysISO } from "../today-date.js";
 import { Onboarding } from "../ui/Onboarding.js";
 import { FoodSetup } from "../ui/FoodSetup.js";
 import { readLS, writeLS } from "../ui/localStore.js";
+import { Install } from "./Install.js";
+import { AskSheet } from "./AskSheet.js";
+import { isIOS, isStandalone } from "../ui/dataSafety.js";
+import { unmarkedToday } from "../streak2.js";
 import { useDay } from "./useDay.js";
 import type { StoredState } from "../ui/storage.js";
 
@@ -53,6 +57,15 @@ export function Shell() {
       onChange={(e) => { const f = e.target.files?.[0]; if (f) void app.actions.restore(f); e.target.value = ""; }} />
   );
 
+  const [installSkipped, setInstallSkipped] = useState(() => readLS<boolean>("edimispim.installSkip", false));
+  if (!app.state && isIOS() && !isStandalone() && !installSkipped) {
+    return <div className="v2-root">
+      <div className="s-sky" style={{ background: skyGradient(sky.stops) }} />
+      <Install onContinue={() => { writeLS("edimispim.installSkip", true); setInstallSkipped(true); }}
+        onRestore={() => fileRef.current?.click()} />
+      {restoreInput}
+    </div>;
+  }
   if (!app.state) {
     return <div className="v2-root">
       <div className="s-sky" style={{ background: skyGradient(sky.stops) }} />
@@ -81,7 +94,19 @@ function Main({ app, tab, setTab, now, night, stops, restoreInput, onRestore }: 
 }) {
   const day = useDay(app.state as StoredState, now);
   const [why, setWhy] = useState(false);
-  const [plus, setPlus] = useState(false);
+  // пуш «как спалось?» открывает сразу отметку ночи, «#eat» — шторку «+»
+  const [plus, setPlus] = useState<false | "any" | "night">(() =>
+    location.hash === "#night" || location.hash === "#mark" ? "night" : location.hash === "#eat" ? "any" : false);
+  const [ask, setAsk] = useState(false);
+  // пуш, нажатый при открытом приложении, меняет только хеш — без перезагрузки
+  useEffect(() => {
+    const on = () => {
+      if (location.hash === "#night" || location.hash === "#mark") setPlus("night");
+      else if (location.hash === "#eat") setPlus("any");
+    };
+    addEventListener("hashchange", on);
+    return () => removeEventListener("hashchange", on);
+  }, []);
   const [shop, setShop] = useState(false);
   const week = useWeek(app.state as StoredState);
   const state = app.state as StoredState;
@@ -98,6 +123,13 @@ function Main({ app, tab, setTab, now, night, stops, restoreInput, onRestore }: 
     const f = (iso: string) => new Date(iso + "T12:00:00").toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
     return `${f(m)} – ${f(plusDaysISO(m, 6))}`;
   };
+
+  // цифра на иконке: сколько приёмов сегодня не отмечено (iOS 16.4+, только на экране «Домой»)
+  const badge = unmarkedToday(day.foodDay?.day ?? null, day.eaten);
+  useEffect(() => {
+    const nav = navigator as Navigator & { setAppBadge?: (n: number) => Promise<void>; clearAppBadge?: () => Promise<void> };
+    try { void (badge > 0 ? nav.setAppBadge?.(badge) : nav.clearAppBadge?.())?.catch(() => {}); } catch { /* не умеет — и ладно */ }
+  }, [badge]);
 
   if (settings) {
     return (
@@ -125,10 +157,11 @@ function Main({ app, tab, setTab, now, night, stops, restoreInput, onRestore }: 
             onClick={() => { tap(); setTab(id); window.scrollTo({ top: 0 }); }}>{ru}</button>
         ))}
       </nav>
-      <button className="s-ask" aria-label="Спросить коуча">?</button>
-      <button className="s-fab" aria-label="Добавить" onClick={() => { tap(); setPlus(true); }}>+</button>
+      <button className="s-ask" aria-label="Спросить коуча" onClick={() => { tap(); setAsk(true); }}>?</button>
+      <button className="s-fab" aria-label="Добавить" onClick={() => { tap(); setPlus("any"); }}>+</button>
       {why && <WhySheet app={app} day={day} onClose={() => setWhy(false)} />}
-      {plus && <PlusSheet app={app} day={day} onClose={() => setPlus(false)} />}
+      {plus && <PlusSheet app={app} day={day} initial={plus === "night" ? "night" : null} onClose={() => { setPlus(false); if (location.hash) history.replaceState(null, "", location.pathname + location.search); }} />}
+      {ask && <AskSheet state={state} screen={tab} onClose={() => setAsk(false)} />}
       {restoreInput}
     </div>
   );

@@ -12,9 +12,9 @@ const SLOT_RU: Record<string, string> = { breakfast: "завтрак", lunch: "�
  * «+» — все действия дня в одном месте: съел следующий приём, написал, что съел,
  * взвесился, отметил ночь. Действие — отдельная кнопка, а не вкладка (HIG).
  */
-export function PlusSheet({ app, day, onClose }: { app: AppModel; day: DayModel; onClose: () => void }) {
+export function PlusSheet({ app, day, onClose, initial = null }: { app: AppModel; day: DayModel; onClose: () => void; initial?: null | "night" }) {
   const a = app.actions;
-  const [mode, setMode] = useState<null | "write" | "weight" | "night">(null);
+  const [mode, setMode] = useState<null | "write" | "weight" | "night">(initial);
   const [kg, setKg] = useState("");
   const [woke, setWoke] = useState(day.wokeHM);
   const [bed, setBed] = useState(day.bedHM ?? "");

@@ -309,3 +309,15 @@
 .s-story-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .s-story-actions .s-btn.ghost { background: rgba(255, 255, 255, .18); color: #fff; }
 .s-story-actions .s-btn:not(.ghost) { background: #fff; color: #0F1730; }
+
+/* ─── установка ─── */
+.s-install { display: grid; gap: 4px; }
+.s-app-icon {
+  width: 96px; height: 96px; margin: 24px auto 8px; border-radius: 24px; display: grid; place-items: center;
+  color: #fff; font: 700 30px var(--round); background: linear-gradient(180deg, #1A1F3D, #F26B1D 55%, #FFE3C7);
+}
+.s-center { text-align: center; }
+.s-block { display: block; width: 100%; margin-top: 12px; padding: 8px; }
+.s-steps { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 12px; }
+.s-steps li { display: grid; grid-template-columns: 36px 1fr; align-items: center; gap: 12px; font-weight: 500; }
+.s-steps span { width: 36px; height: 36px; border-radius: 18px; display: grid; place-items: center; background: rgba(242, 107, 29, .14); color: var(--food-ink); font-weight: 700; }
