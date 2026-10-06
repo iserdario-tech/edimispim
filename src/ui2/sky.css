@@ -330,7 +330,7 @@ html.v2 body { background: none; }  /* иначе фон body ложится п�
 .s-install { display: grid; gap: 4px; }
 .s-app-icon {
   width: 96px; height: 96px; margin: 24px auto 8px; border-radius: 24px; display: grid; place-items: center;
-  color: #fff; font: 700 30px var(--round); background: linear-gradient(180deg, #000, #3634A3 55%, #FF9F0A);
+  color: #fff; font: 700 30px var(--round); background: linear-gradient(180deg, #1A1F3D, #F26B1D 55%, #FFE3C7);  /* как значок приложения */
 }
 .s-center { text-align: center; }
 .s-block { display: block; width: 100%; margin-top: 12px; padding: 8px; }
