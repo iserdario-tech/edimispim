@@ -371,3 +371,5 @@ html.v2 body { background: none; }  /* иначе фон body ложится п�
   animation: fade-in .25s ease both;
 }
 .s-update button { min-height: 36px; padding: 0 16px; border: 0; border-radius: 18px; background: var(--food); color: #fff; font: 600 var(--t4) var(--round); cursor: pointer; }
+/* пока открыта шторка или настройки, плашку прячем: «Обновить» стёрло бы недописанное */
+html:has(.sheet, .s-settings) .s-update { display: none; }

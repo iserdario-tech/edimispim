@@ -88,3 +88,26 @@ describe("isValidState", () => {
     expect(isValidState(null)).toBe(false);
   });
 });
+
+/**
+ * Обновление не должно стирать данные. Если новая версия не смогла прочитать сохранённое
+ * (сменился формат, битая запись), приложение покажет первую настройку — и, пройдя её,
+ * человек затёр бы старое. Поэтому нечитаемое сначала откладывается в отдельную копию.
+ */
+describe("нечитаемые данные не теряются", () => {
+  const memStore = (raw: string): StorageLike & { data: Record<string, string> } => {
+    const data: Record<string, string> = { "edimispim.state.v1": raw };
+    return { data, getItem: k => data[k] ?? null, setItem: (k, v) => { data[k] = v; } };
+  };
+  it("кладёт исходник в edimispim.state.v1.unreadable", () => {
+    const s = memStore('{"profile":"новый формат","history":[]}');
+    expect(loadState(s)).toBeNull();
+    expect(s.data["edimispim.state.v1.unreadable"]).toBe('{"profile":"новый формат","history":[]}');
+  });
+  it("первую отложенную копию не перезаписывает", () => {
+    const s = memStore("битое-2");
+    s.data["edimispim.state.v1.unreadable"] = "битое-1";
+    loadState(s);
+    expect(s.data["edimispim.state.v1.unreadable"]).toBe("битое-1");
+  });
+});
