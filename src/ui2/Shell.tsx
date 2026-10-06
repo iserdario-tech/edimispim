@@ -4,7 +4,7 @@ import { QuickStart } from "../ui/QuickStart.js";
 import { syncPushContext } from "../ui/notifications.js";
 import { useNow } from "../ui/useNow.js";
 import { localMinutes } from "../today-date.js";
-import { skyFor, skyGlow } from "../sky.js";
+import { skyFor, skyGlow, skyTopColor } from "../sky.js";
 import { useDarkTheme } from "./useNight.js";
 import { tap } from "../ui/haptics.js";
 import { Day } from "./Day.js";
@@ -51,9 +51,10 @@ export function Shell() {
     const r = document.documentElement;
     r.classList.add("v2");
     r.classList.toggle("night", sky.night);
-    // полоса над страницей (Safari, статус-бар) — того же цвета, что фон, и при ручной теме тоже
-    document.querySelectorAll('meta[name="theme-color"]').forEach(m => m.setAttribute("content", sky.night ? "#000000" : "#F2F2F7"));
-  }, [sky.night]);
+    // полоса под часами — того же цвета, что верх экрана: на «Сутках» это свечение, на остальных — фон
+    const top = tab === "day" ? skyTopColor(sky.glow, sky.night) : sky.night ? "#000000" : "#F2F2F7";
+    document.querySelectorAll('meta[name="theme-color"]').forEach(m => m.setAttribute("content", top));
+  }, [sky.night, sky.glow, tab]);
 
   const restoreInput = (
     <input ref={fileRef} type="file" accept="application/json,.json" hidden
@@ -164,8 +165,8 @@ function Main({ app, tab, setTab, now, glow, restoreInput, onRestore }: {
           <button key={id} className={tab === id ? "s-tab on" : "s-tab"} aria-current={tab === id ? "page" : undefined}
             onClick={() => { tap(); setTab(id); window.scrollTo({ top: 0 }); }}>{ru}</button>
         ))}
+        <button className="s-tab-ask" aria-label="Спросить коуча" onClick={() => { tap(); setAsk(true); }}>?</button>
       </nav>
-      <button className="s-ask" aria-label="Спросить коуча" onClick={() => { tap(); setAsk(true); }}>?</button>
       <button className="s-fab" aria-label="Добавить" onClick={() => { tap(); setPlus("any"); }}>+</button>
       {why && <WhySheet app={app} day={day} onClose={() => setWhy(false)} />}
       {plus && <PlusSheet app={app} day={day} initial={plus === "night" ? "night" : null} onClose={() => { setPlus(false); if (location.hash) history.replaceState(null, "", location.pathname + location.search); }} />}
