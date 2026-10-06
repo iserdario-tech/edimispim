@@ -39,7 +39,7 @@ const dur = (min: number): string => {
 };
 
 export function dayWord(i: DayWordInput): DayWord {
-  if (i.cheat) return { word: "Свободный день", sub: "калории сегодня не считаем", phase: "day" };
+  if (i.cheat) return { word: "Ем без плана", sub: "меню и счёт калорий сегодня выключены", phase: "day" };
 
   const now = i.nowMin < NIGHT_UNTIL ? i.nowMin + 1440 : i.nowMin;
   const dinnerPassed = i.dinnerMarked || (i.dinnerMin !== undefined && now >= i.dinnerMin);
