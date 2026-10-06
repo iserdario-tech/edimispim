@@ -77,7 +77,7 @@ export function QuickStart({ onDone, onRestore }: {
           <label className="fld">Обычно ложусь
             <input type="time" value={bedHM} onChange={e => setBedHM(e.target.value)} />
           </label>
-          <p className="small muted">Хронотип и кофеин поставим средние — поправишь в «Я» → «Сон».</p>
+          <p className="small muted">Остальное про сон (сова ты или жаворонок, сколько пьёшь кофе) поставим средним — поправишь в «Я → Настройки сна».</p>
           {!timesOk && <p className="note-warn small">Заполни оба времени — от них считается весь план дня.</p>}
           <button className="primary" disabled={!timesOk} onClick={() => setStep(2)}>Дальше</button>
           {onRestore && (
@@ -105,11 +105,11 @@ export function QuickStart({ onDone, onRestore }: {
             {num("Возраст", age, setAge)}
             {num("Рост, см", heightCm, setHeightCm)}
             {num("Вес сейчас, кг", weightKg, setWeightKg, true)}
-            {num("Цель, кг", goalWeightKg, setGoalWeightKg, true)}
+            {num("Хочу весить, кг", goalWeightKg, setGoalWeightKg, true)}
           </div>
           {problems.length > 0 && <p className="note-warn small">Проверь: {problems.join("; ")}.</p>}
           <p className="small muted">
-            Аллергии, технику на кухне, бюджет и время на готовку настроишь потом — меню соберётся уже сейчас.
+            Аллергии, технику на кухне, бюджет и время на готовку настроишь потом в «Я → Настройки еды» — меню соберётся уже сейчас.
           </p>
           <button className="primary" disabled={problems.length > 0} onClick={() => setStep(3)}>Дальше</button>
           <button className="linkbtn" onClick={() => setStep(1)}>← назад</button>
@@ -118,10 +118,10 @@ export function QuickStart({ onDone, onRestore }: {
 
       {step === 3 && (
         <>
-          <h1>Короткая проверка</h1>
+          <h1>Короткая проверка здоровья</h1>
           <p className="muted small">
-            Отметь, если про тебя. Это не диагноз: при тревожных ответах приложение посоветует врача
-            и не поставит жёсткий дефицит. Данные никуда не отправляются.
+            Отметь, что про тебя. Это не диагноз: если что-то отмечено, приложение посоветует врача
+            и не станет сильно урезать калории. Ответы остаются на телефоне.
           </p>
           {([
             ["loudSnoringWithPauses", "Громкий храп с паузами дыхания"],
@@ -136,7 +136,7 @@ export function QuickStart({ onDone, onRestore }: {
             </label>
           ))}
           <JunctionScreening value={junction} onChange={setJunction} />
-          <button className="primary" onClick={finish}>Всё верно — к плану</button>
+          <button className="primary" onClick={finish}>Готово — показать мой день</button>
           <button className="linkbtn" onClick={() => setStep(2)}>← назад</button>
         </>
       )}

@@ -135,12 +135,12 @@ export function FoodSetup({ initial, onDone, onCancel }: {
       </section>
 
       <section className="card">
-        <h3 className="card-h">2 · Образ жизни</h3>
+        <h3 className="card-h">2 · Сколько двигаешься</h3>
         <p className="small muted">Насколько подвижный день — про быт, а не про спортзал.</p>
         <div className="chips">
-          <button className={activity === "low" ? "chip on" : "chip"} onClick={() => setActivity("low")}>Сидячий</button>
-          <button className={activity === "medium" ? "chip on" : "chip"} onClick={() => setActivity("medium")}>Средний</button>
-          <button className={activity === "high" ? "chip on" : "chip"} onClick={() => setActivity("high")}>На ногах</button>
+          <button className={activity === "low" ? "chip on" : "chip"} onClick={() => setActivity("low")}>Сижу почти весь день</button>
+          <button className={activity === "medium" ? "chip on" : "chip"} onClick={() => setActivity("medium")}>Хожу понемногу</button>
+          <button className={activity === "high" ? "chip on" : "chip"} onClick={() => setActivity("high")}>Весь день на ногах</button>
         </div>
         <label className="chk">
           <input type="checkbox" checked={strength} onChange={e => setStrength(e.target.checked)} />
@@ -149,7 +149,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
         <p className="small muted">
           Белок поднимется до 1.6 г на кг — каждый день одинаково, а не только в день тренировки.
           Калории за тренировку не добавляем: вес зависит от среднего за неделю, а браслеты ошибаются
-          в расходе на 27–93%. Реальный расход приложение увидит по весу.
+          в подсчёте сожжённых калорий на 27–93%. Сколько ты тратишь на самом деле, приложение поймёт по весу.
         </p>
 
       </section>
@@ -188,12 +188,12 @@ export function FoodSetup({ initial, onDone, onCancel }: {
           на полтора часа в среду был гарантированным срывом плана. */}
       <section className="card">
         <h3 className="card-h">5 · Готовка</h3>
-        <p className="small muted">Долгие блюда уйдут на выходные — или туда, где времени нет ограничений.</p>
+        <p className="small muted">Долгие блюда встанут на дни, когда есть время.</p>
         {([["В будни", cookWeekday, setCookWeekday], ["В выходные", cookWeekend, setCookWeekend]] as const).map(([ru, v, set]) => (
           <div key={ru} className="day-group">
             <div className="day-group-label small muted">{ru}</div>
             <div className="seg" role="group" aria-label={`Время на готовку ${ru.toLowerCase()}`}>
-              {([[15, "15 мин"], [30, "30 мин"], [45, "45 мин"], [undefined, "сколько надо"]] as const).map(([m, label]) => (
+              {([[15, "15 мин"], [30, "30 мин"], [45, "45 мин"], [undefined, "не важно"]] as const).map(([m, label]) => (
                 <button key={label} className={v === m ? "seg-item on" : "seg-item"}
                   aria-pressed={v === m} onClick={() => set(m)}>{label}</button>
               ))}
@@ -221,7 +221,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
 
       <section className="card">
         <h3 className="card-h">6 · Чего не будет в меню</h3>
-        <p className="small muted">Аллергии исключаются жёстко, нелюбимое — тоже.</p>
+        <p className="small muted">Убираем из меню полностью — и аллергии, и то, что не любишь.</p>
         <div className="chips">
           {ALLERGENS.map(([key, ru]) => (
             <button key={key} className={allergens.includes(key) ? "chip on" : "chip"}
@@ -245,12 +245,11 @@ export function FoodSetup({ initial, onDone, onCancel }: {
       <section className="card">
         <h3 className="card-h">7 · Бюджет</h3>
         <p className="small muted">
-          «Небольшой» оставит блюда повыгоднее по цене за грамм белка — неделя выйдет
-          примерно на тысячу рублей дешевле. Цель по калориям и белку при этом та же.
-          «Средний» и «свободный» — весь набор без ограничений.
+          «Небольшой» оставит блюда подешевле — неделя выйдет примерно на тысячу рублей
+          дешевле, калории и белок те же. «Средний» и «не важно» — все блюда без ограничений.
         </p>
         <div className="seg" role="group" aria-label="Бюджет">
-          {([["small", "Небольшой"], ["medium", "Средний"], ["large", "Свободный"]] as const).map(([v, ru]) => (
+          {([["small", "Небольшой"], ["medium", "Средний"], ["large", "Не важно"]] as const).map(([v, ru]) => (
             <button key={v} className={budget === v ? "seg-item on" : "seg-item"}
               aria-pressed={budget === v} onClick={() => setBudget(v)}>{ru}</button>
           ))}
@@ -260,20 +259,20 @@ export function FoodSetup({ initial, onDone, onCancel }: {
       <section className="card">
         <h3 className="card-h">8 · Как начать: сразу или постепенно</h3>
         <p className="small muted">
-          С первого дня есть на полном дефиците — самая частая причина бросить на первой неделе.
-          Поэтому начинаем с того калоража, на котором ты и так живёшь, и спускаемся к цели
-          понемногу. Первые дни еда будет привычнее и плотнее — паста, жаркое, запеканки.
+          Если сразу сильно урезать еду, многие бросают в первую неделю. Поэтому начинаем
+          с того, сколько ты ешь сейчас, и понемногу снижаем до цели. Первые дни еда будет
+          привычнее и плотнее — паста, жаркое, запеканки.
         </p>
         <div className="seg" role="group" aria-label="Как начать">
-          {([["gentle", "Мягко"], ["normal", "Обычно"], ["none", "Сразу"]] as const).map(([v, ru]) => (
+          {([["gentle", "Плавно"], ["normal", "Обычно"], ["none", "Сразу"]] as const).map(([v, ru]) => (
             <button key={v} className={pace === v ? "seg-item on" : "seg-item"}
               aria-pressed={pace === v} onClick={() => setPace(v)}>{ru}</button>
           ))}
         </div>
         <p className="small muted">
           {pace === "none"
-            ? "Целевой калораж с первого дня. Подходит, если ты уже в режиме и привык к нему."
-            : `${RAMP_DAYS[pace]} дней от привычного калоража до цели. Вес первые недели пойдёт медленнее — зато шанс дойти до конца заметно выше.`}
+            ? "Сразу калории для цели. Подходит, если ты уже так ешь и привык."
+            : `${RAMP_DAYS[pace]} дней плавно: от того, сколько ешь сейчас, к цели. Вес первые недели пойдёт медленнее — зато шанс дойти до конца заметно выше.`}
         </p>
       </section>
 
@@ -289,9 +288,9 @@ export function FoodSetup({ initial, onDone, onCancel }: {
       <section className="card">
         <h3 className="card-h">9 · Короткая проверка</h3>
         <p className="small muted">
-          Два вопроса про сон и еду вместе. Это не диагноз — приложение ничего не лечит
-          и никуда не отправляет данные, а при тревожных ответах просто советует врача
-          и не ставит жёсткий дефицит.
+          Два вопроса про сон и еду вместе. Это не диагноз — приложение ничего не лечит,
+          ответы остаются на телефоне, а если что-то отмечено, оно посоветует врача
+          и не станет сильно урезать калории.
         </p>
 
         <JunctionScreening value={junction} onChange={setJunction} />
@@ -300,7 +299,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
       {problems.length > 0 && (
         <p className="note-warn small">
           Проверь данные о себе: {problems.join("; ")}. Пока они не заполнены, посчитать
-          норму калорий и белка не по чему.
+          норму калорий и белка не из чего.
         </p>
       )}
 
