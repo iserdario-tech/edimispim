@@ -13,6 +13,14 @@ import { PlusSheet } from "./PlusSheet.js";
 import { Eat } from "./Eat.js";
 import { Shop } from "./Shop.js";
 import { useWeek } from "./useWeek.js";
+import { Me, mondayOf } from "./Me.js";
+import { Story } from "./Story.js";
+import { weekStory } from "../weekStory.js";
+import { toDayRecords } from "../ui/dayRecords.js";
+import { plusDaysISO } from "../today-date.js";
+import { Onboarding } from "../ui/Onboarding.js";
+import { FoodSetup } from "../ui/FoodSetup.js";
+import { readLS, writeLS } from "../ui/localStore.js";
 import { useDay } from "./useDay.js";
 import type { StoredState } from "../ui/storage.js";
 
@@ -62,25 +70,54 @@ export function Shell() {
     </div>;
   }
 
-  return <Main app={app} tab={tab} setTab={setTab} now={now} night={sky.night} stops={sky.stops} restoreInput={restoreInput} />;
+  return <Main app={app} tab={tab} setTab={setTab} now={now} night={sky.night} stops={sky.stops} restoreInput={restoreInput}
+    onRestore={() => fileRef.current?.click()} />;
 }
 
 /** Основной вид — отдельно, потому что хукам дня нужно уже существующее состояние. */
-function Main({ app, tab, setTab, now, night, stops, restoreInput }: {
+function Main({ app, tab, setTab, now, night, stops, restoreInput, onRestore }: {
   app: AppModel; tab: Tab2; setTab: (t: Tab2) => void; now: Date; night: boolean; stops: string[]; restoreInput: React.ReactNode;
+  onRestore: () => void;
 }) {
   const day = useDay(app.state as StoredState, now);
   const [why, setWhy] = useState(false);
   const [plus, setPlus] = useState(false);
   const [shop, setShop] = useState(false);
   const week = useWeek(app.state as StoredState);
+  const state = app.state as StoredState;
+  const [settings, setSettings] = useState<null | "sleep" | "food">(null);
+  const [storyWeek, setStoryWeek] = useState<string | null>(null);
+  // история прошлой недели: карточка на «Сутках» с понедельника по среду, пока не открыта
+  const lastMonday = plusDaysISO(mondayOf(day.today), -7);
+  const records = toDayRecords(state.history, state.weights ?? [], state.eaten ?? {}, state.cheatDays ?? []);
+  const storySlides = storyWeek ? weekStory(records, storyWeek, state.profile.targetSleepMin) : null;
+  const [seen, setSeen] = useState(() => readLS<string | null>("edimispim.storySeen", null));
+  const dow = (new Date(day.today + "T12:00:00Z").getUTCDay() + 6) % 7;
+  const offerStory = dow <= 2 && seen !== lastMonday && !!weekStory(records, lastMonday, state.profile.targetSleepMin);
+  const weekLabel = (m: string) => {
+    const f = (iso: string) => new Date(iso + "T12:00:00").toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
+    return `${f(m)} – ${f(plusDaysISO(m, 6))}`;
+  };
+
+  if (settings) {
+    return (
+      <div className="v2-root s-settings">
+        <button className="s-back s-settings-back" onClick={() => setSettings(null)}>‹ Я</button>
+        {settings === "sleep"
+          ? <Onboarding initial={state.profile} onDone={(profile, screener) => { app.update({ ...state, profile, screener }); setSettings(null); void syncPushContext(profile); }} />
+          : <FoodSetup initial={state.food} onCancel={() => setSettings(null)} onDone={food => { app.update({ ...state, food }); setSettings(null); }} />}
+      </div>
+    );
+  }
   return (
     <div className="v2-root">
       <div className="s-sky" style={{ background: skyGradient(stops) }} />
-      {tab === "day" && <Day app={app} day={day} now={now} onWhy={() => setWhy(true)} />}
-      {tab === "eat" && !shop && <Eat app={app} week={week} onShop={() => { setShop(true); window.scrollTo({ top: 0 }); }} onSetupFood={() => setTab("me")} />}
+      {tab === "day" && <Day app={app} day={day} now={now} onWhy={() => setWhy(true)}
+        story={offerStory ? { label: weekLabel(lastMonday), open: () => { setStoryWeek(lastMonday); writeLS("edimispim.storySeen", lastMonday); setSeen(lastMonday); } } : undefined} />}
+      {tab === "eat" && !shop && <Eat app={app} week={week} onShop={() => { setShop(true); window.scrollTo({ top: 0 }); }} onSetupFood={() => setSettings("food")} />}
       {tab === "eat" && shop && <Shop week={week} onBack={() => { setShop(false); window.scrollTo({ top: 0 }); }} />}
-      {tab === "me" && <main className="s-screen"><h1 className="s-title">Я</h1></main>}
+      {tab === "me" && <Me app={app} day={day} onSettings={setSettings} onStory={setStoryWeek} onRestore={onRestore} />}
+      {storySlides && storyWeek && <Story slides={storySlides} label={`Неделя ${weekLabel(storyWeek)}`} onClose={() => setStoryWeek(null)} />}
 
       <nav className="s-tabbar" aria-label="Разделы">
         {([["day", "Сутки"], ["eat", "Еда"], ["me", "Я"]] as const).map(([id, ru]) => (
