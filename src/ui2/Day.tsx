@@ -11,6 +11,11 @@ import type { TimelineRow } from "../ui/mealRows.js";
 import type { DayModel } from "./useDay.js";
 import type { AppModel } from "./Shell.js";
 import type { Yesterday } from "../effects.js";
+import { todayFoodDay } from "../ui/todayPlan.js";
+import { expectedBedMin } from "../food/index.js";
+import { parseHM } from "../index.js";
+import { plusDaysISO } from "../today-date.js";
+import { photoFor, photoUrl } from "../food/photos.js";
 
 const FACES = [[1, "😩", "плохо"], [2, "😕", "так себе"], [3, "🙂", "норм"], [4, "😊", "хорошо"], [5, "😴", "отлично"]] as const;
 const YESTERDAY: [keyof Yesterday, string][] = [["lateDinner", "Ужин позже 21:00"], ["lateCaffeine", "Кофе после 14:00"], ["alcohol", "Алкоголь"]];
@@ -37,6 +42,8 @@ export function Day({ app, day, now, onWhy }: { app: AppModel; day: DayModel; no
   const [recipe, setRecipe] = useState<NonNullable<TimelineRow["meal"]> | null>(null);
   const [info, setInfo] = useState<TimelineRow | null>(null);
   const [writing, setWriting] = useState<Slot | null>(null);
+  // вчера / завтра — просмотр, без отметок: прошлое и план не правят свайпом случайно
+  const [offset, setOffset] = useState(0);
   const eaten = day.eaten;
   const planned = day.foodDay?.day.meals.length ?? 0;
   const dayKcal = day.foodDay?.day.totals.kcal;
@@ -69,9 +76,15 @@ export function Day({ app, day, now, onWhy }: { app: AppModel; day: DayModel; no
     </li>
   ) : null;
 
+  if (offset !== 0) return <OtherDay app={app} iso={plusDaysISO(day.today, offset)} offset={offset} onBack={() => setOffset(0)} now={now} />;
+
   return (
     <main className="s-screen">
-      <div className="s-date">{dateLabel(now)}</div>
+      <div className="s-date-row">
+        <button className="s-nav-day" aria-label="Вчера" onClick={() => { tap(); setOffset(-1); }}>‹ вчера</button>
+        <span className="s-date">{dateLabel(now)}</span>
+        <button className="s-nav-day" aria-label="Завтра" onClick={() => { tap(); setOffset(1); }}>завтра ›</button>
+      </div>
       <div className="s-head">
         <h1 className="s-title">{day.word.word}</h1>
         <button className="s-i" aria-label="Почему так" onClick={onWhy}>i</button>
@@ -187,6 +200,57 @@ export function Day({ app, day, now, onWhy }: { app: AppModel; day: DayModel; no
       {writing && (
         <EatSheet title="Что ты съел вместо плана?" onClose={() => setWriting(null)}
           onSave={food => a.ownWritten(day.today, writing, food)} />
+      )}
+    </main>
+  );
+}
+
+/**
+ * Вчера и завтра: что было съедено и что запланировано. Только просмотр — завтрашнее
+ * меню из того же календарного плана, что и вкладка «Еда», вчерашнее — с отметками.
+ */
+function OtherDay({ app, iso, offset, onBack, now }: { app: AppModel; iso: string; offset: number; onBack: () => void; now: Date }) {
+  const state = app.state!;
+  const [recipe, setRecipe] = useState<NonNullable<TimelineRow["meal"]> | null>(null);
+  const log = state.history.find(h => h.date === iso);
+  const fd = state.food ? todayFoodDay({
+    food: state.food, today: iso, wokeHM: log?.wokeHM ?? state.profile.anchorWakeHM,
+    bedMin: expectedBedMin(parseHM(state.profile.anchorWakeHM), state.profile.targetSleepMin),
+    ratings: state.ratings, swaps: state.swaps, noCookDays: state.noCookDays,
+    night: { targetSleepMin: state.profile.targetSleepMin, ...(log ? { quality: log.quality } : {}) },
+  }) : null;
+  const marks = state.eaten?.[iso]?.marks ?? {};
+  const d = new Date(iso + "T12:00:00");
+  return (
+    <main className="s-screen">
+      <div className="s-date-row">
+        <button className="s-nav-day" onClick={onBack}>‹ сегодня</button>
+        <span className="s-date">{d.toLocaleDateString("ru-RU", { weekday: "long", day: "numeric", month: "long" })}</span>
+        <span />
+      </div>
+      <h1 className="s-title">{offset < 0 ? "Вчера" : "Завтра"}</h1>
+      <p className="s-sub">
+        {offset < 0
+          ? (log ? `ночь: ${["", "очень плохо", "плохо", "нормально", "хорошо", "отлично"][log.quality]} · отмечено ${Object.keys(marks).length} из ${fd?.day.meals.length ?? 0}` : "ночь не отмечалась")
+          : `план на ${fd?.day.totals.kcal ?? 0} ккал`}
+      </p>
+      <ol className="s-timeline">
+        {fd?.day.meals.map(m => (
+          <li key={m.slot} className="s-row">
+            <button className="s-row-btn" onClick={() => setRecipe(m)}>
+              <span className="s-time">{fmtHM(m.timeMin)}</span>
+              <span className="s-plate"><img src={photoUrl(photoFor(m.recipe))} alt="" loading="lazy" decoding="async" />
+                {marks[m.slot] === "ate" && <i className="s-done">✓</i>}</span>
+              <span className="s-what"><b>{m.recipe.name}</b>
+                <span>{marks[m.slot] === "own" ? "ел своё" : `${Math.round(m.recipe.kcal * m.servings)} ккал${m.leftover ? " · остатки ужина" : ""}`}</span></span>
+            </button>
+          </li>
+        ))}
+      </ol>
+      {recipe && (
+        <Sheet title={recipe.recipe.name} onClose={() => setRecipe(null)}>
+          <MealIngredients meal={recipe} household={state.food?.household ?? 1} />
+        </Sheet>
       )}
     </main>
   );
