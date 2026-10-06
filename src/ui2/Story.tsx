@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 import type { Slide } from "../weekStory.js";
 import { shareText } from "../ui/share.js";

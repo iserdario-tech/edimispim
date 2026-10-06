@@ -14,7 +14,7 @@ export function planDay(args: {
   const { wakeMin, bedMin, badNight } = computeBedMin({ profile, ctx, lastNight });
 
   const windows: PlanWindow[] = [];
-  windows.push(...lightWindows({ wakeMin, bedMin, toggles: ctx.toggles, recovery: mode === "recovery" }));
+  windows.push(...lightWindows({ wakeMin, toggles: ctx.toggles, recovery: mode === "recovery" }));
   windows.push(...caffeineWindows({ profile, bedMin, mode, toggles: ctx.toggles, badNight }));
   const nap = napWindow({ profile, wakeMin, bedMin, mode, toggles: ctx.toggles, badNight });
   if (nap) windows.push(nap);

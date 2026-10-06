@@ -83,13 +83,13 @@ export function Shell() {
     </div>;
   }
 
-  return <Main app={app} tab={tab} setTab={setTab} now={now} night={sky.night} stops={sky.stops} restoreInput={restoreInput}
+  return <Main app={app} tab={tab} setTab={setTab} now={now} stops={sky.stops} restoreInput={restoreInput}
     onRestore={() => fileRef.current?.click()} />;
 }
 
 /** Основной вид — отдельно, потому что хукам дня нужно уже существующее состояние. */
-function Main({ app, tab, setTab, now, night, stops, restoreInput, onRestore }: {
-  app: AppModel; tab: Tab2; setTab: (t: Tab2) => void; now: Date; night: boolean; stops: string[]; restoreInput: React.ReactNode;
+function Main({ app, tab, setTab, now, stops, restoreInput, onRestore }: {
+  app: AppModel; tab: Tab2; setTab: (t: Tab2) => void; now: Date; stops: string[]; restoreInput: React.ReactNode;
   onRestore: () => void;
 }) {
   const day = useDay(app.state as StoredState, now);

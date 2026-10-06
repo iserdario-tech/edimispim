@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { Recipe, MealType } from "../food/types.js";
 import { MealIngredients } from "./Grocery.js";
 import { Sheet } from "./Sheet.js";

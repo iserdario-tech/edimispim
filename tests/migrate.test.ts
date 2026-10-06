@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { fromPospat, fromPospatExportFile, fromOheedet, migrateAll, POSPAT_KEY, OHEEDET_KEY } from "../src/migrate";
+import { fromPospat, fromOheedet, migrateAll, POSPAT_KEY, OHEEDET_KEY } from "../src/migrate";
 import type { StorageLike } from "../src/ui/storage";
 
 // Реальные форматы двух приложений — см. POSPAT-DATA.md §3 и OHEEDET-DATA.md §2.
@@ -45,18 +45,6 @@ describe("fromPospat", () => {
     expect(fromPospat(null).days).toEqual([]);
     expect(fromPospat("не json").days).toEqual([]);
     expect(fromPospat("{}").days).toEqual([]);
-  });
-});
-
-describe("fromPospatExportFile — state лежит СТРОКОЙ внутри объекта", () => {
-  it("разбирает двойную сериализацию", () => {
-    const file = JSON.stringify({ app: "pospat", v: 1, state: JSON.stringify(pospatState) });
-    expect(fromPospatExportFile(file).days).toHaveLength(2);
-  });
-
-  it("файл, где state объект (а не строка), отвергается без падения", () => {
-    const wrong = JSON.stringify({ app: "pospat", v: 1, state: pospatState });
-    expect(fromPospatExportFile(wrong).days).toEqual([]);
   });
 });
 

@@ -45,11 +45,3 @@ export function upsertDay(days: DayRecord[], rec: DayRecord): DayRecord[] {
   out.sort((a, b) => a.date.localeCompare(b.date));
   return out.slice(-MAX_DAYS);
 }
-
-export const dayOf = (days: DayRecord[], date: string): DayRecord | undefined =>
-  days.find(d => d.date === date);
-
-/** Последняя запись со сном строго раньше указанной даты — «как спалось этой ночью». */
-export function lastNightBefore(days: DayRecord[], date: string): DayRecord | undefined {
-  return [...days].reverse().find(d => d.date <= date && d.sleep);
-}

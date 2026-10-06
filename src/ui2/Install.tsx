@@ -1,5 +1,3 @@
-import React from "react";
-
 /**
  * Первый экран на iPhone в Safari: «поставь на экран „Домой“».
  *

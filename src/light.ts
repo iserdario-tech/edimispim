@@ -2,9 +2,9 @@ import type { DayToggles, PlanWindow } from "./types.js";
 import { DEFAULTS } from "./defaults.js";
 
 export function lightWindows(args: {
-  wakeMin: number; bedMin: number; toggles: DayToggles; recovery: boolean;
+  wakeMin: number; toggles: DayToggles; recovery: boolean;
 }): PlanWindow[] {
-  const { wakeMin, bedMin, toggles, recovery } = args;
+  const { wakeMin, toggles, recovery } = args;
   const morning: PlanWindow = toggles.noBrightLight
     ? {
         kind: "morning_light", startMin: wakeMin, endMin: wakeMin + DEFAULTS.morningLightWindowMin,

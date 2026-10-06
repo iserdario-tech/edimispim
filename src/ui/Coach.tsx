@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BACKEND_URL } from "./notifications.js";
 import { IconSend, IconCoachBubble } from "./Icons.js";
 import { tap } from "./haptics.js";

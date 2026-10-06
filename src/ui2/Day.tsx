@@ -16,6 +16,7 @@ import { expectedBedMin } from "../food/index.js";
 import { parseHM } from "../index.js";
 import { plusDaysISO } from "../today-date.js";
 import { photoFor, photoUrl } from "../food/photos.js";
+import { backupDue, daysSince } from "../ui/dataSafety.js";
 
 const FACES = [[1, "😩", "плохо"], [2, "😕", "так себе"], [3, "🙂", "норм"], [4, "😊", "хорошо"], [5, "😴", "отлично"]] as const;
 const YESTERDAY: [keyof Yesterday, string][] = [["lateDinner", "Ужин позже 21:00"], ["lateCaffeine", "Кофе после 14:00"], ["alcohol", "Алкоголь"]];
@@ -59,6 +60,11 @@ export function Day({ app, day, now, onWhy, story }: { app: AppModel; day: DayMo
   const nextLine = next
     ? `${next.kind === "food" && next.slot ? SLOT_RU[next.slot] : next.title} в ${next.time} · ${until(next.startMin - day.nowMin)}`
     : "на сегодня всё";
+  const unmarked = day.foodDay ? day.foodDay.day.meals.map(m => m.slot).filter(sl => !eaten?.marks[sl]) : [];
+  const dinnerMin = day.foodDay?.day.meals.find(m => m.slot === "dinner")?.timeMin ?? 19 * 60;
+  const daysWithData = new Set([...state.history.map(h => h.date), ...Object.keys(state.eaten ?? {})]).size;
+  // Safari стирает данные сайта после недели простоя — раз в неделю зовём сохранить копию
+  const showBackup = backupDue(app.backupAt ?? null, day.today, daysWithData);
   const yAns = state.yesterday?.[day.today] ?? {};
   const askYesterday = day.word.phase === "morning" && YESTERDAY.some(([k]) => yAns[k] === undefined);
 
@@ -76,7 +82,7 @@ export function Day({ app, day, now, onWhy, story }: { app: AppModel; day: DayMo
     </li>
   ) : null;
 
-  if (offset !== 0) return <OtherDay app={app} iso={plusDaysISO(day.today, offset)} offset={offset} onBack={() => setOffset(0)} now={now} />;
+  if (offset !== 0) return <OtherDay app={app} iso={plusDaysISO(day.today, offset)} offset={offset} onBack={() => setOffset(0)} />;
 
   return (
     <main className="s-screen">
@@ -175,6 +181,35 @@ export function Day({ app, day, now, onWhy, story }: { app: AppModel; day: DayMo
         })}
       </ol>
 
+      {eaten?.extras?.length ? (
+        <section className="s-card">
+          <h2 className="s-h2">Вне плана</h2>
+          {eaten.extras.map((x, k) => (
+            <div key={k} className="s-yn">
+              <span>{x.text} · ≈{x.kcal} ккал</span>
+              <button className="s-pill" aria-label={`Убрать «${x.text}»`} onClick={() => { tap(); a.extraRemove(day.today, k); }}>убрать</button>
+            </div>
+          ))}
+        </section>
+      ) : null}
+
+      {/* вечером одна кнопка вместо пяти отметок; уже отмеченное не трогает */}
+      {day.foodDay && unmarked.length > 0 && day.nowMin >= dinnerMin && (
+        <button className="s-btn food s-wide" onClick={() => {
+          tap();
+          a.markAll(day.today, unmarked, planned, dayKcal, Object.fromEntries(unmarked.map(sl => [sl, portionOf(sl)])));
+        }}>✓ Весь день по плану</button>
+      )}
+
+      {showBackup && (
+        <section className="s-card">
+          <div className="s-yn">
+            <span>{app.backupAt ? `Последняя копия — ${daysSince(app.backupAt, day.today)} дн. назад` : "Копии данных ещё нет"}</span>
+            <button className="s-pill on" onClick={() => { tap(); a.backup(); }}>Сохранить</button>
+          </div>
+        </section>
+      )}
+
       {day.word.phase === "evening" && day.fact && day.foodDay && (
         <section className="s-card">
           <h2 className="s-h2">День закрыт</h2>
@@ -216,7 +251,7 @@ export function Day({ app, day, now, onWhy, story }: { app: AppModel; day: DayMo
  * Вчера и завтра: что было съедено и что запланировано. Только просмотр — завтрашнее
  * меню из того же календарного плана, что и вкладка «Еда», вчерашнее — с отметками.
  */
-function OtherDay({ app, iso, offset, onBack, now }: { app: AppModel; iso: string; offset: number; onBack: () => void; now: Date }) {
+function OtherDay({ app, iso, offset, onBack }: { app: AppModel; iso: string; offset: number; onBack: () => void }) {
   const state = app.state!;
   const [recipe, setRecipe] = useState<NonNullable<TimelineRow["meal"]> | null>(null);
   const log = state.history.find(h => h.date === iso);

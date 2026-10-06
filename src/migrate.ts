@@ -51,12 +51,6 @@ export function fromPospat(raw: string | null): Pick<Migrated, "days" | "sleepPr
   return { days, sleepProfile: state.profile };
 }
 
-/** Файл экспорта pospat: { app, v, state } — где state СТРОКА, а не объект. */
-export function fromPospatExportFile(text: string): Pick<Migrated, "days" | "sleepProfile"> {
-  const file = parse(text) as { state?: string } | null;
-  return fromPospat(typeof file?.state === "string" ? file.state : null);
-}
-
 /** Состояние oheedet: профиль, ограничения, скрининг и история веса. */
 export function fromOheedet(
   raw: string | null,

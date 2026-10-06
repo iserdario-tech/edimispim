@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { Meal, Recipe } from "../food/types.js";
-import { swapOptions, swapTo, swapDish } from "../food/index.js";
+import { swapOptions, swapTo, swapDish, diagnosePool } from "../food/index.js";
 import { planPurchase } from "../food/packaging.js";
 import recipesJson from "../food/data/recipes.json";
 import { photoFor, photoUrl } from "../food/photos.js";
@@ -47,6 +47,7 @@ export function Eat({ app, week, onShop, onSetupFood }: { app: AppModel; week: W
   }
 
   const d = plan.days[idx]!;
+  const diagnosis = diagnosePool(plan.pool, state.food.mealCount).messageRU;
   const marks = idx === 0 ? state.eaten?.[week.today]?.marks ?? {} : {};
   const swapPool = poolForDate(plan.pool, state.food, d.date, state.noCookDays);
   const choose = (k: number, r: Recipe) => {
@@ -85,6 +86,19 @@ export function Eat({ app, week, onShop, onSetupFood }: { app: AppModel; week: W
         })}
       </div>
       <p className="s-small s-day-total">{d.day.totals.kcal} ккал · белок {d.day.totals.protein} г</p>
+      {diagnosis && <p className="s-small s-day-total">{diagnosis}</p>}
+
+      {/* после быстрого старта меню по умолчанию — зовём донастроить, но не заставляем */}
+      {state.food.tuned === false && (
+        <section className="s-card">
+          <h2 className="s-h2">Донастрой меню · 1 минута</h2>
+          <p className="s-muted">Что не ешь, какая техника есть, бюджет и время на готовку — и меню станет твоим.</p>
+          <div className="s-yn-btns">
+            <button className="s-btn food" onClick={onSetupFood}>Настроить</button>
+            <button className="s-btn ghost" onClick={() => { tap(); a.markTuned(); }}>Не нужно</button>
+          </div>
+        </section>
+      )}
 
       <div className="s-meals">
         {d.day.meals.map((m, k) => {

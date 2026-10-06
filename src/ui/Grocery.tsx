@@ -1,15 +1,12 @@
-import React, { useMemo, useState } from "react";
-import type { Grocery, Meal } from "../food/types.js";
-import { SHOPS, DEFAULT_SHOP_ID, shopById, searchUrl } from "../food/shops.js";
-import { planPurchase, type BuyLine, type Pantry } from "../food/packaging.js";
-import { PRICES_SOURCE, PRICES_DATE, costOf } from "../food/prices.js";
-import { hintFor } from "../food/ingredients.js";
+import { useState } from "react";
+import type { Meal } from "../food/types.js";
+import { shopById, searchUrl } from "../food/shops.js";
+import type { BuyLine } from "../food/packaging.js";
 import { isLiquid, mlOf } from "../food/nutrients.js";
 import { photoFor, photoUrl } from "../food/photos.js";
 import { tap } from "./haptics.js";
 import { shareText, shareNoteRU } from "./share.js";
 import { IconThumb } from "./Icons.js";
-import { readLS, writeLS, SHOP_KEY } from "./localStore.js";
 
 export const pantryKey = (name: string, unit: string): string => `${name.toLowerCase().trim()}|${unit}`;
 
@@ -24,9 +21,6 @@ export function amountRU(qty: number, unit: string): string {
   if (unit === "г" && qty >= 1000) return `${+(qty / 1000).toFixed(qty % 1000 === 0 ? 0 : 1)} кг`;
   return `${+qty.toFixed(1)} ${unit}`;
 }
-
-/** Всегда новой вкладкой: список покупок не должен исчезать из-под рук. */
-const linkTarget = { target: "_blank", rel: "noopener noreferrer" } as const;
 
 /**
  * Показывать ли остаток.
@@ -65,180 +59,6 @@ export const aisleOf = (category?: string): { id: string; ru: string } =>
 /** Ссылка на поиск товара в выбранном сервисе. */
 export const itemLink = (name: string, shopId: string): string => searchUrl(shopById(shopId), name);
 
-/**
- * Покупки — список с галочками.
- *
- * Так было не сразу: сначала на каждой строке висели четыре кнопки — «запомнить»,
- * «есть дома», плюс общие «отправить список» и «закупился». Каждая по отдельности
- * имела смысл, а вместе получалась каша, в которой непонятно, что вообще нажимать.
- *
- * Теперь одна механика, привычная по любому списку покупок: галочка = «взял или уже есть».
- * Отмеченное вычёркивается и само уходит в кладовку — остаток от упаковки учтётся
- * в следующей закупке, отдельной кнопки «закупился» для этого не нужно.
- */
-export function GroceryBlock({ grocery, pantry, onPantry, dayLabels }: {
-  grocery: Grocery;
-  /** Кладовка живёт на экране недели: её же читает замена блюда «из того, что дома». */
-  pantry: Pantry;
-  onPantry: (next: Pantry) => void;
-  /** Подписи дней — те же, что в меню выше («сегодня», «завтра», «вт»).
-   *  Без них покупки звали тот же день «День 3», и сопоставлять приходилось человеку. */
-  dayLabels?: string[];
-}) {
-  const [shopId, setShopId] = useState(() => readLS(SHOP_KEY, DEFAULT_SHOP_ID));
-  const [scope, setScope] = useState<"week" | number>("week");
-
-  const shop = shopById(shopId);
-  const day = typeof scope === "number" ? grocery.byDay[scope] : null;
-  const rawItems = day ? day.items : grocery.items;
-  const labelOf = (i: number): string => dayLabels?.[i] ?? `День ${i + 1}`;
-  const title = day ? `Покупки на ${labelOf(scope as number)}` : "Покупки на неделю";
-
-  const lines = useMemo(() => planPurchase(rawItems, pantry), [rawItems, pantry]);
-  const active = lines.filter(l => !l.staple && l.toBuy > 0);
-  const done = lines.filter(l => !l.staple && l.toBuy === 0);
-  const cost = day ? day.estCostRub : grocery.estCostRub;
-  // сумма молча пропускала продукты без цены — «≈6954 ₽» читалось как полная стоимость недели
-  const unpriced = useMemo(
-    () => lines.filter(l => !l.staple && l.toBuy > 0 && costOf(l.name, l.toBuy, l.unit) === null),
-    [lines],
-  );
-
-  /** Строки, разложенные по отделам зала; пустые отделы не показываем. */
-  const byAisle = useMemo(() => {
-    const groups = new Map<string, { id: string; ru: string; items: BuyLine[] }>();
-    for (const l of lines) {
-      if (l.staple) continue;
-      const a = aisleOf(l.category);
-      const g = groups.get(a.id) ?? { ...a, items: [] };
-      g.items.push(l);
-      groups.set(a.id, g);
-    }
-    const order = [...AISLES.map(a => a.id), OTHER.id];
-    return [...groups.values()].sort((x, y) => order.indexOf(x.id) - order.indexOf(y.id));
-  }, [lines]);
-
-  const chooseShop = (id: string) => { setShopId(id); writeLS(SHOP_KEY, id); };
-  const [shareNote, setShareNote] = useState("");
-
-  /** Галочка: продукт взят или уже есть — кладём в кладовку вместе с остатком упаковки. */
-  const toggle = (line: BuyLine, checked: boolean) => {
-    tap();
-    const key = pantryKey(line.name, line.unit);
-    const next = { ...pantry };
-    if (checked) next[key] = line.need + line.leftover;   // купленное минус съеденное = остаток
-    else delete next[key];
-    onPantry(next);
-  };
-
-  const clearAll = () => onPantry({});
-  const checkAll = () => {
-    const next = { ...pantry };
-    for (const l of active) next[pantryKey(l.name, l.unit)] = l.need + l.leftover;
-    onPantry(next);
-  };
-
-  const row = (line: BuyLine, checked: boolean) => {
-    const href = itemLink(line.name, shopId);
-    const hint = hintFor(line.name);   // «творог мягкий» без пояснения у прилавка бесполезен
-    const amount = line.packs > 0
-      ? `${line.packs} × ${amountRU(line.packSize, line.unit)}`
-      : amountRU(line.toBuy, line.unit);
-    return (
-      <li key={line.name + line.unit} className={checked ? "buy-row done" : "buy-row"}>
-        <label className="buy-check">
-          <input type="checkbox" checked={checked} onChange={e => toggle(line, e.target.checked)} />
-          <span className="sr-only">Взял {line.name}</span>
-        </label>
-
-        <span className="buy-title">
-          <a className="buy-name" href={href} {...linkTarget}>{line.name}</a>
-          {hint && <span className="buy-hint small muted">{hint.what}</span>}
-        </span>
-
-        <span className="small muted buy-qty">
-          {checked ? "есть" : amount}
-          {!checked && showsLeftover(line) && (
-            <span className="left-note">останется {amountRU(line.leftover, line.unit)}</span>
-          )}
-        </span>
-      </li>
-    );
-  };
-
-  return (
-    <section className="card wide">
-      <h3 className="card-h">{title} · ≈{cost} ₽</h3>
-
-      <div className="chips">
-        {SHOPS.map(s => (
-          <button key={s.id} className={s.id === shopId ? "chip on" : "chip"}
-            onClick={() => chooseShop(s.id)}>{s.name}</button>
-        ))}
-      </div>
-
-      <div className="chips mt-2">
-        <button className={scope === "week" ? "chip on" : "chip"} onClick={() => setScope("week")}>Вся неделя</button>
-        {grocery.byDay.map((d, i) => (
-          <button key={d.day} className={scope === i ? "chip on" : "chip"} onClick={() => setScope(i)}>
-            {labelOf(i)}
-          </button>
-        ))}
-      </div>
-
-      <p className="small muted mt-3">
-        Отмечай галочкой, что взял. Тап по названию открывает товар в «{shop.name}».
-      </p>
-      {/* список чаще нужен тому, кто идёт в магазин, а не тому, кто планирует */}
-      <div className="share-row">
-        <button className="linkbtn small" onClick={async () => {
-          tap();
-          const text = [title, ...byAisle.flatMap(({ ru, items }) => {
-            const left = items.filter(l => l.toBuy > 0);
-            return left.length ? ["", ru + ":", ...left.map(l => `• ${l.name} — ${
-              l.packs > 0 ? `${l.packs} × ${amountRU(l.packSize, l.unit)}` : amountRU(l.toBuy, l.unit)}`)] : [];
-          })].join("\n");
-          setShareNote(shareNoteRU(await shareText(title, text)));
-        }}>Поделиться списком</button>
-        {shareNote && <span className="small muted">{shareNote}</span>}
-      </div>
-
-      {/* Строка остаётся на своём месте: раньше отмеченное сразу улетало вниз,
-          и список прыгал под пальцем — легко потерять, где ты был. Отмеченное
-          вычёркивается, но не двигается. */}
-      {byAisle.map(({ id, ru, items }) => (
-        <div key={id} className="aisle">
-          <div className="aisle-head small">{ru}<span className="muted"> · {items.length}</span></div>
-          <ul className="buy-list">
-            {items.map(l => row(l, l.toBuy === 0))}
-          </ul>
-        </div>
-      ))}
-
-      <div className="buy-foot small muted">
-        <span>Взято {done.length} из {active.length + done.length}</span>
-        {active.length > 0 && <button className="linkbtn small" onClick={checkAll}>отметить всё</button>}
-        {done.length > 0 && <button className="linkbtn small" onClick={clearAll}>снять отметки</button>}
-      </div>
-
-      <p className="small muted">
-        Количества приведены к реальным упаковкам, а остаток запоминается: если нужно 100 г
-        творога, а пачка 200 — в следующий раз приложение не попросит покупать творог снова.
-      </p>
-      <p className="small muted">
-        Цены сняты в «{PRICES_SOURCE}» {PRICES_DATE.split("-").reverse().join(".")}: из выдачи
-        берётся недорогой обычный вариант, а не премиальный. В другом городе и магазине
-        будут другие, и со временем они устаревают.
-      </p>
-      {unpriced.length > 0 && (
-        <p className="small muted">
-          В сумму не вошли позиции, по которым честной цены нет ({unpriced.length}):{" "}
-          {unpriced.map(l => l.name).join(", ")}. Значит, на деле выйдет дороже.
-        </p>
-      )}
-    </section>
-  );
-}
 
 /**
  * Карточка блюда: состав и КАК ГОТОВИТЬ.
@@ -247,19 +67,13 @@ export function GroceryBlock({ grocery, pantry, onPantry, dayLabels }: {
  * человек видит «Гочжан-свинина с кимчи», а что с ней делать, не написано.
  * Количества в составе умножены на размер порции, шаги — как в рецепте.
  */
-export function MealIngredients({ meal, rating, onRate, links = false, household = 1 }: {
+export function MealIngredients({ meal, rating, onRate, household = 1 }: {
   meal: Meal;
   rating?: 1 | -1;
   onRate?: (id: string, value: 1 | -1) => void;
-  /** Ссылки на магазин у продуктов. В рецепте по умолчанию выключены: тап по «молоку»
-   *  уводил из приложения в магазин новой вкладкой, и приложение терялось. Покупают
-   *  из списка покупок — там ссылки и остались. */
-  links?: boolean;
   /** На сколько человек готовить: количество продуктов умножается, калории — нет. */
   household?: number;
 }) {
-  const shopId = readLS(SHOP_KEY, DEFAULT_SHOP_ID);
-  const shop = shopById(shopId);
   // жидкости показываем объёмом и здесь: «100 мл молока» привычнее, чем «103 г»
   const ings = (meal.recipe.ingredients ?? []).map(i => {
     const qty = i.qty * meal.servings * household;
@@ -301,22 +115,14 @@ export function MealIngredients({ meal, rating, onRate, links = false, household
         <>
           <div className="small muted">
             {household > 1 ? `Продукты на ${household} порции — твоя и ещё ${household - 1}` : "Продукты на эту порцию"}
-            {links ? ` · «${shop.name}»` : ""}
           </div>
           <ul>
-            {ings.map((i, k) => {
-              const href = itemLink(i.name, shopId);
-              return (
-                <li key={k}>
-                  {links ? (
-                    <a className="shop-link" href={href} target="_blank" rel="noopener noreferrer">
-                      {i.name}<span className="shop-go" aria-hidden="true">→</span>
-                    </a>
-                  ) : <span className="ing-name">{i.name}</span>}
-                  <span className="small muted">{amountRU(i.qty, i.unit)}</span>
-                </li>
-              );
-            })}
+            {ings.map((i, k) => (
+              <li key={k}>
+                <span className="ing-name">{i.name}</span>
+                <span className="small muted">{amountRU(i.qty, i.unit)}</span>
+              </li>
+            ))}
           </ul>
         </>
       )}
