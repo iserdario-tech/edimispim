@@ -37,6 +37,21 @@ const BOUNDS = {
 const RU: Record<keyof typeof BOUNDS, string> = {
   age: "возраст", heightCm: "рост", weightKg: "вес сейчас", goalWeightKg: "цель по весу",
 };
+/**
+ * Числовое поле, которое держит текст как есть. `+""` давал 0: стёр «80» — в поле
+ * остаётся 0, дописал 115 — вышло «0115». Пустое поле — NaN, его ловит checkProfile;
+ * запятая с русской клавиатуры iPhone читается как точка.
+ */
+export function NumInput({ value, onChange, ...rest }: { value: number; onChange: (n: number) => void }
+  & Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "type">) {
+  const [text, setText] = useState(Number.isFinite(value) ? String(value) : "");
+  return <input type="text" inputMode="decimal" {...rest} value={text} onChange={e => {
+    setText(e.target.value);
+    const t = e.target.value.trim().replace(",", ".");
+    onChange(t === "" ? NaN : Number(t));
+  }} />;
+}
+
 export function checkProfile(v: Record<keyof typeof BOUNDS, number>): string[] {
   const out = (Object.keys(BOUNDS) as (keyof typeof BOUNDS)[])
     .filter(k => !Number.isFinite(v[k]) || v[k] < BOUNDS[k][0] || v[k] > BOUNDS[k][1])
@@ -105,16 +120,16 @@ export function FoodSetup({ initial, onDone, onCancel }: {
       </div>
 
       <label className="fld small">Возраст
-        <input type="number" min={18} max={90} value={age} onChange={e => setAge(+e.target.value)} />
+        <NumInput inputMode="numeric" value={age} onChange={setAge} />
       </label>
       <label className="fld small">Рост, см
-        <input type="number" min={130} max={220} value={heightCm} onChange={e => setHeightCm(+e.target.value)} />
+        <NumInput inputMode="numeric" value={heightCm} onChange={setHeightCm} />
       </label>
       <label className="fld small">Вес сейчас, кг
-        <input type="number" min={35} max={250} step="0.1" value={weightKg} onChange={e => setWeightKg(+e.target.value)} />
+        <NumInput value={weightKg} onChange={setWeightKg} />
       </label>
       <label className="fld small">Цель по весу, кг
-        <input type="number" min={35} max={250} step="0.1" value={goalWeightKg} onChange={e => setGoalWeightKg(+e.target.value)} />
+        <NumInput value={goalWeightKg} onChange={setGoalWeightKg} />
       </label>
 
       </section>
