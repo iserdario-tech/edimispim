@@ -36,7 +36,7 @@ const SLOT_RU: Record<string, string> = { breakfast: "Завтрак", lunch: "�
  * строки — в шторке по тапу. Строка ленты — время, тарелка или значок, название и одна
  * строка подробностей. До первого действия — не больше сорока слов (критерий спеки).
  */
-export function Day({ app, day, now, onWhy }: { app: AppModel; day: DayModel; now: Date; onWhy: () => void }) {
+export function Day({ app, day, now, onWhy, story }: { app: AppModel; day: DayModel; now: Date; onWhy: () => void; story?: { label: string; open: () => void } }) {
   const state = app.state!;
   const a = app.actions;
   const [recipe, setRecipe] = useState<NonNullable<TimelineRow["meal"]> | null>(null);
@@ -91,6 +91,13 @@ export function Day({ app, day, now, onWhy }: { app: AppModel; day: DayModel; no
       </div>
       {day.word.sub && <p className="s-sub">{day.word.sub}</p>}
       {day.word.phase !== "morning" || day.logged ? <p className="s-next">{nextLine}</p> : null}
+
+      {story && (
+        <button className="s-story-card" onClick={() => { tap(); story.open(); }}>
+          <span><b>Твоя неделя</b><span>{story.label} · сон, еда, вес</span></span>
+          <span aria-hidden="true">→</span>
+        </button>
+      )}
 
       {!day.logged && day.word.phase !== "evening" && (
         <section className="s-card">
