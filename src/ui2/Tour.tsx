@@ -2,7 +2,7 @@ import { useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { tap } from "../ui/haptics.js";
 
-/** Тур показан — больше сам не открывается; пройти заново — «Я → Как устроено приложение». */
+/** Тур показан — больше сам не открывается; пройти заново — «Я → Как устроено приложение». */
 export const TOUR_KEY = "edimispim.tourSeen";
 
 const Dot = ({ c, k = "" }: { c: ReactNode; k?: string }) => <span className={"s-tour-dot " + k}>{c}</span>;
@@ -49,7 +49,7 @@ const SLIDES: { kicker: string; title: string; text: string; demo: ReactNode }[]
   {
     kicker: "Я", title: "Вес, сон и настройки",
     text: "Вес и сколько калорий тратишь, режим сна, итоги недель, настройки и копия данных.",
-    demo: <div className="s-tour-stats"><span><b>92</b>кг</span><span><b>82</b>цель</span><span><b>≈1858</b>ккал в день</span></div>,
+    demo: <div className="s-tour-stats"><span><b>92 → 82</b>кг: сейчас → цель</span><span><b>≈1 858</b>тратишь ккал/день</span></div>,
   },
   {
     kicker: "Каждое утро", title: "Два тапа — и приложение учится",

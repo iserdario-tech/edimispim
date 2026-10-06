@@ -53,9 +53,9 @@ export function WhySheet({ app, day, onClose }: { app: AppModel; day: DayModel; 
       {ready.length
         ? <ul className="s-why-list">{ready.map(e => <li key={e.factor}>{e.textRU}</li>)}</ul>
         : <p className="s-muted">
-            Отвечай утром на «Что было вчера?» — когда наберётся по 5 «да» и «нет», здесь появится,
-            как поздний ужин, кофе и алкоголь влияют именно на твой сон
-            {waiting[0] ? ` (сейчас ${waiting[0].yes} «да» и ${waiting[0].no} «нет» про ужин)` : ""}.
+            Отвечай утром на «Что было вчера?». После 5 «да» и 5 «нет» здесь будет видно,
+            как поздний ужин, кофе и алкоголь влияют на твой сон.
+            {waiting[0] ? ` Сейчас: ${waiting[0].yes} «да», ${waiting[0].no} «нет».` : ""}
           </p>}
 
       <h3 className="s-why-h">Сегодня всё иначе?</h3>
@@ -82,7 +82,7 @@ export function WhySheet({ app, day, onClose }: { app: AppModel; day: DayModel; 
       </div>
       <p className="s-small s-why-src">
         Наука: недосып поднимает аппетит примерно на 250 ккал и роняет самоконтроль — поэтому
-        после плохой ночи калории те же, а день проще. Источники — в «Я» → «О приложении».
+        после плохой ночи калории те же, а день проще. Источники — в «Я» → «О приложении».
       </p>
     </Sheet>
   );

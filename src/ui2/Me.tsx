@@ -81,7 +81,7 @@ export function Me({ app, day, onSettings, onStory, onRestore, onTour }: {
 
   const ROWS: [MeSheet | "sleep-settings" | "food-settings" | "tour", string, string, string][] = [
     ["weight", "⚖", "Вес и калории", lastKg ? `${lastKg} кг · трата ${exp?.r.status === "ready" ? "по твоим данным" : "по формуле"}` : "записать первый вес"],
-    ["sleep", "☾", "Сон и режим", "ложишься ли в одно время, сон и еда"],
+    ["sleep", "☾", "Сон и режим", "во сколько ложишься, сон и еда"],
     ["stories", "▤", "Итоги недель", "каждый понедельник — новый"],
     ["sleep-settings", "⏰", "Настройки сна", `подъём ${state.profile.anchorWakeHM}`],
     ["food-settings", "🍽", "Настройки еды", state.food ? `${state.food.mealCount} приёма · ${state.food.household && state.food.household > 1 ? `на ${state.food.household}` : "на себя"}` : "не настроено"],
@@ -95,11 +95,12 @@ export function Me({ app, day, onSettings, onStory, onRestore, onTour }: {
   return (
     <main className="s-screen">
       <h1 className="s-title">Я</h1>
-      <p className="s-sub">{daysWith ? `${daysWith} ${dni(daysWith)} с приложением` : "первый день"}{day.streak ? ` · отмечаешь ${day.streak} ${dni(day.streak)} подряд` : ""}</p>
+      <p className="s-sub">{daysWith ? `${daysWith}\u00a0${dni(daysWith)} с приложением` : "первый день"}{day.streak ? ` · отмечаешь ${day.streak}\u00a0${dni(day.streak)} подряд` : ""}</p>
 
       <div className="s-stats">
-        <div className="s-card s-stat"><b>{lastKg ?? "—"}</b><span>кг сейчас</span></div>
-        <div className="s-card s-stat"><b>{state.food?.profile.goalWeightKg ?? "—"}</b><span>кг цель</span></div>
+        {/* две плитки, а не три: в трети ширины «тратишь ккал/день» не помещалось в строку,
+            а без «тратишь» число путали с планом еды */}
+        <div className="s-card s-stat"><b>{lastKg ?? "—"} → {state.food?.profile.goalWeightKg ?? "—"}</b><span>кг: сейчас → цель</span></div>
         <div className="s-card s-stat"><b>{tdee ? `≈${tdee.toLocaleString("ru-RU")}` : "—"}</b><span>тратишь ккал/день</span></div>
       </div>
 
@@ -142,7 +143,7 @@ export function Me({ app, day, onSettings, onStory, onRestore, onTour }: {
         <Sheet title="Копия данных" onClose={() => setSheet(null)}>
           <p className="s-muted">Всё хранится только на этом телефоне. Копия — файл: сохрани его в «Файлы» или отправь себе. Аккаунтов и облака нет.</p>
           <div className="s-sheet-actions">
-            <button className="s-btn food" onClick={() => { tap(); a.backup(); }}>Сохранить копию</button>
+            <button className="s-btn food" onClick={() => { tap(); a.backup(); }}>Сохранить</button>
             <button className="s-btn ghost" onClick={onRestore}>Загрузить</button>
           </div>
           {app.backupAt && <p className="s-small">Последняя копия — {app.backupAt.split("-").reverse().join(".")}</p>}
