@@ -1,0 +1,288 @@
+import React, { useMemo, useState } from "react";
+import { Sheet } from "../ui/Sheet.js";
+import { WeightChart } from "../ui/Charts.js";
+import { targetsFor } from "../ui/storage.js";
+import { targetsForToday } from "../food/index.js";
+import { toDayRecords } from "../ui/dayRecords.js";
+import { expenditure } from "../expenditure.js";
+import { plateau } from "../plateau.js";
+import { anchor, type AnchorResult } from "../anchor.js";
+import { sleepFoodLink, monthRecap } from "../sleep-food.js";
+import { weekStory } from "../weekStory.js";
+import { plusDaysISO } from "../today-date.js";
+import { readTheme, applyTheme, type ThemeChoice } from "../ui/theme.js";
+import { PHOTOS } from "../food/photos.js";
+import { tap } from "../ui/haptics.js";
+import type { AppModel } from "./Shell.js";
+import type { DayModel } from "./useDay.js";
+
+type MeSheet = null | "weight" | "sleep" | "stories" | "backup" | "theme" | "about";
+
+/** Понедельник недели даты (ISO). */
+export const mondayOf = (iso: string): string => {
+  const dow = (new Date(iso + "T12:00:00Z").getUTCDay() + 6) % 7;
+  return plusDaysISO(iso, -dow);
+};
+const weekLabel = (monday: string) => {
+  const a = new Date(monday + "T12:00:00"), b = new Date(plusDaysISO(monday, 6) + "T12:00:00");
+  const f = (d: Date) => d.toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
+  return `${f(a)} – ${f(b)}`;
+};
+
+/**
+ * «Я» 2.0: кто ты и как идут дела — и всё, что раньше было вкладкой «Итоги».
+ *
+ * Вместо семи карточек подряд — три цифры наверху и список разделов. Подробности
+ * (вес и расход, сон и режим, истории недель) открываются шторками: на них заходят
+ * раз в неделю, а не каждое утро, поэтому им не место на главном пути.
+ */
+export function Me({ app, day, onSettings, onStory, onRestore }: {
+  app: AppModel; day: DayModel;
+  onSettings: (which: "sleep" | "food") => void;
+  onStory: (monday: string) => void;
+  onRestore: () => void;
+}) {
+  const state = app.state!;
+  const a = app.actions;
+  const [sheet, setSheet] = useState<MeSheet>(null);
+  const records = useMemo(() => toDayRecords(state.history, state.weights ?? [], state.eaten ?? {}, state.cheatDays ?? []),
+    [state.history, state.weights, state.eaten, state.cheatDays]);
+  const first = [...state.history.map(h => h.date), ...Object.keys(state.eaten ?? {})].sort()[0];
+  const daysWith = first ? Math.round((Date.parse(day.today) - Date.parse(first)) / 86_400_000) + 1 : 0;
+  const lastKg = state.weights?.at(-1)?.kg;
+
+  const exp = useMemo(() => {
+    if (!state.food) return null;
+    const base = targetsFor(state.food);
+    const unadjusted = targetsFor({ ...state.food, kcalAdjust: 0 });
+    const f = state.food;
+    const targetOf = (iso: string) => targetsForToday(f.kcalAdjustAt && iso < f.kcalAdjustAt ? unadjusted : base, f.startISO, iso, f.pace).targets.kcalTarget;
+    return {
+      formula: base.tdee, tempo: base.tempoKgPerWeek,
+      r: expenditure({
+        today: day.today, weights: state.weights ?? [], eaten: state.eaten ?? {}, mealCount: f.mealCount, targetOf,
+        currentTarget: targetOf(day.today),
+        ...(f.startISO ? { startISO: f.startISO } : {}),
+        ...(state.cheatDays ? { cheatDays: state.cheatDays } : {}),
+        ...(f.kcalAdjustAt ? { lastAdjustISO: f.kcalAdjustAt } : {}),
+      }),
+    };
+  }, [state.food, state.weights, state.eaten, state.cheatDays, day.today]);
+  const tdee = exp ? (exp.r.status === "ready" || exp.r.status === "uncertain" ? exp.r.tdee : exp.formula) : null;
+
+  const ROWS: [MeSheet | "sleep-settings" | "food-settings", string, string, string][] = [
+    ["weight", "⚖", "Вес и расход", lastKg ? `${lastKg} кг · ${exp?.r.status === "ready" ? "расход по данным" : "расход по формуле"}` : "записать первый вес"],
+    ["sleep", "☾", "Сон и режим", "ложишься ли в одно время, сон и еда"],
+    ["stories", "▤", "Истории недель", "каждый понедельник — новая"],
+    ["sleep-settings", "⏰", "Настройки сна", `подъём ${state.profile.anchorWakeHM}`],
+    ["food-settings", "🍽", "Настройки еды", state.food ? `${state.food.mealCount} приёма · ${state.food.household && state.food.household > 1 ? `на ${state.food.household}` : "на себя"}` : "не настроено"],
+    ["backup", "⤓", "Копия данных", app.backupAt ? `последняя ${app.backupAt.split("-").reverse().slice(0, 2).join(".")}` : "ещё не делал"],
+    ["theme", "◐", "Оформление", { auto: "как в системе", light: "светлое", dark: "тёмное" }[readTheme()]],
+    ["about", "ℹ", "О приложении", "наука, фото, честная рамка"],
+  ];
+
+  return (
+    <main className="s-screen">
+      <h1 className="s-title">Я</h1>
+      <p className="s-sub">{daysWith ? `${daysWith} дн. с приложением` : "первый день"}{day.streak ? ` · серия ${day.streak}` : ""}</p>
+
+      <div className="s-stats">
+        <div className="s-card s-stat"><b>{lastKg ?? "—"}</b><span>кг сейчас</span></div>
+        <div className="s-card s-stat"><b>{state.food?.profile.goalWeightKg ?? "—"}</b><span>цель</span></div>
+        <div className="s-card s-stat"><b>{tdee ? `≈${tdee.toLocaleString("ru-RU")}` : "—"}</b><span>расход</span></div>
+      </div>
+
+      <div className="s-card s-list">
+        {ROWS.map(([id, ico, title, sub]) => (
+          <button key={title} className="s-list-row" onClick={() => {
+            tap();
+            if (id === "sleep-settings") onSettings("sleep");
+            else if (id === "food-settings") onSettings("food");
+            else setSheet(id);
+          }}>
+            <span className="s-list-ico">{ico}</span>
+            <span className="s-what"><b>{title}</b><span>{sub}</span></span>
+            <span className="s-list-go" aria-hidden="true">›</span>
+          </button>
+        ))}
+      </div>
+
+      {sheet === "weight" && <WeightSheet app={app} exp={exp} records={records} onClose={() => setSheet(null)} />}
+      {sheet === "sleep" && <SleepSheet app={app} day={day} records={records} onClose={() => setSheet(null)} />}
+      {sheet === "stories" && (
+        <Sheet title="Истории недель" onClose={() => setSheet(null)}>
+          {(() => {
+            const weeks = Array.from({ length: 10 }, (_, i) => plusDaysISO(mondayOf(day.today), -7 * (i + 1)))
+              .filter(m => weekStory(records, m, state.profile.targetSleepMin));
+            return weeks.length ? (
+              <div className="s-options">
+                {weeks.map(m => (
+                  <button key={m} className="s-option s-option-text" onClick={() => { setSheet(null); onStory(m); }}>
+                    <span className="s-what"><b>{weekLabel(m)}</b><span>сон, еда, вес и что заметили</span></span>
+                  </button>
+                ))}
+              </div>
+            ) : <p className="s-muted">Первая история появится в понедельник — когда за неделю наберётся хотя бы четыре дня отметок.</p>;
+          })()}
+        </Sheet>
+      )}
+      {sheet === "backup" && (
+        <Sheet title="Копия данных" onClose={() => setSheet(null)}>
+          <p className="s-muted">Всё хранится только на этом телефоне. Копия — файл: сохрани его в «Файлы» или отправь себе. Аккаунтов и облака нет.</p>
+          <div className="s-sheet-actions">
+            <button className="s-btn food" onClick={() => { tap(); a.backup(); }}>Сохранить копию</button>
+            <button className="s-btn ghost" onClick={onRestore}>Загрузить</button>
+          </div>
+          {app.backupAt && <p className="s-small">Последняя копия — {app.backupAt.split("-").reverse().join(".")}</p>}
+        </Sheet>
+      )}
+      {sheet === "theme" && <ThemeSheet onClose={() => setSheet(null)} />}
+      {sheet === "about" && (
+        <Sheet title="О приложении" onClose={() => setSheet(null)}>
+          <p>edim & spim строит день от сна: ужин за три часа до отбоя, после плохой ночи — тот же калораж, но день проще.</p>
+          <p className="s-muted">Честная рамка: сон не сжигает калории — он меняет аппетит и самоконтроль. Кофеин маскирует недосып, а не заменяет его. Оценки помечены «≈», личные сопоставления — наблюдения, а не выводы. Это не медицинское приложение.</p>
+          <h3 className="s-why-h">Фотографии блюд</h3>
+          <p className="s-small">Снимки подобраны по типу блюда с Викисклада, свободные лицензии.</p>
+          <ul className="s-credits">
+            {Object.entries(PHOTOS).map(([k, p]) => (
+              <li key={k}><a href={p.source} target="_blank" rel="noopener noreferrer">{p.author}</a> · {p.license}</li>
+            ))}
+          </ul>
+        </Sheet>
+      )}
+    </main>
+  );
+}
+
+function WeightSheet({ app, exp, records, onClose }: {
+  app: AppModel; exp: { formula: number; tempo: number; r: ReturnType<typeof expenditure> } | null;
+  records: ReturnType<typeof toDayRecords>; onClose: () => void;
+}) {
+  const state = app.state!;
+  const [kg, setKg] = useState("");
+  const weights = state.weights ?? [];
+  const plat = plateau(records, state.profile.targetSleepMin);
+  const delta = weights.length >= 2 ? Math.round((weights.at(-1)!.kg - weights[0]!.kg) * 10) / 10 : null;
+  const r = exp?.r;
+  return (
+    <Sheet title="Вес и расход" onClose={onClose}>
+      <form className="s-inline" onSubmit={e => { e.preventDefault(); const v = +kg.replace(",", "."); if (v >= 30 && v <= 300) { tap(); app.actions.addWeight(v); setKg(""); } }}>
+        <input type="text" inputMode="decimal" value={kg} placeholder={weights.at(-1) ? String(weights.at(-1)!.kg) : "кг"} onChange={e => setKg(e.target.value)} aria-label="Вес, кг" />
+        <button className="s-btn food" type="submit" disabled={!kg}>Записать</button>
+      </form>
+      {weights.length >= 2 && <WeightChart weights={weights} goal={state.food?.profile.goalWeightKg} />}
+      {delta !== null && <p className="s-muted">С первого замера: {delta > 0 ? "+" : ""}{delta} кг. Одна цифра прыгает на полкило — смотри на линию.</p>}
+
+      {r && (
+        <>
+          <h3 className="s-why-h">Твой реальный расход</h3>
+          {r.status === "wait" && <p className="s-muted">Пока по формуле: ≈ {exp!.formula} ккал. Через {r.daysLeft} дн. посчитаю по твоим данным — взвешивайся 4 раза в неделю и отмечай все приёмы.</p>}
+          {r.status === "data" && <p className="s-muted">Не хватает записей за 4 недели: взвешиваний {r.weighIns} из {r.weighInsNeed}, недель с 5+ записанными днями — {r.weeksLogged} из {r.weeks}. Пока по формуле: ≈ {exp!.formula} ккал.</p>}
+          {r.status === "uncertain" && <p className="s-muted">≈ {r.tdee} ккал, но разброс ±{r.ci} — рано менять норму. Чаще взвешивайся.</p>}
+          {r.status === "ready" && (
+            <>
+              <p className="s-big">≈ {r.tdee} <span className="s-small">ккал в день · ±{r.ci}</span></p>
+              <p className="s-muted">Вес снижался на {r.lossPerWeek} кг в неделю, план — на {exp!.tempo}.{r.step === 0 ? " Норма совпадает с расходом." : ""}</p>
+              {r.step !== 0 && r.nextChangeInDays > 0 && <p className="s-small">Следующая поправка — через {r.nextChangeInDays} дн.</p>}
+              {r.step !== 0 && r.nextChangeInDays === 0 && (
+                <button className="s-btn food" onClick={() => { tap(); app.actions.adjustKcal(r.step); }}>
+                  {r.step < 0 ? `Убрать ${-r.step} ккал` : `Добавить ${r.step} ккал`}
+                </button>
+              )}
+            </>
+          )}
+          {state.food?.kcalAdjust ? <p className="s-small">Норма поправлена на {state.food.kcalAdjust > 0 ? "+" : ""}{state.food.kcalAdjust} ккал · <button className="s-link" onClick={() => app.actions.adjustKcal(0)}>сбросить</button></p> : null}
+          <p className="s-small">Расчёт по твоим записям и весу, а не замер. Тренировки уже учтены — они видны в весе.</p>
+        </>
+      )}
+      {plat.cause !== "no_data" && plat.cause !== "not_plateau" && (
+        <>
+          <h3 className="s-why-h">Вес стоит {plat.weeks} нед.</h3>
+          <p className="s-muted">{plat.messageRU}</p>
+        </>
+      )}
+    </Sheet>
+  );
+}
+
+function SleepSheet({ app, day, records, onClose }: { app: AppModel; day: DayModel; records: ReturnType<typeof toDayRecords>; onClose: () => void }) {
+  const state = app.state!;
+  const t = state.profile.targetSleepMin;
+  const anc = anchor(records, t);
+  const link = sleepFoodLink(records.filter(r => r.date >= plusDaysISO(day.today, -60)), t);
+  const d = new Date(day.today + "T12:00:00Z"); d.setUTCDate(0);
+  const ym = d.toISOString().slice(0, 7);
+  const recap = monthRecap(records, ym);
+  return (
+    <Sheet title="Сон и режим" onClose={onClose}>
+      <h3 className="s-why-h">Ложишься в одно время?</h3>
+      <p className="s-muted">{regularRU(anc)}</p>
+
+      {state.food && (
+        <>
+          <h3 className="s-why-h">Сон и еда у тебя</h3>
+          {link.ready ? (
+            ([["После обычной ночи", link.good], ["После плохой ночи", link.rough]] as const).map(([ru, g]) => (
+              <div key={ru} className="s-bar s-bar-wide">
+                <span>{ru}</span>
+                <span className="s-bar-track"><span style={{ width: `${(g.followed / g.total) * 100}%` }} /></span>
+                <span className="s-small">{g.followed} из {g.total}</span>
+              </div>
+            ))
+          ) : <p className="s-muted">Нужно хотя бы по 3 дня отметок еды после обычных и после плохих ночей — сейчас {link.good} и {link.rough}.</p>}
+          {link.ready && <p className="s-small">Дни по плану. Это наблюдение, а не вывод о причинах.</p>}
+        </>
+      )}
+
+      <h3 className="s-why-h">Заметили</h3>
+      {day.effects.some(e => e.ready)
+        ? <ul className="s-why-list">{day.effects.filter(e => e.ready).map(e => <li key={e.factor}>{e.textRU}</li>)}</ul>
+        : <p className="s-muted">Отвечай утром на «Вчера было?» — после 5 «да» и 5 «нет» здесь появится, как ужин, кофе и алкоголь влияют на твой сон.</p>}
+
+      {recap && (
+        <>
+          <h3 className="s-why-h">{d.toLocaleDateString("ru-RU", { month: "long", timeZone: "UTC" })}</h3>
+          <p className="s-muted">
+            {recap.nights} ночей отмечено{recap.avgSleepMin != null ? ` · сон в среднем ${Math.floor(recap.avgSleepMin / 60)} ч ${recap.avgSleepMin % 60} мин` : ""}
+            {` · ${recap.followed} из ${recap.marked} дней еды по плану`}
+            {recap.weightFrom != null ? ` · ${recap.weightFrom} → ${recap.weightTo} кг` : ""}
+          </p>
+        </>
+      )}
+    </Sheet>
+  );
+}
+
+function ThemeSheet({ onClose }: { onClose: () => void }) {
+  const [t, setT] = useState<ThemeChoice>(readTheme());
+  return (
+    <Sheet title="Оформление" onClose={onClose}>
+      <div className="s-chips">
+        {([["auto", "Как в системе"], ["light", "Светлое"], ["dark", "Тёмное"]] as const).map(([v, ru]) => (
+          <button key={v} className={t === v ? "s-pill on" : "s-pill"} onClick={() => {
+            tap(); applyTheme(v); setT(v);
+            // небо слушает это событие — тема меняется сразу, без перезагрузки
+            window.dispatchEvent(new Event("storage"));
+          }}>{ru}</button>
+        ))}
+      </div>
+      <p className="s-small">В тёмном оформлении небо всегда ночное — светлый фон в темноте слепит.</p>
+    </Sheet>
+  );
+}
+
+/**
+ * «Ложишься в одно время?» — ответ словами, без «середины сна» и баллов из ста.
+ * Ровность режима связана с самочувствием и весом не меньше длительности сна (X13),
+ * но человеку нужен вывод, а не метрика.
+ */
+function regularRU(a: AnchorResult): string {
+  if (a.score === null) return "Отметь ещё несколько ночей со временем отбоя — тогда станет видно.";
+  const head = a.score >= 80 ? "Да — время сна почти не плавает."
+    : a.score >= 60 ? "Почти: время сна гуляет примерно на час."
+    : "Пока нет: время сна заметно скачет от ночи к ночи.";
+  const jet = a.socialJetlagMin !== null && a.socialJetlagMin >= 60
+    ? ` В выходные сдвигаешься на ${Math.round(a.socialJetlagMin / 30) / 2} ч — это как перелёт через часовой пояс каждые выходные.`
+    : "";
+  return head + jet;
+}

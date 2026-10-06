@@ -68,7 +68,6 @@ export function Catalog({ recipes, ratings, onRate }: {
   ratings?: Record<string, 1 | -1>;
   onRate?: (id: string, value: 1 | -1) => void;
 }) {
-  const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [type, setType] = useState<Filter>("all");
   const [shown, setShown] = useState(PAGE);
@@ -87,18 +86,9 @@ export function Catalog({ recipes, ratings, onRate }: {
   const reset = (next: () => void) => { next(); setShown(PAGE); setOpenDish(null); };
 
   return (
-    <section className="card wide">
-      <div className="menu-head">
-        <h3 className="card-h m-0">Все блюда</h3>
-        <button className="linkbtn small" onClick={() => setOpen(!open)}>
-          {open ? "свернуть" : `${recipes.length} в наборе`}
-        </button>
-      </div>
-
-      {open && (
-        <div className="reveal">
+    <div>
           <p className="small muted">
-            Весь набор целиком. Отметь пальцем вверх то, что любишь, — такие блюда планировщик
+            {recipes.length} блюд. Отметь пальцем вверх то, что любишь, — такие блюда планировщик
             ставит чаще; палец вниз убирает блюдо из меню совсем.
           </p>
 
@@ -179,8 +169,6 @@ export function Catalog({ recipes, ratings, onRate }: {
               показать ещё {Math.min(PAGE, found.length - shown)}
             </button>
           )}
-        </div>
-      )}
-    </section>
+    </div>
   );
 }

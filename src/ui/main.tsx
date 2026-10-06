@@ -1,7 +1,8 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { readTheme, applyTheme } from "./theme.js";
-import { App } from "./App.js";
+import { Shell } from "../ui2/Shell.js";
+import "../ui2/sky.css";
 import { askPersistentStorage } from "./dataSafety.js";
 import "./ui.css";
 
@@ -74,6 +75,9 @@ if ("serviceWorker" in navigator) {
 // просим браузер не стирать данные; в Safari ненадёжно, но безвредно
 askPersistentStorage();
 
+// флаг сборки 2.0 больше не нужен: старого интерфейса нет
+try { localStorage.removeItem("edimispim.v2"); } catch { /* приватный режим */ }
+
 createRoot(document.getElementById("root")!).render(
-  <React.StrictMode><App /></React.StrictMode>
+  <React.StrictMode><Shell /></React.StrictMode>
 );

@@ -11,13 +11,15 @@ import { shareText, shareNoteRU } from "./share.js";
 import { IconThumb } from "./Icons.js";
 import { readLS, writeLS, SHOP_KEY } from "./localStore.js";
 
-const pantryKey = (name: string, unit: string): string => `${name.toLowerCase().trim()}|${unit}`;
+export const pantryKey = (name: string, unit: string): string => `${name.toLowerCase().trim()}|${unit}`;
 
 /**
  * Количество так, как его называют у полки: полтора литра молока, а не 1500 мл.
  * Граммы выше килограмма тоже читаются хуже — «1.2 кг» понятнее «1200 г».
  */
 export function amountRU(qty: number, unit: string): string {
+  // «215.8 г» у полки не взвесить: округляем вверх, чтобы точно хватило
+  if ((unit === "г" || unit === "мл") && qty >= 10) qty = Math.ceil(qty / (qty < 100 ? 5 : 10)) * (qty < 100 ? 5 : 10);
   if (unit === "мл" && qty >= 1000) return `${+(qty / 1000).toFixed(qty % 1000 === 0 ? 0 : 1)} л`;
   if (unit === "г" && qty >= 1000) return `${+(qty / 1000).toFixed(qty % 1000 === 0 ? 0 : 1)} кг`;
   return `${+qty.toFixed(1)} ${unit}`;
@@ -33,7 +35,7 @@ const linkTarget = { target: "_blank", rel: "noopener noreferrer" } as const;
  * и напоминание о нём только зашумляет список. Остаток важен для скоропорта —
  * там это предупреждение «успей съесть» — и когда его заметно много.
  */
-const showsLeftover = (line: BuyLine): boolean =>
+export const showsLeftover = (line: BuyLine): boolean =>
   line.leftover > 0 &&
   line.perishDays !== undefined && line.perishDays <= 14 &&
   line.leftover >= line.need * 0.25;
@@ -46,7 +48,7 @@ const showsLeftover = (line: BuyLine): boolean =>
  * алфавитный: сначала овощи и мясо (тележка внизу тяжёлым), потом молочное и яйца,
  * потом сухое, хлеб в конце — чтобы не смялся.
  */
-const AISLES: { id: string; ru: string; match: string[] }[] = [
+export const AISLES: { id: string; ru: string; match: string[] }[] = [
   { id: "veg",    ru: "Овощи и фрукты", match: ["овощи/фрукты"] },
   { id: "meat",   ru: "Мясо и рыба",    match: ["мясо/рыба", "полуфабрикаты"] },
   { id: "dairy",  ru: "Молочное и яйца", match: ["молочное", "яйца"] },
@@ -55,13 +57,13 @@ const AISLES: { id: string; ru: string; match: string[] }[] = [
   { id: "misc",   ru: "Бакалея, орехи, специи", match: ["бакалея", "орехи", "орехи/семена", "специи"] },
   { id: "bread",  ru: "Хлеб", match: ["хлеб"] },
 ];
-const OTHER = { id: "other", ru: "Остальное" };
+export const OTHER = { id: "other", ru: "Остальное" };
 
-const aisleOf = (category?: string): { id: string; ru: string } =>
+export const aisleOf = (category?: string): { id: string; ru: string } =>
   AISLES.find(a => a.match.includes(category ?? "")) ?? OTHER;
 
 /** Ссылка на поиск товара в выбранном сервисе. */
-const itemLink = (name: string, shopId: string): string => searchUrl(shopById(shopId), name);
+export const itemLink = (name: string, shopId: string): string => searchUrl(shopById(shopId), name);
 
 /**
  * Покупки — список с галочками.
