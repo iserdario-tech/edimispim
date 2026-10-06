@@ -19,6 +19,14 @@ describe("как называются количества", () => {
     expect(amountRU(800, "г")).toBe("800 г");
   });
 
+  it("у полки не взвешивают десятые: граммы округляются вверх", () => {
+    expect(amountRU(215.8, "г")).toBe("220 г");
+    expect(amountRU(522.3, "г")).toBe("530 г");
+    expect(amountRU(42, "мл")).toBe("45 мл");
+    expect(amountRU(2.5, "г")).toBe("2.5 г");   // специи — как есть
+    expect(amountRU(996, "г")).toBe("1 кг");
+  });
+
   it("штуки не трогаем", () => {
     expect(amountRU(10, "шт")).toBe("10 шт");
   });

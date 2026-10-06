@@ -97,6 +97,12 @@
 @media (prefers-reduced-motion: reduce) {
   .s-sky, .s-fab, .s-btn { transition: none; }
 }
+/* на широком экране кнопки держатся колонки контента (520px), а не краёв окна */
+@media (min-width: 600px) {
+  .s-tabbar { left: calc(50% - 260px + 16px); }
+  .s-ask { left: calc(50% - 260px + 16px + 250px + 9px); }
+  .s-fab { right: calc(50% - 260px + 16px); }
+}
 
 /* ─── «Сутки» ─── */
 .s-head { display: flex; align-items: center; gap: 10px; }
@@ -253,6 +259,10 @@
 .s-wide { width: 100%; margin-top: 20px; }
 .s-shops { align-items: center; margin-top: 16px; }
 .s-legacy { margin-top: 16px; }
+.s-legacy .card {
+  margin: 0; border-radius: 20px; background: var(--glass); box-shadow: var(--shadow);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4); backdrop-filter: blur(20px) saturate(1.4);
+}
 
 /* ─── «Я» ─── */
 .s-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
