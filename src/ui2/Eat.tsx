@@ -121,7 +121,7 @@ export function Eat({ app, week, onShop, onSetupFood }: { app: AppModel; week: W
       </div>
 
       <button className="s-shop" onClick={() => { tap(); onShop(); }}>
-        <span><b>В магазине</b><span>{toBuy.length ? `${toBuy.length} продуктов на неделю · ≈${plan.grocery.estCostRub.toLocaleString("ru-RU")} ₽` : "всё есть дома"}</span></span>
+        <span><b>Список покупок</b><span>{toBuy.length ? `${toBuy.length} продуктов на неделю · ≈${plan.grocery.estCostRub.toLocaleString("ru-RU")} ₽` : "всё есть дома"}</span></span>
         <span aria-hidden="true">→</span>
       </button>
 
@@ -148,7 +148,7 @@ export function Eat({ app, week, onShop, onSetupFood }: { app: AppModel; week: W
               week.bump();
             }
             setSwapping(null);
-          }}>Любое другое</button>
+          }}>Случайное другое блюдо</button>
         </Sheet>
       )}
       {search && (
