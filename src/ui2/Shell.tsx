@@ -10,6 +10,9 @@ import { tap } from "../ui/haptics.js";
 import { Day } from "./Day.js";
 import { WhySheet } from "./WhySheet.js";
 import { PlusSheet } from "./PlusSheet.js";
+import { Eat } from "./Eat.js";
+import { Shop } from "./Shop.js";
+import { useWeek } from "./useWeek.js";
 import { useDay } from "./useDay.js";
 import type { StoredState } from "../ui/storage.js";
 
@@ -69,11 +72,14 @@ function Main({ app, tab, setTab, now, night, stops, restoreInput }: {
   const day = useDay(app.state as StoredState, now);
   const [why, setWhy] = useState(false);
   const [plus, setPlus] = useState(false);
+  const [shop, setShop] = useState(false);
+  const week = useWeek(app.state as StoredState);
   return (
     <div className="v2-root">
       <div className="s-sky" style={{ background: skyGradient(stops) }} />
       {tab === "day" && <Day app={app} day={day} now={now} onWhy={() => setWhy(true)} />}
-      {tab === "eat" && <main className="s-screen"><h1 className="s-title">Еда</h1></main>}
+      {tab === "eat" && !shop && <Eat app={app} week={week} onShop={() => { setShop(true); window.scrollTo({ top: 0 }); }} onSetupFood={() => setTab("me")} />}
+      {tab === "eat" && shop && <Shop week={week} onBack={() => { setShop(false); window.scrollTo({ top: 0 }); }} />}
       {tab === "me" && <main className="s-screen"><h1 className="s-title">Я</h1></main>}
 
       <nav className="s-tabbar" aria-label="Разделы">
