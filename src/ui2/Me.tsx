@@ -36,11 +36,12 @@ const weekLabel = (monday: string) => {
  * (вес и расход, сон и режим, истории недель) открываются шторками: на них заходят
  * раз в неделю, а не каждое утро, поэтому им не место на главном пути.
  */
-export function Me({ app, day, onSettings, onStory, onRestore }: {
+export function Me({ app, day, onSettings, onStory, onRestore, onTour }: {
   app: AppModel; day: DayModel;
   onSettings: (which: "sleep" | "food") => void;
   onStory: (monday: string) => void;
   onRestore: () => void;
+  onTour: () => void;
 }) {
   const state = app.state!;
   const a = app.actions;
@@ -70,7 +71,7 @@ export function Me({ app, day, onSettings, onStory, onRestore }: {
   }, [state.food, state.weights, state.eaten, state.cheatDays, day.today]);
   const tdee = exp ? (exp.r.status === "ready" || exp.r.status === "uncertain" ? exp.r.tdee : exp.formula) : null;
 
-  const ROWS: [MeSheet | "sleep-settings" | "food-settings", string, string, string][] = [
+  const ROWS: [MeSheet | "sleep-settings" | "food-settings" | "tour", string, string, string][] = [
     ["weight", "⚖", "Вес и расход", lastKg ? `${lastKg} кг · ${exp?.r.status === "ready" ? "расход по данным" : "расход по формуле"}` : "записать первый вес"],
     ["sleep", "☾", "Сон и режим", "ложишься ли в одно время, сон и еда"],
     ["stories", "▤", "Истории недель", "каждый понедельник — новая"],
@@ -78,6 +79,7 @@ export function Me({ app, day, onSettings, onStory, onRestore }: {
     ["food-settings", "🍽", "Настройки еды", state.food ? `${state.food.mealCount} приёма · ${state.food.household && state.food.household > 1 ? `на ${state.food.household}` : "на себя"}` : "не настроено"],
     ["backup", "⤓", "Копия данных", app.backupAt ? `последняя ${app.backupAt.split("-").reverse().slice(0, 2).join(".")}` : "ещё не делал"],
     ["theme", "◐", "Оформление", { auto: "как в системе", light: "светлое", dark: "тёмное" }[readTheme()]],
+    ["tour", "?", "Как устроено приложение", "кнопки и экраны за минуту"],
     ["about", "ℹ", "О приложении", "наука, фото, честная рамка"],
   ];
 
@@ -98,6 +100,7 @@ export function Me({ app, day, onSettings, onStory, onRestore }: {
             tap();
             if (id === "sleep-settings") onSettings("sleep");
             else if (id === "food-settings") onSettings("food");
+            else if (id === "tour") onTour();
             else setSheet(id);
           }}>
             <span className="s-list-ico">{ico}</span>
