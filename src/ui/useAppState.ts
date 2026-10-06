@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type { Yesterday } from "../effects.js";
 import type { DayLog } from "../index.js";
 import { todayFoodDay } from "./todayPlan.js";
 import { eatenTotals, rebalance } from "../food/eaten.js";
@@ -242,11 +243,26 @@ export function useAppState() {
     alert("Данные восстановлены ✓");
   };
 
+  /** «Вчера было?» — ответ на один вопрос; повторный тот же ответ снимает его. */
+  const setYesterday = (date: string, key: keyof Yesterday, value: boolean) => {
+    setState((prev) => {
+      if (!prev) return prev;
+      const all = { ...(prev.yesterday ?? {}) };
+      const cur = { ...(all[date] ?? {}) };
+      if (cur[key] === value) delete cur[key]; else cur[key] = value;
+      all[date] = cur;
+      const kept = Object.keys(all).sort().slice(-180);
+      const next = { ...prev, yesterday: Object.fromEntries(kept.map(d => [d, all[d]!])) };
+      persist(next);
+      return next;
+    });
+  };
+
   return {
     state, update, saveFailed, backupAt, migrationNote,
     actions: {
       saveLog, markMeal, markAll, ownSize, ownWritten, extraAdd, extraRemove, rateDish, setCheatDay,
-      adjustKcal, markTuned, setNoCook, saveSwap, addWeight, backup, restore,
+      adjustKcal, markTuned, setNoCook, saveSwap, addWeight, backup, restore, setYesterday,
     },
   };
 }

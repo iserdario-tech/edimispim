@@ -86,6 +86,8 @@ export interface StoredState {
   swaps?: Record<string, Record<string, string>>;
   /** Дни «сегодня не готовлю»: меню дня собирается из блюд до десяти минут. */
   noCookDays?: string[];
+  /** «Вчера было?» по датам: поздний ужин, кофе после 14:00, алкоголь — для личного эффекта. */
+  yesterday?: Record<string, import("../effects.js").Yesterday>;
 }
 // выбранный на сегодня контекст (режим + переключатели), чтобы не терялся при перезапуске PWA
 export interface DayDraft { date: string; mode: DayMode; crunchEndHM: string; toggles: DayToggles }
