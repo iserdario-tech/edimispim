@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Sheet } from "./Sheet.js";
 import { BACKEND_URL } from "./notifications.js";
 import { tap } from "./haptics.js";

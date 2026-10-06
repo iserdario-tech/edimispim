@@ -63,8 +63,6 @@ const jetlagScore = (min: number): number =>
   Math.max(0, Math.round(100 - (min / JETLAG_ZERO_AT_MIN) * 100));
 
 const mean = (xs: number[]): number => xs.reduce((a, b) => a + b, 0) / xs.length;
-const hm = (min: number): string =>
-  `${String(Math.floor(min / 60) % 24).padStart(2, "0")}:${String(Math.round(min % 60)).padStart(2, "0")}`;
 
 /** Сколько ночей каждого типа нужно, чтобы вообще говорить о джетлаге. */
 const MIN_NIGHTS = 2;
@@ -133,9 +131,3 @@ function verdict(jetlagMin: number, weekendLater: boolean): string {
   }
   return `Выходные живут на ${h} ч ${weekendLater ? "позже" : "раньше"} будней — телу это примерно как перелёт через несколько часовых поясов каждую неделю. В наблюдениях такой сдвиг связан с бо́льшим весом и объёмом талии.`;
 }
-
-/** Человеческое описание разъезда, для экрана недели. */
-export const anchorSummaryRU = (a: AnchorResult): string =>
-  a.socialJetlagMin == null
-    ? a.verdictRU
-    : `Будни: середина сна ${hm(a.weekdayMidsleep!)} · выходные: ${hm(a.weekendMidsleep!)}`;

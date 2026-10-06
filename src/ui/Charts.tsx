@@ -1,5 +1,3 @@
-import React from "react";
-
 /** Линия веса — нативный SVG, без библиотек: одна зависимость ради графика не окупается. */
 export function WeightChart({ weights, goal }: {
   weights: { date: string; kg: number }[];

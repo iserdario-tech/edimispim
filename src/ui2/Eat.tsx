@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { Meal, Recipe } from "../food/types.js";
 import { swapOptions, swapTo, swapDish, diagnosePool } from "../food/index.js";
 import { planPurchase } from "../food/packaging.js";

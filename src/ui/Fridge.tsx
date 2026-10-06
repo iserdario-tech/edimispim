@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { Pantry } from "../food/packaging.js";
 import { coverageOf } from "../food/packaging.js";
 import { NUTRIENTS, isLiquid } from "../food/nutrients.js";

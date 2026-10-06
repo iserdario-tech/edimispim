@@ -194,15 +194,6 @@ export function planPurchase(
   });
 }
 
-/** Кладовка после закупки и готовки: остатки переезжают в следующую неделю. */
-export function pantryAfter(lines: BuyLine[]): Pantry {
-  const out: Pantry = {};
-  for (const l of lines) {
-    if (l.leftover > 0) out[keyOf(l.name, l.unit)] = l.leftover;
-  }
-  return out;
-}
-
 /**
  * Насколько блюдо собирается из того, что уже дома.
  *
@@ -239,10 +230,3 @@ export function coverageOf(
     missing: short.map(s => s.name),
   };
 }
-
-/** Сколько денег «уходит в остаток» — полезно понимать, что фасовки не бесплатны. */
-export const leftoverShare = (lines: BuyLine[]): number => {
-  const bought = lines.reduce((s, l) => s + l.buyAmount, 0);
-  const left = lines.reduce((s, l) => s + l.leftover, 0);
-  return bought > 0 ? left / bought : 0;
-};

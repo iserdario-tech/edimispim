@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import type { Profile, ScreenerAnswers, ScreenerResult } from "../index.js";
 import { runScreener } from "../index.js";
 import type { Sex } from "../food/types.js";

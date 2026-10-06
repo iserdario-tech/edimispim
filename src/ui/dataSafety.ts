@@ -9,8 +9,6 @@
 
 /** Когда человек последний раз сохранял копию — ISO-дата. Только на этом устройстве. */
 export const BACKUP_KEY = "edimispim.backupAt";
-/** Плашку установки закрыли — больше не показываем. */
-export const INSTALL_HINT_KEY = "edimispim.installHintClosed";
 
 /**
  * Запущено ли приложение с домашнего экрана, а не из браузера.

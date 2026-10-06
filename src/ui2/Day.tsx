@@ -82,7 +82,7 @@ export function Day({ app, day, now, onWhy, story }: { app: AppModel; day: DayMo
     </li>
   ) : null;
 
-  if (offset !== 0) return <OtherDay app={app} iso={plusDaysISO(day.today, offset)} offset={offset} onBack={() => setOffset(0)} now={now} />;
+  if (offset !== 0) return <OtherDay app={app} iso={plusDaysISO(day.today, offset)} offset={offset} onBack={() => setOffset(0)} />;
 
   return (
     <main className="s-screen">
@@ -251,7 +251,7 @@ export function Day({ app, day, now, onWhy, story }: { app: AppModel; day: DayMo
  * Вчера и завтра: что было съедено и что запланировано. Только просмотр — завтрашнее
  * меню из того же календарного плана, что и вкладка «Еда», вчерашнее — с отметками.
  */
-function OtherDay({ app, iso, offset, onBack, now }: { app: AppModel; iso: string; offset: number; onBack: () => void; now: Date }) {
+function OtherDay({ app, iso, offset, onBack }: { app: AppModel; iso: string; offset: number; onBack: () => void }) {
   const state = app.state!;
   const [recipe, setRecipe] = useState<NonNullable<TimelineRow["meal"]> | null>(null);
   const log = state.history.find(h => h.date === iso);

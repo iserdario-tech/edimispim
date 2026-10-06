@@ -1,4 +1,3 @@
-import React from "react";
 import { Sheet } from "../ui/Sheet.js";
 import { Coach } from "../ui/Coach.js";
 import { coachContext } from "../ui/useAppState.js";
