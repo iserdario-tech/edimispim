@@ -1,7 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <rect width="512" height="512" fill="#14213d"/>
-  <circle cx="244" cy="266" r="152" fill="#eef2fb"/>
-  <circle cx="300" cy="216" r="140" fill="#14213d"/>
-  <circle cx="338" cy="150" r="13" fill="#eef2fb"/>
-  <circle cx="380" cy="205" r="7" fill="#cdd7ee"/>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1A1F3D"/><stop offset=".55" stop-color="#F26B1D"/><stop offset="1" stop-color="#FFE3C7"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="115" fill="url(#g)"/>
+  <text x="256" y="300" text-anchor="middle" font-family="ui-rounded, 'SF Pro Rounded', -apple-system, system-ui, sans-serif" font-size="164" font-weight="700" letter-spacing="-3" fill="#fff">e&amp;s</text>
 </svg>
