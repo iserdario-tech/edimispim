@@ -1,7 +1,7 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { readTheme, applyTheme } from "./theme.js";
-import { Shell } from "../ui2/Shell.js";
+import { Shell, UpdateBanner, UPDATE_EVENT } from "../ui2/Shell.js";
 import "../ui2/sky.css";
 import { askPersistentStorage } from "./dataSafety.js";
 import "./ui.css";
@@ -45,19 +45,26 @@ document.documentElement.style.touchAction = "manipulation";
  *    но не выдёргивая экран из-под рук.
  *
  * Отсюда правило перезагрузки: если приложение сейчас не на экране — обновляемся молча
- * прямо сейчас; если человек в нём — ждём, пока он свернёт, и обновляемся тогда.
+ * прямо сейчас; если человек в нём — показываем плашку «Обновить» и, если он её не нажал,
+ * обновляемся, когда свернёт.
  * В обоих случаях он просто открывает приложение и видит новую версию, не зная,
  * что что-то происходило. Удалять значок и ставить заново не нужно никогда.
  */
 if ("serviceWorker" in navigator) {
+  // при самом первом заходе worker тоже «берёт управление» — это не обновление
+  const hadWorker = !!navigator.serviceWorker.controller;
   let reloading = false;
   const reloadWhenHidden = () => {
-    if (reloading) return;
+    if (reloading || !hadWorker) return;
     reloading = true;
     if (document.visibilityState === "hidden") location.reload();
-    else document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "hidden") location.reload();
-    }, { once: true });
+    else {
+      // человек в приложении: показываем плашку «Обновить», а если не нажмёт — обновимся, когда свернёт
+      window.dispatchEvent(new Event(UPDATE_EVENT));
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "hidden") location.reload();
+      }, { once: true });
+    }
   };
   // сработает, когда новый worker возьмёт управление (у нас `skipWaiting` + `clientsClaim`)
   navigator.serviceWorker.addEventListener("controllerchange", reloadWhenHidden);
@@ -79,5 +86,5 @@ askPersistentStorage();
 try { localStorage.removeItem("edimispim.v2"); } catch { /* приватный режим */ }
 
 createRoot(document.getElementById("root")!).render(
-  <React.StrictMode><Shell /></React.StrictMode>
+  <React.StrictMode><Shell /><UpdateBanner /></React.StrictMode>
 );
