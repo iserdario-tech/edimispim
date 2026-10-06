@@ -175,3 +175,23 @@ function Main({ app, tab, setTab, now, glow, restoreInput, onRestore }: {
     </div>
   );
 }
+
+/** Событие из main.tsx: новая версия скачана, а открыт ещё старый код. */
+export const UPDATE_EVENT = "edimispim:update";
+
+/** Плашка сверху «Вышла новая версия · Обновить» — иначе люди неделями сидят на старой. */
+export function UpdateBanner() {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const on = () => setReady(true);
+    window.addEventListener(UPDATE_EVENT, on);
+    return () => window.removeEventListener(UPDATE_EVENT, on);
+  }, []);
+  if (!ready) return null;
+  return (
+    <div className="s-update" role="status">
+      <span>Вышла новая версия</span>
+      <button onClick={() => location.reload()}>Обновить</button>
+    </div>
+  );
+}
