@@ -1,6 +1,15 @@
 import type { Profile, DayMode, DayToggles } from "../index.js";
+import { ALL_PUSHES, type PushMeal, type PushPrefs } from "../push.js";
+import { readLS, writeLS } from "./localStore.js";
 
 export interface PushDay { date: string; mode: DayMode; toggles: DayToggles; crunchUntilHM?: string }
+/** Что ещё знает сервер: меню на сегодня и завтра (дата → приёмы) и переключатели. */
+export interface PushExtra { meals?: Record<string, PushMeal[]>; prefs?: PushPrefs }
+
+/** Переключатели живут на устройстве: подписка на пуши — тоже у каждого устройства своя. */
+const PREFS_KEY = "edimispim.pushPrefs";
+export const readPushPrefs = (): PushPrefs => ({ ...ALL_PUSHES, ...readLS<Partial<PushPrefs>>(PREFS_KEY, {}) });
+export const writePushPrefs = (p: PushPrefs): void => writeLS(PREFS_KEY, p);
 
 // Публичный VAPID-ключ (пара к приватному JWK на Worker — см. app/.vapid.json)
 const VAPID_PUBLIC = "BL2WzWdDc3_XRNF9Q7M9lJP-SHQA6WSKaMYb32kKb7gZMqf9WX1R8ZkmhTbMdApqEu7xYQEFXxa-DXuDMQBx894";
@@ -38,7 +47,7 @@ function iosNeedsInstall(): boolean {
 
 // Тихо обновляет то, что Worker знает о человеке (профиль + контекст дня), если подписка уже есть.
 // Без неё пуши продолжали бы идти по расписанию на момент подписки. Разрешений не просит.
-export async function syncPushContext(profile: Profile, day?: PushDay): Promise<void> {
+export async function syncPushContext(profile: Profile, day?: PushDay, extra: PushExtra = {}): Promise<void> {
   if (!PUSH_READY) return;   // не отправляем контекст в чужой Worker
   try {
     if (!("serviceWorker" in navigator)) return;
@@ -49,7 +58,7 @@ export async function syncPushContext(profile: Profile, day?: PushDay): Promise<
     if (!sub) return; // напоминания не включены — синхронизировать нечего
     await fetch(BACKEND_URL + "/subscribe", {
       method: "POST", headers: { "content-type": "application/json" },
-      body: JSON.stringify({ subscription: sub, profile, tzOffsetMin: -new Date().getTimezoneOffset(), ...(day ? { day } : {}) }),
+      body: JSON.stringify({ subscription: sub, profile, tzOffsetMin: -new Date().getTimezoneOffset(), ...(day ? { day } : {}), ...extra }),
     });
   } catch { /* не критично: в следующий раз досинхронизируется */ }
 }
@@ -72,7 +81,7 @@ export async function enableNotifications(profile: Profile, day?: PushDay): Prom
     });
     const res = await fetch(BACKEND_URL + "/subscribe", {
       method: "POST", headers: { "content-type": "application/json" },
-      body: JSON.stringify({ subscription: sub, profile, tzOffsetMin: -new Date().getTimezoneOffset(), ...(day ? { day } : {}) }),
+      body: JSON.stringify({ subscription: sub, profile, tzOffsetMin: -new Date().getTimezoneOffset(), ...(day ? { day } : {}), prefs: readPushPrefs() }),
     });
     // Разрешение от браузера ещё не значит, что подписка дошла до сервера: раньше при
     // упавшем сервере человек всё равно читал «Готово!» и ждал напоминаний, которых не будет.

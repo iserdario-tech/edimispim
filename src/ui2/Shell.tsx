@@ -4,7 +4,7 @@ import { QuickStart } from "../ui/QuickStart.js";
 import { syncPushContext } from "../ui/notifications.js";
 import { useNow } from "../ui/useNow.js";
 import { localMinutes } from "../today-date.js";
-import { skyFor, skyGradient } from "../sky.js";
+import { skyFor, skyGlow } from "../sky.js";
 import { useDarkTheme } from "./useNight.js";
 import { tap } from "../ui/haptics.js";
 import { Day } from "./Day.js";
@@ -23,6 +23,7 @@ import { FoodSetup } from "../ui/FoodSetup.js";
 import { readLS, writeLS } from "../ui/localStore.js";
 import { Install } from "./Install.js";
 import { AskSheet } from "./AskSheet.js";
+import { Tour, TOUR_KEY } from "./Tour.js";
 import { isIOS, isStandalone } from "../ui/dataSafety.js";
 import { unmarkedToday } from "../streak2.js";
 import { useDay } from "./useDay.js";
@@ -50,6 +51,8 @@ export function Shell() {
     const r = document.documentElement;
     r.classList.add("v2");
     r.classList.toggle("night", sky.night);
+    // полоса над страницей (Safari, статус-бар) — того же цвета, что фон, и при ручной теме тоже
+    document.querySelectorAll('meta[name="theme-color"]').forEach(m => m.setAttribute("content", sky.night ? "#000000" : "#F2F2F7"));
   }, [sky.night]);
 
   const restoreInput = (
@@ -60,7 +63,7 @@ export function Shell() {
   const [installSkipped, setInstallSkipped] = useState(() => readLS<boolean>("edimispim.installSkip", false));
   if (!app.state && isIOS() && !isStandalone() && !installSkipped) {
     return <div className="v2-root">
-      <div className="s-sky" style={{ background: skyGradient(sky.stops) }} />
+      <div className="s-sky" />
       <Install onContinue={() => { writeLS("edimispim.installSkip", true); setInstallSkipped(true); }}
         onRestore={() => fileRef.current?.click()} />
       {restoreInput}
@@ -68,7 +71,7 @@ export function Shell() {
   }
   if (!app.state) {
     return <div className="v2-root">
-      <div className="s-sky" style={{ background: skyGradient(sky.stops) }} />
+      <div className="s-sky" />
       <QuickStart onRestore={() => fileRef.current?.click()}
         onDone={(profile, screener, quickFood) => {
           const picked = pickUpOldApps();
@@ -83,13 +86,13 @@ export function Shell() {
     </div>;
   }
 
-  return <Main app={app} tab={tab} setTab={setTab} now={now} stops={sky.stops} restoreInput={restoreInput}
+  return <Main app={app} tab={tab} setTab={setTab} now={now} glow={skyGlow(sky.glow, sky.night)} restoreInput={restoreInput}
     onRestore={() => fileRef.current?.click()} />;
 }
 
 /** Основной вид — отдельно, потому что хукам дня нужно уже существующее состояние. */
-function Main({ app, tab, setTab, now, stops, restoreInput, onRestore }: {
-  app: AppModel; tab: Tab2; setTab: (t: Tab2) => void; now: Date; stops: string[]; restoreInput: React.ReactNode;
+function Main({ app, tab, setTab, now, glow, restoreInput, onRestore }: {
+  app: AppModel; tab: Tab2; setTab: (t: Tab2) => void; now: Date; glow: string; restoreInput: React.ReactNode;
   onRestore: () => void;
 }) {
   const day = useDay(app.state as StoredState, now);
@@ -112,6 +115,9 @@ function Main({ app, tab, setTab, now, stops, restoreInput, onRestore }: {
   const state = app.state as StoredState;
   const [settings, setSettings] = useState<null | "sleep" | "food">(null);
   const [storyWeek, setStoryWeek] = useState<string | null>(null);
+  // тур один раз для всех, включая тех, кто пользовался 1.x: 2.0 устроена иначе
+  const [tour, setTour] = useState(() => !readLS<boolean>(TOUR_KEY, false));
+  const closeTour = () => { writeLS(TOUR_KEY, true); setTour(false); };
   // история прошлой недели: карточка на «Сутках» с понедельника по среду, пока не открыта
   const lastMonday = plusDaysISO(mondayOf(day.today), -7);
   const records = toDayRecords(state.history, state.weights ?? [], state.eaten ?? {}, state.cheatDays ?? []);
@@ -143,12 +149,14 @@ function Main({ app, tab, setTab, now, stops, restoreInput, onRestore }: {
   }
   return (
     <div className="v2-root">
-      <div className="s-sky" style={{ background: skyGradient(stops) }} />
+      {/* свечение неба — только на «Сутках», остальные экраны однотонные */}
+      <div className="s-sky" style={tab === "day" ? { backgroundImage: glow } : undefined} />
       {tab === "day" && <Day app={app} day={day} now={now} onWhy={() => setWhy(true)}
         story={offerStory ? { label: weekLabel(lastMonday), open: () => { setStoryWeek(lastMonday); writeLS("edimispim.storySeen", lastMonday); setSeen(lastMonday); } } : undefined} />}
       {tab === "eat" && !shop && <Eat app={app} week={week} onShop={() => { setShop(true); window.scrollTo({ top: 0 }); }} onSetupFood={() => setSettings("food")} />}
       {tab === "eat" && shop && <Shop week={week} onBack={() => { setShop(false); window.scrollTo({ top: 0 }); }} />}
-      {tab === "me" && <Me app={app} day={day} onSettings={setSettings} onStory={setStoryWeek} onRestore={onRestore} />}
+      {tab === "me" && <Me app={app} day={day} onSettings={setSettings} onStory={setStoryWeek} onRestore={onRestore} onTour={() => setTour(true)} />}
+      {tour && <Tour onClose={closeTour} />}
       {storySlides && storyWeek && <Story slides={storySlides} label={`Неделя ${weekLabel(storyWeek)}`} onClose={() => setStoryWeek(null)} />}
 
       <nav className="s-tabbar" aria-label="Разделы">
