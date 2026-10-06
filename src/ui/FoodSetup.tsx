@@ -137,7 +137,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
       <section className="card">
         <h3 className="card-h">2 · Сколько двигаешься</h3>
         <p className="small muted">Насколько подвижный день — про быт, а не про спортзал.</p>
-        <div className="chips">
+        <div className="chips chips-col">
           <button className={activity === "low" ? "chip on" : "chip"} onClick={() => setActivity("low")}>Сижу почти весь день</button>
           <button className={activity === "medium" ? "chip on" : "chip"} onClick={() => setActivity("medium")}>Хожу понемногу</button>
           <button className={activity === "high" ? "chip on" : "chip"} onClick={() => setActivity("high")}>Весь день на ногах</button>
@@ -147,9 +147,8 @@ export function FoodSetup({ initial, onDone, onCancel }: {
           Регулярно делаю силовые — 2 раза в неделю и чаще
         </label>
         <p className="small muted">
-          Белок поднимется до 1.6 г на кг — каждый день одинаково, а не только в день тренировки.
-          Калории за тренировку не добавляем: вес зависит от среднего за неделю, а браслеты ошибаются
-          в подсчёте сожжённых калорий на 27–93%. Сколько ты тратишь на самом деле, приложение поймёт по весу.
+          Белок — 1.6 г на кг каждый день. Калории за тренировки не добавляем: браслеты
+          ошибаются на 27–93%, а сколько ты тратишь на самом деле, приложение поймёт по весу.
         </p>
 
       </section>
@@ -257,7 +256,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
       </section>
 
       <section className="card">
-        <h3 className="card-h">8 · Как начать: сразу или постепенно</h3>
+        <h3 className="card-h">8 · Как начать</h3>
         <p className="small muted">
           Если сразу сильно урезать еду, многие бросают в первую неделю. Поэтому начинаем
           с того, сколько ты ешь сейчас, и понемногу снижаем до цели. Первые дни еда будет

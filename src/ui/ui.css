@@ -75,6 +75,12 @@ a { color: var(--accent); }
   outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent;
 }
 .chk { display: flex; gap: var(--sp-2); align-items: center; min-height: var(--tap); font-size: var(--t-callout); }
+/* подпись в две строки: галочка вровень с первой строкой, а не посередине; строки не слипаются */
+.chk { align-items: flex-start; padding: 8px 0; line-height: 1.35; }
+/* варианты длиной в фразу — столбиком одной ширины, а не лесенкой разной длины */
+.chips-col { flex-direction: column; align-items: stretch; }
+.chips-col .chip { text-align: left; }
+.chk input { flex: none; margin: 2px 0 0; }
 
 button.primary {
   width: 100%; margin-top: var(--sp-4); min-height: 50px; padding: 0 var(--sp-5);
