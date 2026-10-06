@@ -139,12 +139,23 @@ export function isValidState(v: unknown): v is StoredState {
   return true;
 }
 
+/**
+ * Нечитаемое состояние не выбрасываем: без него приложение покажет первую настройку,
+ * и, пройдя её, человек затёр бы старые данные. Откладываем исходник один раз —
+ * первая копия самая ценная, её не перезаписываем.
+ */
+const UNREADABLE_KEY = KEY + ".unreadable";
+function keepUnreadable(raw: string, store: StorageLike): null {
+  try { if (store.getItem(UNREADABLE_KEY) === null) store.setItem(UNREADABLE_KEY, raw); } catch { /* нет места — ничего не поделать */ }
+  return null;
+}
+
 export function loadState(store: StorageLike = defaultStore()): StoredState | null {
   const raw = store.getItem(KEY);
   if (!raw) return null;
   try {
     const parsed: unknown = JSON.parse(raw);
-    if (!isValidState(parsed)) return null;
+    if (!isValidState(parsed)) return keepUnreadable(raw, store);
     // отдельные записи истории тоже могут быть битыми — отсеиваем, а не роняем всё.
     // Порядок восстанавливаем здесь же: ровность режима считает последние семь ЭЛЕМЕНТОВ
     // массива, а копия и перенос из старого приложения сортировки не гарантируют.
@@ -154,7 +165,7 @@ export function loadState(store: StorageLike = defaultStore()): StoredState | nu
         .filter(h => h && typeof h.wokeHM === "string")
         .sort((a, b) => a.date.localeCompare(b.date)),
     };
-  } catch { return null; }
+  } catch { return keepUnreadable(raw, store); }
 }
 export function saveDayDraft(d: DayDraft, store: StorageLike = defaultStore()): void {
   store.setItem(DAY_KEY, JSON.stringify(d));
