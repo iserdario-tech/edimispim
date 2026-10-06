@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useAppState, pickUpOldApps } from "../ui/useAppState.js";
 import { QuickStart } from "../ui/QuickStart.js";
 import { syncPushContext } from "../ui/notifications.js";
@@ -7,6 +7,11 @@ import { localMinutes } from "../today-date.js";
 import { skyFor, skyGradient } from "../sky.js";
 import { useDarkTheme } from "./useNight.js";
 import { tap } from "../ui/haptics.js";
+import { Day } from "./Day.js";
+import { WhySheet } from "./WhySheet.js";
+import { PlusSheet } from "./PlusSheet.js";
+import { useDay } from "./useDay.js";
+import type { StoredState } from "../ui/storage.js";
 
 export type Tab2 = "day" | "eat" | "me";
 export type AppModel = ReturnType<typeof useAppState>;
@@ -25,6 +30,12 @@ export function Shell() {
   const now = useNow();
   const dark = useDarkTheme();
   const sky = skyFor(localMinutes(now), dark);
+  // класс на <html>, а не на обёртке: шторки рисуются порталом в body и должны видеть те же переменные
+  useEffect(() => {
+    const r = document.documentElement;
+    r.classList.add("v2");
+    r.classList.toggle("night", sky.night);
+  }, [sky.night]);
 
   const restoreInput = (
     <input ref={fileRef} type="file" accept="application/json,.json" hidden
@@ -32,7 +43,7 @@ export function Shell() {
   );
 
   if (!app.state) {
-    return <div className={"v2" + (sky.night ? " night" : "")}>
+    return <div className="v2-root">
       <div className="s-sky" style={{ background: skyGradient(sky.stops) }} />
       <QuickStart onRestore={() => fileRef.current?.click()}
         onDone={(profile, screener, quickFood) => {
@@ -48,14 +59,22 @@ export function Shell() {
     </div>;
   }
 
+  return <Main app={app} tab={tab} setTab={setTab} now={now} night={sky.night} stops={sky.stops} restoreInput={restoreInput} />;
+}
+
+/** Основной вид — отдельно, потому что хукам дня нужно уже существующее состояние. */
+function Main({ app, tab, setTab, now, night, stops, restoreInput }: {
+  app: AppModel; tab: Tab2; setTab: (t: Tab2) => void; now: Date; night: boolean; stops: string[]; restoreInput: React.ReactNode;
+}) {
+  const day = useDay(app.state as StoredState, now);
+  const [why, setWhy] = useState(false);
+  const [plus, setPlus] = useState(false);
   return (
-    <div className={"v2" + (sky.night ? " night" : "")}>
-      <div className="s-sky" style={{ background: skyGradient(sky.stops) }} />
-      <main className="s-screen">
-        {tab === "day" && <h1 className="s-title">Сутки</h1>}
-        {tab === "eat" && <h1 className="s-title">Еда</h1>}
-        {tab === "me" && <h1 className="s-title">Я</h1>}
-      </main>
+    <div className="v2-root">
+      <div className="s-sky" style={{ background: skyGradient(stops) }} />
+      {tab === "day" && <Day app={app} day={day} now={now} onWhy={() => setWhy(true)} />}
+      {tab === "eat" && <main className="s-screen"><h1 className="s-title">Еда</h1></main>}
+      {tab === "me" && <main className="s-screen"><h1 className="s-title">Я</h1></main>}
 
       <nav className="s-tabbar" aria-label="Разделы">
         {([["day", "Сутки"], ["eat", "Еда"], ["me", "Я"]] as const).map(([id, ru]) => (
@@ -64,7 +83,9 @@ export function Shell() {
         ))}
       </nav>
       <button className="s-ask" aria-label="Спросить коуча">?</button>
-      <button className="s-fab" aria-label="Добавить">+</button>
+      <button className="s-fab" aria-label="Добавить" onClick={() => { tap(); setPlus(true); }}>+</button>
+      {why && <WhySheet app={app} day={day} onClose={() => setWhy(false)} />}
+      {plus && <PlusSheet app={app} day={day} onClose={() => setPlus(false)} />}
       {restoreInput}
     </div>
   );
