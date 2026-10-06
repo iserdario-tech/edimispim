@@ -4,7 +4,7 @@ import { QuickStart } from "../ui/QuickStart.js";
 import { syncPushContext } from "../ui/notifications.js";
 import { useNow } from "../ui/useNow.js";
 import { localMinutes } from "../today-date.js";
-import { skyFor, skyGradient } from "../sky.js";
+import { skyFor, skyGlow } from "../sky.js";
 import { useDarkTheme } from "./useNight.js";
 import { tap } from "../ui/haptics.js";
 import { Day } from "./Day.js";
@@ -60,7 +60,7 @@ export function Shell() {
   const [installSkipped, setInstallSkipped] = useState(() => readLS<boolean>("edimispim.installSkip", false));
   if (!app.state && isIOS() && !isStandalone() && !installSkipped) {
     return <div className="v2-root">
-      <div className="s-sky" style={{ background: skyGradient(sky.stops) }} />
+      <div className="s-sky" />
       <Install onContinue={() => { writeLS("edimispim.installSkip", true); setInstallSkipped(true); }}
         onRestore={() => fileRef.current?.click()} />
       {restoreInput}
@@ -68,7 +68,7 @@ export function Shell() {
   }
   if (!app.state) {
     return <div className="v2-root">
-      <div className="s-sky" style={{ background: skyGradient(sky.stops) }} />
+      <div className="s-sky" />
       <QuickStart onRestore={() => fileRef.current?.click()}
         onDone={(profile, screener, quickFood) => {
           const picked = pickUpOldApps();
@@ -83,13 +83,13 @@ export function Shell() {
     </div>;
   }
 
-  return <Main app={app} tab={tab} setTab={setTab} now={now} stops={sky.stops} restoreInput={restoreInput}
+  return <Main app={app} tab={tab} setTab={setTab} now={now} glow={skyGlow(sky.glow, sky.night)} restoreInput={restoreInput}
     onRestore={() => fileRef.current?.click()} />;
 }
 
 /** Основной вид — отдельно, потому что хукам дня нужно уже существующее состояние. */
-function Main({ app, tab, setTab, now, stops, restoreInput, onRestore }: {
-  app: AppModel; tab: Tab2; setTab: (t: Tab2) => void; now: Date; stops: string[]; restoreInput: React.ReactNode;
+function Main({ app, tab, setTab, now, glow, restoreInput, onRestore }: {
+  app: AppModel; tab: Tab2; setTab: (t: Tab2) => void; now: Date; glow: string; restoreInput: React.ReactNode;
   onRestore: () => void;
 }) {
   const day = useDay(app.state as StoredState, now);
@@ -143,7 +143,8 @@ function Main({ app, tab, setTab, now, stops, restoreInput, onRestore }: {
   }
   return (
     <div className="v2-root">
-      <div className="s-sky" style={{ background: skyGradient(stops) }} />
+      {/* свечение неба — только на «Сутках», остальные экраны однотонные */}
+      <div className="s-sky" style={tab === "day" ? { backgroundImage: glow } : undefined} />
       {tab === "day" && <Day app={app} day={day} now={now} onWhy={() => setWhy(true)}
         story={offerStory ? { label: weekLabel(lastMonday), open: () => { setStoryWeek(lastMonday); writeLS("edimispim.storySeen", lastMonday); setSeen(lastMonday); } } : undefined} />}
       {tab === "eat" && !shop && <Eat app={app} week={week} onShop={() => { setShop(true); window.scrollTo({ top: 0 }); }} onSetupFood={() => setSettings("food")} />}
