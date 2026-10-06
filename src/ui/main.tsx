@@ -54,17 +54,22 @@ if ("serviceWorker" in navigator) {
   // при самом первом заходе worker тоже «берёт управление» — это не обновление
   const hadWorker = !!navigator.serviceWorker.controller;
   let reloading = false;
+  // Открыта шторка или настройки — там может быть недописанный вес, «что съел», вопрос
+  // коучу или изменённая форма. Тихо перезагрузив, мы бы это стёрли; ждём, пока закроет.
+  // Сохранённое не в опасности в любом случае: каждое действие пишется на диск сразу.
+  const busy = () => !!document.querySelector(".sheet, .s-settings");
   const reloadWhenHidden = () => {
     if (reloading || !hadWorker) return;
     reloading = true;
-    if (document.visibilityState === "hidden") location.reload();
-    else {
-      // человек в приложении: показываем плашку «Обновить», а если не нажмёт — обновимся, когда свернёт
-      window.dispatchEvent(new Event(UPDATE_EVENT));
-      document.addEventListener("visibilitychange", () => {
-        if (document.visibilityState === "hidden") location.reload();
-      }, { once: true });
-    }
+    if (document.visibilityState === "hidden" && !busy()) { location.reload(); return; }
+    // человек в приложении: показываем плашку «Обновить», а если не нажмёт — обновимся, когда свернёт
+    if (document.visibilityState === "visible") window.dispatchEvent(new Event(UPDATE_EVENT));
+    const onHide = () => {
+      if (document.visibilityState !== "hidden" || busy()) return;
+      document.removeEventListener("visibilitychange", onHide);
+      location.reload();
+    };
+    document.addEventListener("visibilitychange", onHide);
   };
   // сработает, когда новый worker возьмёт управление (у нас `skipWaiting` + `clientsClaim`)
   navigator.serviceWorker.addEventListener("controllerchange", reloadWhenHidden);
