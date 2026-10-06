@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { skyFor, skyGlow } from "../src/sky";
+import { skyFor, skyGlow, skyTopColor } from "../src/sky";
 
 const hm = (h: number, m = 0) => h * 60 + m;
 
@@ -27,5 +27,9 @@ describe("свечение неба по времени суток", () => {
   it("свечение — полупрозрачный цвет сверху, в тёмной теме чуть ярче", () => {
     expect(skyGlow("#FF9F0A", false)).toContain("rgba(255, 159, 10, 0.25)");
     expect(skyGlow("#FF9F0A", true)).toContain("rgba(255, 159, 10, 0.4)");
+  });
+  it("верх экрана — фон, подкрашенный свечением: под этот цвет красится полоса под часами", () => {
+    expect(skyTopColor("#5E5CE6", true)).toBe("#1A1A40");   // индиговая ночь на чёрном
+    expect(skyTopColor("#FF9F0A", false)).toBe("#F4E3CE");  // утро на светлом
   });
 });
