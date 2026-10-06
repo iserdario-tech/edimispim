@@ -43,4 +43,13 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        // Рецепты (≈0.6 МБ) — отдельным файлом: обновление интерфейса не заставляет
+        // телефон заново качать базу блюд, она остаётся в кэше, пока не поменялась сама.
+        manualChunks: (id) => (id.includes("/food/data/recipes.json") ? "recipes" : undefined),
+      },
+    },
+  },
 });
