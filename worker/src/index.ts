@@ -1,7 +1,7 @@
 import { buildPushHTTPRequest } from "@pushforge/builder";
 import type { Profile, DayMode, DayToggles } from "../../src/index.js";
 import { planDay, parseHM } from "../../src/index.js";
-import { dueWindows, checkinDue } from "../../src/push.js";
+import { planPushes, mealPushes, checkinDue, ALL_PUSHES, type PushMeal, type PushPrefs } from "../../src/push.js";
 import { coachStream, type CoachTurn } from "./coach.js";
 import { estimateFood } from "./estimate.js";
 
@@ -26,6 +26,10 @@ interface StoredSub {
   tzOffsetMin: number;
   // контекст дня из приложения: чтобы пуши шли по тому же плану, что человек видит на экране
   day?: { date: string; mode: DayMode; toggles: DayToggles; crunchUntilHM?: string };
+  // меню на сегодня и завтра (дата → приёмы): меню считается на телефоне, сервер его не знает
+  meals?: Record<string, PushMeal[]>;
+  // переключатели «Еда / Кофе и дневной сон / Сон» из «Я → Напоминания»
+  prefs?: PushPrefs;
   // «что уже отправлено сегодня» лежит в отдельном ключе sent:<endpoint> — см. scheduled()
 }
 
@@ -52,6 +56,8 @@ export default {
         profile: body.profile,
         tzOffsetMin: body.tzOffsetMin ?? 0,
         ...(body.day ? { day: body.day } : existing?.day ? { day: existing.day } : {}),
+        ...(body.meals ? { meals: body.meals } : existing?.meals ? { meals: existing.meals } : {}),
+        ...(body.prefs ? { prefs: body.prefs } : existing?.prefs ? { prefs: existing.prefs } : {}),
       }));
       if (existing) return new Response("ok", { headers: CORS }); // тихая синхронизация — без приветствия
       // приветственный пуш — мгновенное подтверждение, что доставка работает (только при первой подписке)
@@ -138,10 +144,15 @@ export default {
         lastNight: { wokeHM: s.profile.anchorWakeHM, quality: 3 },
         history: [],
       });
-      // Что шлём в это окно: шаги плана + утренняя отметка «как спалось?»
-      const outgoing: { kind: string; title: string; body: string; data?: { url: string } }[] =
-        dueWindows(plan.windows, minOfDay, 5).map((w) => ({ kind: w.kind, title: w.title, body: w.detail }));
-      if (checkinDue(minOfDay, parseHM(s.profile.anchorWakeHM)))
+      // Что шлём в это окно: шаги плана заранее, готовка еды, утренняя отметка «как спалось?».
+      // Меню — только если приложение открывали недавно: дальше чем на завтра оно его не присылает.
+      const prefs = s.prefs ?? ALL_PUSHES;
+      const wakeMin = parseHM(s.profile.anchorWakeHM);
+      const outgoing = [
+        ...planPushes(plan.windows, minOfDay, 5, prefs),
+        ...(prefs.food ? mealPushes(s.meals?.[localDate] ?? [], minOfDay, 5, wakeMin) : []),
+      ];
+      if (prefs.sleep && checkinDue(minOfDay, wakeMin))
         outgoing.push({ kind: "checkin", title: "Как спалось?", body: "Отметь подъём — план на день подстроится под тебя.", data: { url: "/edimispim/#night" } });
 
       // «что уже отправлено сегодня» держим отдельным ключом: эту запись пишет только крон,

@@ -128,6 +128,8 @@ html.v2 body { background: none; }  /* иначе фон body ложится п�
 .s-face:active .s-face-emoji { transform: scale(.88); }
 .s-face-ru { font-size: var(--t5); color: var(--ink2); }
 .s-yn { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; }
+.s-yn .s-what span { white-space: normal; }
+.s-rows { display: grid; gap: 12px; margin-top: 16px; }
 .s-yn-btns { display: flex; gap: 6px; }
 .s-yn-btns .s-pill { min-width: 52px; }
 
