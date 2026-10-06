@@ -144,7 +144,7 @@ export function Day({ app, day, now, onWhy, story }: { app: AppModel; day: DayMo
           const detail = isFood
             ? (m === "ate" ? "съел" : m === "own" ? "своё" : r.meal!.leftover ? "остатки вчерашнего ужина"
               : `${Math.round(r.meal!.recipe.kcal * r.meal!.servings)} ккал${r.meal!.recipe.time_min ? ` · ${r.meal!.recipe.time_min} мин` : ""}`)
-            : r.detail;
+            : r.short ?? r.detail;
           return (
             <React.Fragment key={i}>
               {i === day.nextIdx && (
@@ -155,7 +155,8 @@ export function Day({ app, day, now, onWhy, story }: { app: AppModel; day: DayMo
                   onLeft={() => r.slot && m !== "ate" && mark(r.slot, "ate")}
                   onRight={() => r.slot && m !== "own" && mark(r.slot, "own")}>
                   <button className="s-row-btn" onClick={() => (isFood ? setRecipe(r.meal!) : setInfo(r))}>
-                    <span className="s-time">{r.time}</span>
+                    {/* «00:00 ночью»: «ночью» мелко под временем, а не второй крупной строкой */}
+                    <span className="s-time">{r.time.replace(" ночью", "")}{r.time.endsWith(" ночью") && <small>ночью</small>}</span>
                     <span className={"s-plate" + (isFood ? "" : " sleep") + (i === day.nextIdx ? " big" : "")}>
                       {isFood && r.photo ? <img src={r.photo} alt="" loading="lazy" decoding="async" /> : <span>{r.icon}</span>}
                       {m === "ate" && <i className="s-done">✓</i>}

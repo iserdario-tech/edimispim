@@ -14,6 +14,8 @@ export interface TimelineRow {
   icon: string;
   title: string;
   detail: string;
+  /** Подпись в строке ленты — помещается в одну строку на узком iPhone; полная — в шторке. */
+  short?: string;
   why: string;
   past?: boolean;
   startMin: number;

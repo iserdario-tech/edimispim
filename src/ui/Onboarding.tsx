@@ -26,7 +26,7 @@ export function Onboarding({ initial, onDone, onRestore }: {
   return (
     <main className="wrap">
       <h1>Настройки сна</h1>
-      <p className="muted">Пара вопросов — и построим твой план дня.</p>
+      <p className="muted">От этого строится весь день — и сон, и еда.</p>
 
       {/* Видно только тем, кто открыл приложение с домашнего экрана: у установленной
           версии на iOS своё хранилище, и данные из Safari в неё не переезжают. */}
@@ -38,7 +38,7 @@ export function Onboarding({ initial, onDone, onRestore }: {
             Данные из Safari сюда сами не переедут, их нужно перенести файлом.
           </p>
           <p className="small muted">
-            В Safari открой тот же адрес → «Я» → «Копия данных» → «Сохранить копию». Потом вернись сюда и загрузи файл.
+            В Safari открой тот же адрес → «Я» → «Копия данных» → «Сохранить копию». Потом вернись сюда и загрузи файл.
           </p>
           <button className="chip" onClick={onRestore}>Загрузить копию</button>
         </section>
@@ -60,14 +60,14 @@ export function Onboarding({ initial, onDone, onRestore }: {
       <p className="muted small">Ориентируйся на выходные без будильника: когда сам засыпаешь и просыпаешься.</p>
       <label className="fld">Сколько кофе обычно за раз
         <select value={form.caffeineMg} onChange={e=>set({ caffeineMg: Number(e.target.value) })}>
-          <option value={0}>Не пью кофеин</option>
-          <option value={35}>Кола или зелёный чай (~35 мг)</option>
-          <option value={60}>Чёрный чай, растворимый кофе или 1 эспрессо (~60 мг)</option>
-          <option value={95}>Чашка кофе 200–250 мл или банка Red Bull 250 мл (~95 мг)</option>
-          <option value={150}>Двойной кофе или большой энергетик 0.5 л (~150 мг)</option>
+          <option value={0}>Не пью кофе и чай</option>
+          <option value={35}>Кола или зелёный чай</option>
+          <option value={60}>Чёрный чай или эспрессо</option>
+          <option value={95}>Чашка кофе или Red Bull</option>
+          <option value={150}>Двойной кофе, энергетик 0,5 л</option>
         </select>
       </label>
-      <p className="muted small">Не знаешь мг — просто выбери, что похоже на твою чашку.</p>
+      <p className="muted small">Выбери, что похоже на твою обычную порцию.</p>
       <label className="chk"><input type="checkbox" checked={form.caffeineRegular}
         onChange={e=>set({ caffeineRegular: e.target.checked })} /> Пью кофе или чай каждый день</label>
       <label className="chk"><input type="checkbox" checked={form.napPossible}
@@ -76,11 +76,11 @@ export function Onboarding({ initial, onDone, onRestore }: {
       <label className="chk"><input type="checkbox" checked={scr.loudSnoringWithPauses}
         onChange={e=>setS({ loudSnoringWithPauses: e.target.checked })} /> Громкий храп с паузами дыхания</label>
       <label className="chk"><input type="checkbox" checked={scr.daytimeSleepyDespiteEnoughSleep}
-        onChange={e=>setS({ daytimeSleepyDespiteEnoughSleep: e.target.checked })} /> Сильно клонит в сон днём даже выспавшись</label>
+        onChange={e=>setS({ daytimeSleepyDespiteEnoughSleep: e.target.checked })} /> Сильно клонит в сон днём, даже выспавшись</label>
       <label className="chk"><input type="checkbox" checked={scr.legUrgeToMoveEvening}
         onChange={e=>setS({ legUrgeToMoveEvening: e.target.checked })} /> Неприятные ощущения в ногах по вечерам</label>
       <label className="chk"><input type="checkbox" checked={scr.insomnia3xWeek3Months}
-        onChange={e=>setS({ insomnia3xWeek3Months: e.target.checked })} /> Плохо сплю (трудно заснуть или просыпаюсь) 3+ ночей в неделю — и так уже 3+ месяца</label>
+        onChange={e=>setS({ insomnia3xWeek3Months: e.target.checked })} /> Плохо сплю 3+ ночи в неделю, уже больше 3 месяцев</label>
       <label className="chk"><input type="checkbox" checked={scr.lowMood2Weeks}
         onChange={e=>setS({ lowMood2Weeks: e.target.checked })} /> Подавленное настроение 2 недели и дольше</label>
       <label className="chk"><input type="checkbox" checked={scr.selfHarmThoughts}

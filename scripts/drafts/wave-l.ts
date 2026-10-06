@@ -186,7 +186,7 @@ export const DRAFT: Draft[] = [
   },
   {
     id: "d88",
-    name: "Бигус с колбасой",
+    name: "Бигос с колбасой",
     type: "dinner",
     cuisine: "slavic",
     src: "https://www.russianfood.com/recipes/recipe.php?rid=113613",

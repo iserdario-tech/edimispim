@@ -77,7 +77,7 @@ export function QuickStart({ onDone, onRestore }: {
           <label className="fld">Обычно ложусь
             <input type="time" value={bedHM} onChange={e => setBedHM(e.target.value)} />
           </label>
-          <p className="small muted">Остальное про сон (сова ты или жаворонок, сколько пьёшь кофе) поставим средним — поправишь в «Я → Настройки сна».</p>
+          <p className="small muted">Остальное про сон (сова ты или жаворонок, сколько пьёшь кофе) поставим средним — поправишь в «Я → Настройки сна».</p>
           {!timesOk && <p className="note-warn small">Заполни оба времени — от них считается весь план дня.</p>}
           <button className="primary" disabled={!timesOk} onClick={() => setStep(2)}>Дальше</button>
           {onRestore && (
@@ -109,7 +109,7 @@ export function QuickStart({ onDone, onRestore }: {
           </div>
           {problems.length > 0 && <p className="note-warn small">Проверь: {problems.join("; ")}.</p>}
           <p className="small muted">
-            Аллергии, технику на кухне, бюджет и время на готовку настроишь потом в «Я → Настройки еды» — меню соберётся уже сейчас.
+            Аллергии, технику на кухне, бюджет и время на готовку настроишь потом в «Я → Настройки еды» — меню соберётся уже сейчас.
           </p>
           <button className="primary" disabled={problems.length > 0} onClick={() => setStep(3)}>Дальше</button>
           <button className="linkbtn" onClick={() => setStep(1)}>← назад</button>
@@ -127,7 +127,7 @@ export function QuickStart({ onDone, onRestore }: {
             ["loudSnoringWithPauses", "Громкий храп с паузами дыхания"],
             ["daytimeSleepyDespiteEnoughSleep", "Сильно клонит в сон днём, даже выспавшись"],
             ["legUrgeToMoveEvening", "Неприятные ощущения в ногах по вечерам"],
-            ["insomnia3xWeek3Months", "Плохо сплю 3+ ночи в неделю — и так уже 3+ месяца"],
+            ["insomnia3xWeek3Months", "Плохо сплю 3+ ночи в неделю, уже больше 3 месяцев"],
             ["lowMood2Weeks", "Подавленное настроение 2 недели и дольше"],
             ["selfHarmThoughts", "Есть мысли причинить себе вред"],
           ] as const).map(([k, ru]) => (
