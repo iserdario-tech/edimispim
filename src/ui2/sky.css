@@ -139,7 +139,8 @@
   position: relative; width: 56px; height: 56px; border-radius: 28px; display: grid; place-items: center;
   background: #fff; box-shadow: 0 0 0 3px var(--food); font-size: 24px; transition: transform .25s var(--spring);
 }
-.s-plate img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+/* absolute, а не 100% в сетке: Safari считал высоту по самой картинке, и фото вылезало из круга */
+.s-plate img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 .s-plate.sleep { box-shadow: 0 0 0 3px var(--sleep); background: var(--glass-strong); }
 .s-plate.big { width: 60px; height: 60px; }
 .s-row-btn:active .s-plate { transform: scale(.92); }
@@ -257,7 +258,7 @@
 .s-buy-qty { font-size: var(--t4); color: var(--ink2); text-align: right; display: grid; }
 .s-buy-qty small { font-size: var(--t5); }
 .s-wide { width: 100%; margin-top: 20px; }
-.s-shops { align-items: center; margin-top: 16px; }
+.s-shops { margin: 20px 0 0; }
 .s-legacy { margin-top: 16px; }
 .s-legacy .card {
   margin: 0; border-radius: 20px; background: var(--glass); box-shadow: var(--shadow);

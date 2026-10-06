@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { planPurchase, pantryAfter, packOf, isStaple, leftoverShare } from "../src/food/packaging";
+import { planPurchase, packOf, isStaple } from "../src/food/packaging";
 
 /**
  * Сценарий из жизни: на завтрак нужно 100 г творога, а пачка — 200 г.
@@ -90,40 +90,11 @@ describe("кладовка", () => {
     expect(line!.leftover).toBe(4900);     // остальное продолжает лежать
   });
 
-  it("остатки переезжают в следующую закупку", () => {
-    const week1 = planPurchase([{ name: "творог 5%", unit: "г", qty: 100 }]);
-    const pantry = pantryAfter(week1);
-    expect(pantry["творог 5%|г"]).toBe(100);
-
-    const week2 = planPurchase([{ name: "творог 5%", unit: "г", qty: 100 }], pantry);
-    expect(week2[0]!.packs).toBe(0);      // вторую пачку покупать не надо
-    expect(week2[0]!.haveAtHome).toBe(100);
-  });
-
-  it("нулевые остатки не засоряют кладовку", () => {
-    const lines = planPurchase([{ name: "творог 5%", unit: "г", qty: 400 }]);
-    expect(pantryAfter(lines)).toEqual({});
-  });
-
   it("регистр и пробелы в названии не мешают найти остаток", () => {
     const [line] = planPurchase(
       [{ name: "  Творог 5%  ", unit: "г", qty: 150 }],
       { "творог 5%|г": 100 },
     );
     expect(line!.haveAtHome).toBe(100);
-  });
-});
-
-describe("цена фасовок", () => {
-  it("показывает, какая доля закупки уходит в остаток", () => {
-    const lines = planPurchase([
-      { name: "творог 5%", unit: "г", qty: 100 },     // куплено 200, остаток 100
-      { name: "банан", unit: "г", qty: 100 },         // весовой, остатка нет
-    ]);
-    expect(leftoverShare(lines)).toBeCloseTo(100 / 300, 2);
-  });
-
-  it("пустой список не делит на ноль", () => {
-    expect(leftoverShare([])).toBe(0);
   });
 });

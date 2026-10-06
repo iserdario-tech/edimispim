@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Sheet } from "../ui/Sheet.js";
 import { EatSheet } from "../ui/EatSheet.js";
 import { tap } from "../ui/haptics.js";

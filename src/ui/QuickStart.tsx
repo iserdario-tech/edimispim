@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import type { Profile, ScreenerAnswers, ScreenerResult } from "../index.js";
 import { runScreener } from "../index.js";
 import type { Sex } from "../food/types.js";
@@ -6,7 +6,7 @@ import { DEFAULT_PACE } from "../food/rampin.js";
 import type { FoodSettings } from "./storage.js";
 import { buildProfile, isValidTime } from "./onboardingModel.js";
 import { emptyScreener } from "./Onboarding.js";
-import { checkProfile } from "./FoodSetup.js";
+import { checkProfile, NumInput } from "./FoodSetup.js";
 import { JunctionScreening, junctionFrom, junctionResult } from "./JunctionScreening.js";
 import { isStandalone } from "./dataSafety.js";
 import { localDateISO } from "../today-date.js";
@@ -55,9 +55,9 @@ export function QuickStart({ onDone, onRestore }: {
     });
   };
 
-  const num = (label: string, v: number, set: (n: number) => void, step = 1) => (
+  const num = (label: string, v: number, set: (n: number) => void, decimal = false) => (
     <label className="fld small">{label}
-      <input type="number" inputMode="decimal" step={step} value={v} onChange={e => set(+e.target.value)} />
+      <NumInput inputMode={decimal ? "decimal" : "numeric"} value={v} onChange={set} />
     </label>
   );
 
@@ -104,8 +104,8 @@ export function QuickStart({ onDone, onRestore }: {
           <div className="quick-grid">
             {num("Возраст", age, setAge)}
             {num("Рост, см", heightCm, setHeightCm)}
-            {num("Вес сейчас, кг", weightKg, setWeightKg, 0.1)}
-            {num("Цель, кг", goalWeightKg, setGoalWeightKg, 0.1)}
+            {num("Вес сейчас, кг", weightKg, setWeightKg, true)}
+            {num("Цель, кг", goalWeightKg, setGoalWeightKg, true)}
           </div>
           {problems.length > 0 && <p className="note-warn small">Проверь: {problems.join("; ")}.</p>}
           <p className="small muted">

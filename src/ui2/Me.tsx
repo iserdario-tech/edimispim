@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Sheet } from "../ui/Sheet.js";
 import { WeightChart } from "../ui/Charts.js";
 import { targetsFor } from "../ui/storage.js";

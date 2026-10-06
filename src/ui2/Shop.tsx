@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { planPurchase, type BuyLine } from "../food/packaging.js";
 import { SHOPS, DEFAULT_SHOP_ID } from "../food/shops.js";
 import { AISLES, OTHER, aisleOf, pantryKey, itemLink, amountRU, showsLeftover } from "../ui/Grocery.js";
@@ -88,8 +88,8 @@ export function Shop({ week, onBack }: { week: WeekModel; onBack: () => void }) 
             setNote(shareNoteRU(await shareText("Покупки", text)));
           }}>Отправить список в чат</button>
           {note && <p className="s-small">{note}</p>}
-          <div className="s-chips-row s-shops">
-            <span className="s-small">Тап по продукту ищет его в</span>
+          <p className="s-small s-shops">Тап по продукту ищет его в магазине:</p>
+          <div className="s-chips-row">
             {SHOPS.map(s => (
               <button key={s.id} className={s.id === shopId ? "s-pill on" : "s-pill"} onClick={() => { setShopId(s.id); writeLS(SHOP_KEY, s.id); }}>{s.name}</button>
             ))}
