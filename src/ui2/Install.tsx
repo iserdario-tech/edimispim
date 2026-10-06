@@ -12,13 +12,13 @@ export function Install({ onContinue, onRestore }: { onContinue: () => void; onR
       <h1 className="s-title s-center">edim &amp; spim</h1>
       <p className="s-sub s-center">Сон и еда — одни сутки</p>
       <section className="s-card">
-        <h2 className="s-h2">Сначала поставь на экран «Домой»</h2>
+        <h2 className="s-h2">Поставь на экран «Домой»</h2>
         <ol className="s-steps">
-          <li><span>⬆</span>Нажми «Поделиться» внизу Safari</li>
+          <li><span>⬆</span>Нажми «Поделиться» в Safari</li>
           <li><span>＋</span>Выбери «На экран „Домой“»</li>
-          <li><span>✓</span>«Добавить» — и открывай с иконки</li>
+          <li><span>✓</span>Нажми «Добавить»</li>
         </ol>
-        <p className="s-muted">Так приложение откроется на весь экран, а Safari не сотрёт твои данные.</p>
+        <p className="s-muted">Открывай с иконки — так Safari не сотрёт твои данные.</p>
       </section>
       <button className="s-btn s-wide" onClick={onContinue}>Продолжить в Safari</button>
       <button className="s-link s-center s-block" onClick={onRestore}>Есть копия данных? Загрузить</button>

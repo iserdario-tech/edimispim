@@ -28,6 +28,20 @@ const READINESS: Record<Readiness, { label: string; color: string }> = {
   ok: { label: "Норма", color: "var(--warn)" },
   in_debt: { label: "Недосып", color: "var(--danger)" },
 };
+/**
+ * Короткая подпись строки ленты. На iPhone шириной 375 в неё влезает около 28 знаков,
+ * а полные советы — по 50–70, и раньше каждая строка обрывалась многоточием на середине.
+ * Полная фраза и «почему» остаются в шторке по тапу.
+ */
+const SHORT: Record<WindowKind, string> = {
+  morning_light: "20–30 мин на ярком свету", caffeine_last: "позже — помешает уснуть", caffeine_boost: "чашка для бодрости",
+  nap: "10–20 мин, будильник на 20", coffee_nap: "кофе, затем 20 мин сна", afternoon_dip: "выйди на свет, подвигайся",
+  warm_shower: "10–15 мин, вода горячая", winddown: "приглуши свет, убери экраны", target_bed: "каждый день в одно время",
+};
+// у окон-замен свой смысл: нельзя поспать или нет яркого света
+const SHORT_BY_TITLE: Record<string, string> = {
+  "Вместо яркого света": "выйди на улицу или к лампе", "Вместо дневного сна": "3–5 мин с закрытыми глазами",
+};
 // "03:00 (+1)" -> "03:00 ночью" — понятнее, чем технический (+1)
 const nice = (min: number): string => fmtHM(min).replace(" (+1)", " ночью");
 
@@ -36,7 +50,7 @@ export function toPlanView(plan: DayPlan, nowMin?: number): PlanView {
     time: nice(w.startMin),
     endTime: w.endMin != null ? nice(w.endMin) : undefined,
     icon: ICONS[w.kind],
-    title: w.title, detail: w.detail, why: w.why,
+    title: w.title, detail: w.detail, short: SHORT_BY_TITLE[w.title] ?? SHORT[w.kind], why: w.why,
     past: nowMin != null ? (w.endMin ?? w.startMin) <= nowMin : undefined,
     startMin: w.startMin,
     kind: "sleep" as const,
