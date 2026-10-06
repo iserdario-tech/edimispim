@@ -243,13 +243,13 @@ export function FoodSetup({ initial, onDone, onCancel }: {
       </section>
 
       <section className="card">
-        <h3 className="card-h">8 · Как входить в режим</h3>
+        <h3 className="card-h">8 · Как начать: сразу или постепенно</h3>
         <p className="small muted">
           С первого дня есть на полном дефиците — самая частая причина бросить на первой неделе.
           Поэтому начинаем с того калоража, на котором ты и так живёшь, и спускаемся к цели
           понемногу. Первые дни еда будет привычнее и плотнее — паста, жаркое, запеканки.
         </p>
-        <div className="seg" role="group" aria-label="Как входить в режим">
+        <div className="seg" role="group" aria-label="Как начать">
           {([["gentle", "Мягко"], ["normal", "Обычно"], ["none", "Сразу"]] as const).map(([v, ru]) => (
             <button key={v} className={pace === v ? "seg-item on" : "seg-item"}
               aria-pressed={pace === v} onClick={() => setPace(v)}>{ru}</button>
