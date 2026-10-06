@@ -1,24 +1,59 @@
 import { describe, it, expect } from "vitest";
 import { planDay, parseHM } from "../src/index.js";
-import { dueWindows, checkinDue } from "../src/push.js";
+import { planPushes, mealPushes, checkinDue } from "../src/push.js";
 const profile = { anchorWakeHM:"07:00", targetSleepMin:465, chronotype:"intermediate",
   caffeine:{ typicalMgPerDose:95, regularUser:true }, napPossibleByDefault:true, goal:"alertness" } as const;
 const plan = planDay({ profile, ctx:{ date:"2026-07-10", mode:"normal", toggles:{} },
   lastNight:{ wokeHM:"07:00", quality:3 }, history:[] });
 
-describe("dueWindows", () => {
-  it("fires morning_light at 07:00 within slot", () => {
-    const due = dueWindows(plan.windows, 7*60, 5); // 07:00
-    expect(due.some(w=>w.kind==="morning_light")).toBe(true);
+const at = (kind: string) => plan.windows.find(w => w.kind === kind)!.startMin;
+const kinds = (now: number, prefs?: any) => planPushes(plan.windows, now, 5, prefs).map(p => p.kind);
+
+describe("пуши плана — заранее, а не в момент события", () => {
+  it("утренний свет — в момент подъёма", () => {
+    expect(kinds(7 * 60)).toContain("morning_light");
+    expect(kinds(9 * 60)).not.toContain("morning_light");
   });
-  it("does not fire it at 09:00", () => {
-    const due = dueWindows(plan.windows, 9*60, 5);
-    expect(due.some(w=>w.kind==="morning_light")).toBe(false);
+  it("последний кофе — за 30 минут, с временем в заголовке", () => {
+    const c = at("caffeine_last");
+    const p = planPushes(plan.windows, c - 30, 5).find(p => p.kind === "caffeine_last")!;
+    expect(p.title).toMatch(/^Последний кофе — до \d\d:\d\d$/);
+    expect(kinds(c)).not.toContain("caffeine_last");
   });
-  it("ignores non-allowlisted windows (afternoon_dip)", () => {
-    const dip = plan.windows.find(w=>w.kind==="afternoon_dip")!;
-    const due = dueWindows(plan.windows, dip.startMin % 1440, 5);
-    expect(due.some(w=>w.kind==="afternoon_dip")).toBe(false);
+  it("отбой — за час", () => {
+    const b = at("target_bed") % 1440;
+    expect(planPushes(plan.windows, b - 60, 5).find(p => p.kind === "target_bed")!.title).toBe("Через час — спать");
+    expect(kinds(b)).not.toContain("target_bed");
+  });
+  it("не шлём окна вне списка (дневная вялость)", () => {
+    expect(kinds(at("afternoon_dip") % 1440)).not.toContain("afternoon_dip");
+  });
+  it("выключенная группа не шлётся", () => {
+    expect(kinds(at("caffeine_last") - 30, { food: true, caffeine: false, sleep: true })).not.toContain("caffeine_last");
+    expect(kinds(7 * 60, { food: true, caffeine: true, sleep: false })).not.toContain("morning_light");
+  });
+});
+
+describe("пуши еды — с учётом времени готовки", () => {
+  const wake = parseHM("07:00");
+  const meal = (slot: string, hm: string, cookMin: number, extra = {}) => ({ slot, timeMin: parseHM(hm), name: "Рагу", cookMin, ...extra });
+  it("долгая готовка: время готовки + 10 минут дойти до кухни", () => {
+    const p = mealPushes([meal("dinner", "20:00", 30)], parseHM("19:20"), 5, wake);
+    expect(p).toEqual([{ kind: "meal:dinner", title: "Пора готовить ужин", body: "Рагу — 30 мин, к 20:00" }]);
+  });
+  it("быстрое блюдо — за 15 минут", () => {
+    expect(mealPushes([meal("lunch", "13:00", 10)], parseHM("12:45"), 5, wake)[0]!.title).toBe("Через 15 мин — обед");
+  });
+  it("остатки — разогреть, а не готовить", () => {
+    expect(mealPushes([meal("lunch", "13:00", 60, { leftover: true })], parseHM("12:45"), 5, wake)[0]!.body).toBe("Разогрей вчерашний ужин: Рагу");
+  });
+  it("перекусы и сладкое не беспокоим", () => {
+    expect(mealPushes([meal("snack", "16:00", 0), meal("dessert", "17:00", 0)], parseHM("15:45"), 5, wake)).toEqual([]);
+    expect(mealPushes([meal("snack", "16:00", 0), meal("dessert", "17:00", 0)], parseHM("16:45"), 5, wake)).toEqual([]);
+  });
+  it("готовка завтрака не будит раньше подъёма", () => {
+    expect(mealPushes([meal("breakfast", "07:30", 25)], parseHM("07:00"), 5, wake)[0]!.title).toBe("Пора готовить завтрак");
+    expect(mealPushes([meal("breakfast", "07:30", 25)], parseHM("06:55"), 5, wake)).toEqual([]);
   });
 });
 

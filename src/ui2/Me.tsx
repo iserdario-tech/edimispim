@@ -13,10 +13,13 @@ import { plusDaysISO } from "../today-date.js";
 import { readTheme, applyTheme, type ThemeChoice } from "../ui/theme.js";
 import { PHOTOS } from "../food/photos.js";
 import { tap } from "../ui/haptics.js";
+import { enableNotifications, readPushPrefs, writePushPrefs, syncPushContext } from "../ui/notifications.js";
+import type { PushPrefs } from "../push.js";
+import type { Profile } from "../index.js";
 import type { AppModel } from "./Shell.js";
 import type { DayModel } from "./useDay.js";
 
-type MeSheet = null | "weight" | "sleep" | "stories" | "backup" | "theme" | "about";
+type MeSheet = null | "weight" | "sleep" | "stories" | "backup" | "notif" | "theme" | "about";
 
 /** Понедельник недели даты (ISO). */
 export const mondayOf = (iso: string): string => {
@@ -78,6 +81,7 @@ export function Me({ app, day, onSettings, onStory, onRestore, onTour }: {
     ["sleep-settings", "⏰", "Настройки сна", `подъём ${state.profile.anchorWakeHM}`],
     ["food-settings", "🍽", "Настройки еды", state.food ? `${state.food.mealCount} приёма · ${state.food.household && state.food.household > 1 ? `на ${state.food.household}` : "на себя"}` : "не настроено"],
     ["backup", "⤓", "Копия данных", app.backupAt ? `последняя ${app.backupAt.split("-").reverse().slice(0, 2).join(".")}` : "ещё не делал"],
+    ["notif", "🔔", "Напоминания", notifOn() ? "заранее: еда, кофе, сон" : "выключены"],
     ["theme", "◐", "Оформление", { auto: "как в системе", light: "светлое", dark: "тёмное" }[readTheme()]],
     ["tour", "?", "Как устроено приложение", "кнопки и экраны за минуту"],
     ["about", "ℹ", "О приложении", "наука, фото, честная рамка"],
@@ -140,6 +144,7 @@ export function Me({ app, day, onSettings, onStory, onRestore, onTour }: {
         </Sheet>
       )}
       {sheet === "theme" && <ThemeSheet onClose={() => setSheet(null)} />}
+      {sheet === "notif" && <NotifSheet profile={state.profile} onClose={() => setSheet(null)} />}
       {sheet === "about" && (
         <Sheet title="О приложении" onClose={() => setSheet(null)}>
           <p>edim & spim строит день от сна: ужин за три часа до отбоя, после плохой ночи — тот же калораж, но день проще.</p>
@@ -256,6 +261,42 @@ function SleepSheet({ app, day, records, onClose }: { app: AppModel; day: DayMod
   );
 }
 
+const notifOn = () => typeof Notification !== "undefined" && Notification.permission === "granted";
+
+const NOTIF_ROWS: [keyof PushPrefs, string, string][] = [
+  ["food", "Еда", "«пора готовить» — за время готовки и ещё 10 минут"],
+  ["caffeine", "Кофе и дневной сон", "последний кофе — за 30 минут, сон — за 15"],
+  ["sleep", "Сон", "свет утром, «как спалось?», за час до отбоя"],
+];
+
+/** Напоминания приходят заранее — чтобы успеть дойти до кухни или допить кофе. */
+function NotifSheet({ profile, onClose }: { profile: Profile; onClose: () => void }) {
+  const [prefs, setPrefs] = useState(readPushPrefs);
+  const [note, setNote] = useState("");
+  const toggle = (k: keyof PushPrefs) => {
+    tap();
+    const next = { ...prefs, [k]: !prefs[k] };
+    setPrefs(next); writePushPrefs(next);
+    void syncPushContext(profile, undefined, { prefs: next });
+  };
+  return (
+    <Sheet title="Напоминания" onClose={onClose}>
+      {!notifOn() && (
+        <button className="s-btn food s-wide" onClick={async () => setNote(await enableNotifications(profile))}>Включить напоминания</button>
+      )}
+      {note && <p className="s-small">{note}</p>}
+      <div className="s-rows">
+        {NOTIF_ROWS.map(([k, title, sub]) => (
+          <div key={k} className="s-yn">
+            <span className="s-what"><b>{title}</b><span>{sub}</span></span>
+            <button className={prefs[k] ? "s-pill on" : "s-pill"} aria-pressed={prefs[k]} onClick={() => toggle(k)}>{prefs[k] ? "вкл" : "выкл"}</button>
+          </div>
+        ))}
+      </div>
+    </Sheet>
+  );
+}
+
 function ThemeSheet({ onClose }: { onClose: () => void }) {
   const [t, setT] = useState<ThemeChoice>(readTheme());
   return (
@@ -269,7 +310,7 @@ function ThemeSheet({ onClose }: { onClose: () => void }) {
           }}>{ru}</button>
         ))}
       </div>
-      <p className="s-small">В тёмном оформлении небо всегда ночное — светлый фон в темноте слепит.</p>
+      <p className="s-small">Тёмное — чистый чёрный: вечером не слепит и бережёт батарею.</p>
     </Sheet>
   );
 }
