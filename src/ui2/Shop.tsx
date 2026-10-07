@@ -11,6 +11,7 @@ import { Ico } from "./Ico.js";
 import type { WeekModel } from "./useWeek.js";
 
 const DOW = ["вс", "пн", "вт", "ср", "чт", "пт", "сб"];
+const BUNCH: Record<string, string> = { one: "пучок", few: "пучка", many: "пучков" };
 
 /**
  * «В магазине» — отдельный режим, а не карточка внизу «Еды».
@@ -48,7 +49,9 @@ export function Shop({ week, onBack }: { week: WeekModel; onBack: () => void }) 
     if (checked) next[pantryKey(l.name, l.unit)] = l.need + l.leftover; else delete next[pantryKey(l.name, l.unit)];
     week.savePantry(next);
   };
-  const qty = (l: BuyLine) => l.packs > 0 ? `${l.packs} × ${amountRU(l.packSize, l.unit)}` : amountRU(l.toBuy || l.need, l.unit);
+  const qty = (l: BuyLine) => l.packs > 0
+    ? (l.bunch ? `${l.packs} ${BUNCH[new Intl.PluralRules("ru").select(l.packs)] ?? "пучка"}` : `${l.packs} × ${amountRU(l.packSize, l.unit)}`)
+    : amountRU(l.toBuy || l.need, l.unit);
 
   return (
     <main className="s-screen">

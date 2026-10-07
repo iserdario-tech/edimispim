@@ -77,24 +77,26 @@ export function mealTimes(
   rhythm: DayRhythm, count: MealCount, lateTreat = false,
 ): Partial<Record<Slot, number>> {
   const { mains, treatCount } = SCHEMES[count];
+  // до пяти минут: «16:53» читается как расчёт робота, «16:55» — как время
+  const r5 = (m: number) => Math.round(m / 5) * 5;
   const dinner = rhythm.bedMin - DINNER_BEFORE_BED_MIN;
   const first = rhythm.wakeMin + 30;
-  const times: Partial<Record<Slot, number>> = { dinner: Math.round(dinner) };
+  const times: Partial<Record<Slot, number>> = { dinner: r5(dinner) };
 
   const hasBreakfast = mains.breakfast !== undefined;
-  if (hasBreakfast) times.breakfast = Math.round(first);
+  if (hasBreakfast) times.breakfast = r5(first);
 
   // обед — середина между первым приёмом и ужином; без завтрака сдвигается в первую треть
   const lunch = hasBreakfast ? (first + dinner) / 2 : first + (dinner - first) / 3;
-  times.lunch = Math.round(lunch);
+  times.lunch = r5(lunch);
 
   // После плохой ночи сладкое переносится на вечер: оно уже вписано в норму и работает
   // как запланированная замена срыву, а не как добавка (B1).
   if (treatCount >= 1) {
-    times.dessert = Math.round(lateTreat ? (dinner + rhythm.bedMin) / 2 : (lunch + dinner) / 2);
+    times.dessert = r5(lateTreat ? (dinner + rhythm.bedMin) / 2 : (lunch + dinner) / 2);
   }
   // второй перекус — в самый длинный оставшийся промежуток (до обеда)
-  if (treatCount >= 2) times.snack = Math.round((first + lunch) / 2);
+  if (treatCount >= 2) times.snack = r5((first + lunch) / 2);
 
   return times;
 }

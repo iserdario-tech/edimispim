@@ -19,6 +19,8 @@ export interface Pack {
   loose?: boolean;
   /** Через сколько дней остаток обычно портится. Без значения — хранится долго. */
   perishDays?: number;
+  /** Зелень продают пучком: в списке «1 пучок», а не «1 × 50 г». */
+  bunch?: true;
 }
 
 /**
@@ -95,7 +97,11 @@ const PACKS: Record<string, Pack> = {
   "пармезан": { size: 150, perishDays: 14 },
   "грецкие орехи": { size: 100 },
   "тофу": { size: 200, perishDays: 5 },
-  "зелень": { size: 50, perishDays: 4 },
+  // пучок ≈ 50 г; «укроп 6.1 г» в списке покупок читался как ошибка
+  "зелень": { size: 50, perishDays: 4, bunch: true },
+  "укроп": { size: 50, perishDays: 4, bunch: true },
+  "петрушка": { size: 50, perishDays: 4, bunch: true },
+  "кинза": { size: 50, perishDays: 4, bunch: true },
   "шпинат": { size: 200, perishDays: 4 },
   // весовое: берём ровно сколько нужно
   "банан": { size: 1, loose: true, perishDays: 5 },
@@ -135,6 +141,7 @@ export interface BuyLine {
   leftover: number;      // что останется после готовки
   loose: boolean;
   staple: boolean;
+  bunch?: true;          // упаковка — пучок
   perishDays?: number;   // через сколько дней остаток обычно портится
   /** Отдел магазина. Нужен списку покупок, чтобы не гонять человека по залу кругами. */
   category?: string;
@@ -188,6 +195,7 @@ export function planPurchase(
       packSize: pack.size, packs, buyAmount,
       leftover: Math.max(0, leftover),
       loose: !!pack.loose, staple,
+      ...(pack.bunch ? { bunch: true as const } : {}),
       ...(it.category ? { category: it.category } : {}),
       ...(pack.perishDays !== undefined ? { perishDays: pack.perishDays } : {}),
     };
