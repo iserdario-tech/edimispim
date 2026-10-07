@@ -448,6 +448,7 @@ export function generateDay(targets: Targets, pool: Recipe[], opts: DayOptions):
   swapForFiber(day, targets, pool, mains, offset, opts.roughNight || opts.familiar ? 1 : 4, opts.liked ?? [], !!opts.roughNight, opts.avoid ?? []);
   swapForProtein(day, targets, pool, mains, offset, opts.liked ?? [], !!opts.roughNight, opts.avoid ?? []);
   addProteinTopUp(day, targets);
+  fitKcal(day, targets);
   day.meals.sort((a, b) => a.timeMin - b.timeMin);
   if (opts.roughNight) day.simplified = true;
   return day;
@@ -604,7 +605,7 @@ function addProteinTopUp(day: Day, targets: Targets): void {
   if (day.totals.protein >= targets.proteinGTarget || !open.length) return;
   const m = open.reduce((a, b) =>
     b.recipe.protein_g / b.recipe.kcal > a.recipe.protein_g / a.recipe.kcal ? b : a);
-  const room = Math.max(0, targets.kcalTarget * 1.08 - day.totals.kcal);
+  const room = Math.max(0, targets.kcalTarget * KCAL_FIT - day.totals.kcal);
   const byProtein = (targets.proteinGTarget - day.totals.protein) / m.recipe.protein_g;
   const byKcal = room / m.recipe.kcal;
   // добор тоже не должен раздувать порцию: «×3.5» — это уже не порция, а добавка
@@ -612,6 +613,35 @@ function addProteinTopUp(day: Day, targets: Targets): void {
   const add = +Math.min(byProtein, byKcal, room2).toFixed(1);
   if (add > 0) {
     m.servings = +(m.servings + add).toFixed(1);
+    recomputeTotals(day);
+  }
+}
+
+/**
+ * Последний шаг дня: калории в пределах ±3% от цели.
+ *
+ * Замер на 12 неделях: в 20% дней меню перебирало цель больше чем на 5% (до +150 ккал) —
+ * округление порций, замены «ради клетчатки» (+5% к приёму) и добор белка (+8% ко дню).
+ * Для человека, который худеет на дефиците 550 ккал, такой день съедает четверть дефицита.
+ * Перебор срезаем с блюда, где меньше всего белка на калорию (белок почти не страдает),
+ * недобор добираем в самое белковое. Сладкое и вчерашние остатки не трогаем.
+ */
+const KCAL_FIT = 1.03;
+function fitKcal(day: Day, targets: Targets): void {
+  const T = targets.kcalTarget;
+  const mains = day.meals.filter(m => !m.leftover && m.slot !== "dessert" && m.slot !== "snack");
+  if (!mains.length) return;
+  const density = (m: Meal) => m.recipe.protein_g / m.recipe.kcal;
+  for (let guard = 0; guard < 40 && day.totals.kcal > T * KCAL_FIT; guard++) {
+    const m = mains.filter(x => x.servings > 0.5).sort((a, b) => density(a) - density(b))[0];
+    if (!m) break;
+    m.servings = +Math.max(0.5, m.servings - 0.1).toFixed(1);
+    recomputeTotals(day);
+  }
+  for (let guard = 0; guard < 40 && day.totals.kcal < T * (2 - KCAL_FIT); guard++) {
+    const m = mains.filter(x => x.servings < PORTION_MAX).sort((a, b) => density(b) - density(a))[0];
+    if (!m) break;
+    m.servings = +Math.min(PORTION_MAX, m.servings + 0.1).toFixed(1);
     recomputeTotals(day);
   }
 }
