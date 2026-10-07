@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import type { Slot } from "../food/types.js";
 import type { MealMark, OwnSize } from "../food/eaten.js";
 import { fmtHM } from "../time.js";
@@ -19,6 +19,7 @@ import { photoFor, photoUrl } from "../food/photos.js";
 import { backupDue, daysSince } from "../ui/dataSafety.js";
 import { readCloud } from "../ui/cloudSync.js";
 import { readLS, writeLS } from "../ui/localStore.js";
+import { enableNotifications, pushSubscribed, pushWanted, PUSH_WANTED_KEY } from "../ui/notifications.js";
 import { Ico, EmojiIco } from "./Ico.js";
 import { useExp, paceRU } from "./useExp.js";
 
@@ -88,6 +89,12 @@ export function Day({ app, day, now, onWhy, story, code }: { app: AppModel; day:
   // начиналась с утра, а «сейчас» и ужин были на полтора экрана ниже. Неотмеченный приём
   // остаётся на виду — его как раз надо отметить.
   const [showPast, setShowPast] = useState(false);
+  const [pushLost, setPushLost] = useState(false);
+  const [pushNote, setPushNote] = useState("");
+  useEffect(() => {
+    if (!pushWanted() || typeof Notification === "undefined") return;
+    void pushSubscribed().then(has => setPushLost(!has));
+  }, []);
   const isPast = (r: TimelineRow, i: number) => r.startMin < day.nowMin - 15 && i !== day.nextIdx;
   const hidden = new Set(day.rows.filter((r, i) => isPast(r, i) && !(r.kind === "food" && r.slot && !eaten?.marks[r.slot])));
   const pastCount = hidden.size + (day.logged ? 1 : 0);
@@ -174,6 +181,20 @@ export function Day({ app, day, now, onWhy, story, code }: { app: AppModel; day:
               {kcal.step < 0 ? `Убрать ${-kcal.step} ккал` : `Добавить ${kcal.step} ккал`}
             </button>
             <button className="s-btn ghost" onClick={() => { tap(); writeLS(KCAL_SKIP, day.today); setKcalSkip(day.today); }}>Позже</button>
+          </div>
+        </section>
+      )}
+
+      {/* напоминания включали, а на этом телефоне подписки нет (переустановка, новый телефон):
+          иначе приложение молча жило бы без пушей — так Сердар остался без них после переустановки */}
+      {pushLost && (
+        <section className="s-card">
+          <h2 className="s-h2">Напоминания выключены</h2>
+          <p className="s-muted">После переустановки или на новом телефоне их нужно включить заново — подписка живёт на устройстве.</p>
+          {pushNote && <p className="s-small">{pushNote}</p>}
+          <div className="s-yn-btns">
+            <button className="s-btn food" onClick={async () => { tap(); const r = await enableNotifications(state.profile); setPushNote(r); setPushLost(!(await pushSubscribed())); }}>Включить</button>
+            <button className="s-btn ghost" onClick={() => { tap(); writeLS(PUSH_WANTED_KEY, false); setPushLost(false); }}>Не нужно</button>
           </div>
         </section>
       )}

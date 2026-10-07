@@ -194,6 +194,8 @@ const EXTRA_KEYS = [
   "edimispim.shop",        // выбранный сервис доставки
   "edimispim.coach.v1",    // переписка с коучем
   "edimispim.cloud",       // код облачной копии: после восстановления из файла копии идут туда же
+  "edimispim.pushPrefs",   // какие напоминания включены
+  "edimispim.pushWanted",  // напоминания включались: на новом телефоне приложение попросит включить заново
 ] as const;
 
 export function exportAll(store: StorageLike = defaultStore()): string {
