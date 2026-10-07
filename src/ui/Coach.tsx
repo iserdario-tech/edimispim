@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { BACKEND_URL } from "./notifications.js";
 import { IconSend, IconCoachBubble } from "./Icons.js";
 import { tap } from "./haptics.js";
+import { deviceId } from "./localStore.js";
 
 interface Turn { role: "user" | "assistant"; content: string }
 
@@ -62,7 +63,7 @@ export function Coach({ contextRU }: { contextRU: string }) {
     try {
       const res = await fetch(BACKEND_URL + "/coach", {
         method: "POST", headers: { "content-type": "application/json" },
-        body: JSON.stringify({ messages: next, contextRU }),
+        body: JSON.stringify({ messages: next, contextRU, deviceId: deviceId() }),
       });
       if (!res.ok || !res.body) {
         const data = await res.json().catch(() => ({}));
