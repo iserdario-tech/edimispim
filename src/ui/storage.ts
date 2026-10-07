@@ -190,6 +190,7 @@ const EXTRA_KEYS = [
   "edimispim.pantry",      // что осталось дома
   "edimispim.shop",        // выбранный сервис доставки
   "edimispim.coach.v1",    // переписка с коучем
+  "edimispim.cloud",       // код облачной копии: после восстановления из файла копии идут туда же
 ] as const;
 
 export function exportAll(store: StorageLike = defaultStore()): string {

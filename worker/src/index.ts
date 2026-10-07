@@ -13,10 +13,10 @@ interface Env {
 
 const COACH_DAILY_LIMIT = 40; // эндпоинт публичный — без лимита любой выест бесплатную квоту ИИ за день
 // ponytail: счётчик в KV по IP; KV не строго консистентен, для потолка запросов этого хватает.
-async function overCoachLimit(env: Env, ip: string): Promise<boolean> {
-  const key = `rl:${ip}:${new Date().toISOString().slice(0, 10)}`;
+async function overLimit(env: Env, prefix: string, ip: string, limit: number): Promise<boolean> {
+  const key = `${prefix}:${ip}:${new Date().toISOString().slice(0, 10)}`;
   const used = Number((await env.SUBS.get(key)) ?? 0);
-  if (used >= COACH_DAILY_LIMIT) return true;
+  if (used >= limit) return true;
   await env.SUBS.put(key, String(used + 1), { expirationTtl: 172800 });
   return false;
 }
@@ -76,9 +76,31 @@ export default {
       return new Response("ok", { headers: CORS });
     }
 
+    /*
+     * Копия в облаке. Приложение шлёт адрес копии (SHA-256 от кода — код сюда не приходит)
+     * и данные, зашифрованные на телефоне. Здесь их не прочитать. Восстановление ограничено
+     * 20 попытками в день с адреса — подобрать чужой код через сервер нельзя.
+     */
+    if (req.method === "POST" && (url.pathname === "/backup" || url.pathname === "/restore")) {
+      const ip = req.headers.get("cf-connecting-ip") ?? "unknown";
+      const body = (await req.json().catch(() => ({}))) as { id?: unknown; data?: unknown };
+      const id = typeof body.id === "string" && /^[0-9a-f]{64}$/.test(body.id) ? body.id : null;
+      if (!id) return new Response("bad request", { status: 400, headers: CORS });
+      if (url.pathname === "/backup") {
+        const data = typeof body.data === "string" && body.data.length <= 2_000_000 && /^[A-Za-z0-9+/=]+$/.test(body.data) ? body.data : null;
+        if (!data) return new Response("bad request", { status: 400, headers: CORS });
+        if (await overLimit(env, "wb", ip, 30)) return new Response("limit", { status: 429, headers: CORS });
+        await env.SUBS.put(`bk:${id}`, data, { expirationTtl: 400 * 86400 });  // копию трогают раз в день — живёт год с запасом
+        return new Response("ok", { headers: CORS });
+      }
+      if (await overLimit(env, "rb", ip, 20)) return new Response("limit", { status: 429, headers: CORS });
+      const data = await env.SUBS.get(`bk:${id}`);
+      return data ? new Response(data, { headers: CORS }) : new Response("not found", { status: 404, headers: CORS });
+    }
+
     if (req.method === "POST" && url.pathname === "/coach") {
       const ip = req.headers.get("cf-connecting-ip") ?? "unknown";
-      if (await overCoachLimit(env, ip))
+      if (await overLimit(env, "rl", ip, COACH_DAILY_LIMIT))
         return new Response(JSON.stringify({ error: "На сегодня хватит вопросов — продолжим завтра." }), { status: 429, headers: JSON_CORS });
       const body = (await req.json()) as { messages?: CoachTurn[]; contextRU?: string };
       const messages = (body.messages ?? []).slice(-10); // держим короткий хвост: дешевле и достаточно
@@ -100,7 +122,7 @@ export default {
       const text = typeof body.text === "string" ? body.text.trim().slice(0, 300) : "";
       if (!text) return new Response(JSON.stringify({ error: "Напиши, что съел." }), { status: 400, headers: JSON_CORS });
       const ip = req.headers.get("cf-connecting-ip") ?? "unknown";
-      if (await overCoachLimit(env, ip))
+      if (await overLimit(env, "rl", ip, COACH_DAILY_LIMIT))
         return new Response(JSON.stringify({ error: "На сегодня хватит — продолжим завтра." }), { status: 429, headers: JSON_CORS });
       try {
         const est = await estimateFood(env.AI, text);

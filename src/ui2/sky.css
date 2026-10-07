@@ -383,3 +383,8 @@ html:root.v2 { --accent: var(--food); --accent-press: #E68600; --accent-ink: #ff
 /* выбранный вариант — как пилюля 2.0: чёрная в светлой теме, белая в тёмной */
 .v2 .chip.on, .v2 .rate-btn.on { background: var(--ink); border-color: transparent; color: var(--on-ink); }
 .v2 input[type="checkbox"], .v2 input[type="radio"] { accent-color: var(--ink); }
+
+/* ─── копия в облаке ─── */
+.s-code { font: 700 var(--t2)/1.3 var(--round); letter-spacing: .01em; margin: 4px 0 8px; user-select: all; -webkit-user-select: all; word-break: break-word; }
+.s-restore { display: grid; gap: 8px; margin-top: 8px; }
+.s-restore input { min-height: 48px; padding: 0 14px; border-radius: 14px; border: 1px solid var(--separator); font: 500 var(--t3) var(--text); color: var(--fg); background: var(--surface); }
