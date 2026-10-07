@@ -30,7 +30,11 @@ export interface Constraints {
   dislikes?: string[];         // свободный ввод
   /** Блюда с оценкой «палец вниз»: id рецептов, которые больше не предлагаем вовсе. */
   bannedIds?: string[];
+  /** Сладкое: «куплю готовое», «без готовки» или «готовлю сам» (по умолчанию — как было). */
+  sweets?: Sweets;
 }
+
+export type Sweets = "buy" | "nocook" | "cook";
 
 export interface Screen {
   conditions?: Condition[];
