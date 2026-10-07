@@ -155,7 +155,7 @@ function Main({ app, tab, setTab, now, glow, restoreInput, onRestore }: {
     return () => removeEventListener("hashchange", on);
   }, []);
   const [shop, setShop] = useState(false);
-  const week = useWeek(pairState);
+  const week = useWeek(pairState, app.actions.rememberMenu);
   // обмен с партнёром: при открытии и при возвращении в приложение
   useEffect(() => {
     const go = () => {

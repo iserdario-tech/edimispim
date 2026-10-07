@@ -299,7 +299,7 @@ function OtherDay({ app, iso, offset, onBack }: { app: AppModel; iso: string; of
   const fd = state.food ? todayFoodDay({
     food: state.food, today: iso, wokeHM: log?.wokeHM ?? state.profile.anchorWakeHM,
     bedMin: expectedBedMin(parseHM(state.profile.anchorWakeHM), state.profile.targetSleepMin),
-    ratings: state.ratings, swaps: state.swaps, noCookDays: state.noCookDays,
+    ratings: state.ratings, swaps: state.swaps, menu: state.menu, noCookDays: state.noCookDays,
     night: { targetSleepMin: state.profile.targetSleepMin, ...(log ? { quality: log.quality } : {}) },
   }) : null;
   const marks = state.eaten?.[iso]?.marks ?? {};
