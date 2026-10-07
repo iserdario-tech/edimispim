@@ -39,7 +39,7 @@
    * 1rem = Body, остальное — доли от него, ровно по таблице Dynamic Type.
    */
   font: -apple-system-body;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", system-ui, "Segoe UI", Roboto, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 
   /* ── шкала текста (доли от системного Body) ────────────────────── */
   --t-large-title: 2rem;      --lh-large-title: 2.412rem;    /* 34 / 41 */

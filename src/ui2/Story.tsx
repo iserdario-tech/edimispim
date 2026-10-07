@@ -60,12 +60,12 @@ async function shareSlide(s: Slide, label: string): Promise<void> {
     const grad = g.createLinearGradient(0, 0, 0, c.height);
     grad.addColorStop(0, "#0A1522"); grad.addColorStop(0.45, "#1D3A5C"); grad.addColorStop(0.8, "#38618C"); grad.addColorStop(1, "#35A7FF");
     g.fillStyle = grad; g.fillRect(0, 0, c.width, c.height);
-    g.fillStyle = "rgba(255,255,255,.75)"; g.font = "500 44px -apple-system, system-ui, sans-serif"; g.fillText(label, 80, 140);
-    g.fillStyle = "#FFFFFF"; g.font = "600 64px -apple-system, system-ui, sans-serif"; g.fillText(s.title, 80, 360);
-    g.font = "700 150px -apple-system, system-ui, sans-serif"; g.fillText(s.big, 80, 540);
-    g.font = "400 46px -apple-system, system-ui, sans-serif";
+    g.fillStyle = "rgba(255,255,255,.75)"; g.font = "500 44px 'Helvetica Neue', Helvetica, Arial, sans-serif"; g.fillText(label, 80, 140);
+    g.fillStyle = "#FFFFFF"; g.font = "600 64px 'Helvetica Neue', Helvetica, Arial, sans-serif"; g.fillText(s.title, 80, 360);
+    g.font = "700 150px 'Helvetica Neue', Helvetica, Arial, sans-serif"; g.fillText(s.big, 80, 540);
+    g.font = "400 46px 'Helvetica Neue', Helvetica, Arial, sans-serif";
     wrap(g, s.sub, 80, 640, 920, 60);
-    g.font = "500 40px -apple-system, system-ui, sans-serif"; g.fillText("edim & spim", 80, 1270);
+    g.font = "500 40px 'Helvetica Neue', Helvetica, Arial, sans-serif"; g.fillText("edim & spim", 80, 1270);
     const blob: Blob | null = await new Promise(res => c.toBlob(res, "image/png"));
     const file = blob ? new File([blob], "edim-spim-week.png", { type: "image/png" }) : null;
     if (file && navigator.canShare?.({ files: [file] })) { await navigator.share({ files: [file], title: label }); return; }
