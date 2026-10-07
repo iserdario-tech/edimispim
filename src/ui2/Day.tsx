@@ -107,10 +107,11 @@ export function Day({ app, day, now, onWhy, story, code }: { app: AppModel; day:
       </div>
       <div className="s-head">
         <h1 className="s-title">{day.word.word}</h1>
-        <button className="s-i" aria-label="Почему так" onClick={onWhy}>i</button>
       </div>
       {day.word.sub && <p className="s-sub">{day.word.sub}</p>}
       {day.word.phase !== "morning" || day.logged ? <p className="s-next">{nextLine}</p> : null}
+      {/* было «i» у заголовка — непонятно, что это; внутри ещё и переключатели дня */}
+      <button className="s-why-chip" onClick={onWhy}><Ico name="question-circle" /> Почему день такой</button>
 
       {story && (
         <button className="s-story-card" onClick={() => { tap(); story.open(); }}>
@@ -196,18 +197,25 @@ export function Day({ app, day, now, onWhy, story, code }: { app: AppModel; day:
                 <SwipeRow enabled={!!isFood} leftLabel="съел ✓" rightLabel="своё"
                   onLeft={() => r.slot && m !== "ate" && mark(r.slot, "ate")}
                   onRight={() => r.slot && m !== "own" && mark(r.slot, "own")}>
+                  <div className="s-row-line">
                   <button className="s-row-btn" onClick={() => (isFood ? setRecipe(r.meal!) : setInfo(r))}>
                     {/* «00:00 ночью»: «ночью» мелко под временем, а не второй крупной строкой */}
                     <span className="s-time">{r.time.replace(" ночью", "")}{r.time.endsWith(" ночью") && <small>ночью</small>}</span>
                     <span className={"s-plate" + (isFood ? "" : " sleep") + (i === day.nextIdx ? " big" : "")}>
                       {isFood && r.photo ? <img src={r.photo} alt="" loading="lazy" decoding="async" /> : <EmojiIco e={r.icon} className="ico-plate" />}
-                      {m === "ate" && <i className="s-done"><Ico name="check" mono /></i>}
                     </span>
                     <span className="s-what">
                       <b>{r.title}</b>
                       <span>{detail}</span>
                     </span>
                   </button>
+                  {/* «съел» — видимым кружком, как в покупках: свайп знает только тот, кто прошёл тур */}
+                  {isFood && r.slot && (
+                    <button className={"s-check" + (m === "ate" ? " on" : "")} aria-pressed={m === "ate"}
+                      aria-label={m === "ate" ? `Убрать отметку: ${r.title}` : `Съел: ${r.title}`}
+                      onClick={() => mark(r.slot!, "ate")}>{m === "ate" ? <Ico name="check" mono /> : null}</button>
+                  )}
+                  </div>
                 </SwipeRow>
                 {isFood && m === "own" && r.slot && (
                   <div className="s-own">

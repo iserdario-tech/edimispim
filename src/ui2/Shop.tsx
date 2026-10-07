@@ -56,7 +56,7 @@ export function Shop({ week, onBack }: { week: WeekModel; onBack: () => void }) 
       <h1 className="s-title">Покупки</h1>
       <div className="s-seg">
         <button className={view === "buy" ? "on" : ""} onClick={() => setView("buy")}>Купить</button>
-        <button className={view === "home" ? "on" : ""} onClick={() => setView("home")}>Дома есть</button>
+        <button className={view === "home" ? "on" : ""} onClick={() => setView("home")}>Что есть дома</button>
       </div>
 
       {view === "home" ? <div className="s-legacy"><Fridge pantry={week.pantry} onPantry={week.savePantry} pool={plan.pool} /></div> : (

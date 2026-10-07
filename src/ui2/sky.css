@@ -140,11 +140,19 @@ html.v2 body { background: none; }  /* иначе фон body ложится п�
   font-size: var(--t4); color: var(--ink);
 }
 .s-tab.on { background: var(--fill-soft); font-weight: 600; }
-/* «?» — в той же панели, но кругом: это не раздел, а вопрос коучу */
+/* «Спросить» — в той же панели, но отдельной плашкой: это не раздел, а вопрос коучу */
 .s-tab-ask {
-  flex: none; width: 50px; height: 50px; border-radius: 25px; border: 0; cursor: pointer;
-  background: var(--fill-soft); font: 700 var(--t2) var(--round); color: var(--ink);
+  flex: none; height: 50px; padding: 0 14px 0 10px; border-radius: 25px; border: 0; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--fill-soft); font: 600 var(--t4) var(--round); color: var(--ink);
 }
+.s-tab-ask .ico { width: 22px; height: 22px; }
+/* «Почему день такой» — плашка под заголовком вместо загадочной «i» */
+.s-why-chip {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; min-height: 34px; padding: 0 14px 0 10px;
+  border: 0; border-radius: 17px; background: var(--fill-soft); color: var(--ink); font: 600 var(--t5) var(--round); cursor: pointer;
+}
+.s-why-chip .ico { width: 18px; height: 18px; }
 .s-fab {
   position: fixed; right: 16px; bottom: calc(92px + var(--safe-b)); z-index: 50;
   width: 56px; height: 56px; border-radius: 28px; border: 0; cursor: pointer; display: grid; place-items: center; padding: 0;
@@ -188,7 +196,11 @@ html.v2 body { background: none; }  /* иначе фон body ложится п�
 
 .s-timeline { list-style: none; margin: 24px 0 0; padding: 0; display: grid; gap: 14px; }
 .s-row { transition: opacity .3s ease; }
-.s-row.past { opacity: .42; }
+/* бледнеет строка, а не кружок «съел»: прошедший неотмеченный приём как раз надо заметить */
+.s-row.past .s-row-btn, .s-row.past .s-own { opacity: .42; }
+.s-row-line { display: flex; align-items: center; gap: 4px; }
+.s-row-line .s-row-btn { flex: 1; min-width: 0; }
+.s-row-line .s-check { width: 28px; height: 28px; margin-left: 2px; flex: none; }
 .s-row-btn {
   width: 100%; display: grid; grid-template-columns: 54px 56px minmax(0, 1fr); align-items: center; gap: 10px;
   padding: 0; border: 0; background: none; text-align: left; cursor: pointer;
@@ -222,6 +234,11 @@ html.v2 body { background: none; }  /* иначе фон body ложится п�
 .s-own .s-pill { min-height: 32px; font-size: var(--t5); }
 .s-sheet-actions { display: flex; gap: 8px; margin-bottom: 12px; }
 .s-sheet-actions .s-btn { flex: 1; }
+.s-mt { margin-top: 16px; }
+.s-mt0 { margin-top: 4px; }
+.s-steps-text { margin: 0 0 12px; padding-left: 22px; display: grid; gap: 6px; font-size: var(--t4); color: var(--ink); }
+.s-done-note { display: flex; gap: 8px; align-items: flex-start; margin: 20px 0 0; font-size: var(--t4); color: var(--ink); }
+.s-done-note .ico { width: 22px; height: 22px; margin-top: -1px; }
 
 /* ─── шторки 2.0 ─── */
 .s-why-text { font-size: var(--t3); line-height: 1.45; margin: 0 0 8px; }
@@ -284,6 +301,7 @@ html.v2 body { background: none; }  /* иначе фон body ложится п�
 .s-week button b { font: 600 var(--t3) var(--round); }
 .s-week button.on { background: var(--food); }
 .s-week button.on span, .s-week button.on b { color: #fff; }
+.s-week button span.s-week-today { font-size: 10px; font-weight: 600; letter-spacing: -.01em; }
 .s-day-total { margin: 12px 0 0; }
 .s-meals { display: grid; gap: 0; }
 .s-meal { display: flex; align-items: center; gap: 8px; padding: 10px 12px; margin-top: 10px; }
@@ -409,6 +427,11 @@ html.v2 body { background: none; }  /* иначе фон body ложится п�
 .s-tour-chip.ok { background: #30D158; color: #000; }
 .s-tour-chip.food { background: #FF5964; color: #fff; }
 .s-tour-chip.light { background: #fff; color: #000; }
+.s-tour-chip { gap: 6px; }
+.s-tour-chip .ico { width: 18px; height: 18px; }
+.s-tour-chip.light .ico { --ico: #38618C; }
+.s-tour-check { width: 30px; height: 30px; border-radius: 15px; display: grid; place-items: center; background: #30D158; color: #fff; }
+.s-tour-check .ico { width: 18px; height: 18px; }
 .s-tour-chips, .s-tour-faces { display: flex; flex-wrap: wrap; gap: 8px; }
 .s-tour-swipe, .s-tour-pair { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .s-tour-pair > span { display: grid; justify-items: center; gap: 6px; }

@@ -33,6 +33,7 @@ import { targetsFor } from "../ui/storage.js";
 import { isIOS, isStandalone } from "../ui/dataSafety.js";
 import { unmarkedToday } from "../streak2.js";
 import { useDay } from "./useDay.js";
+import { Ico } from "./Ico.js";
 import type { StoredState } from "../ui/storage.js";
 
 export type Tab2 = "day" | "eat" | "me";
@@ -227,7 +228,8 @@ function Main({ app, tab, setTab, now, glow, restoreInput, onRestore }: {
           <button key={id} className={tab === id ? "s-tab on" : "s-tab"} aria-current={tab === id ? "page" : undefined}
             onClick={() => { tap(); setTab(id); window.scrollTo({ top: 0 }); }}>{ru}</button>
         ))}
-        <button className="s-tab-ask" aria-label="Спросить коуча" onClick={() => { tap(); setAsk(true); }}>?</button>
+        {/* было «?» — читалось как «помощь»; это вопрос коучу */}
+        <button className="s-tab-ask" aria-label="Спросить коуча" onClick={() => { tap(); setAsk(true); }}><Ico name="chat-round-dots" />Спросить</button>
       </nav>
       {/* плюс нарисован, а не буквой: у Helvetica «+» сидит ниже середины и съезжал в круге */}
       <button className="s-fab" aria-label="Добавить" onClick={() => { tap(); setPlus("any"); }}><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5v15M4.5 12h15" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" /></svg></button>
