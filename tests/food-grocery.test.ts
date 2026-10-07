@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { PRICES } from "../src/food/prices";
 import { buildGroceryList } from "../src/food/grocery";
 import type { Meal } from "../src/food/types";
 
@@ -30,8 +31,8 @@ describe("buildGroceryList", () => {
     const g = buildGroceryList(week);
     expect(g.byDay).toHaveLength(2);
     // считается по ингредиентам и их ценам за 100 г, а не по выдуманному cost_rub рецепта:
-    // куриное филе 146.4 ₽/100 г × 150 г + рис 30.2 ₽/100 г × 50 г
-    expect(g.byDay[0].estCostRub).toBe(Math.round(146.4 * 1.5) + Math.round(30.2 * 0.5));
+    // куриное филе × 150 г + рис × 50 г — по ценам из таблицы, а не по числам, снятым когда-то
+    expect(g.byDay[0].estCostRub).toBe(Math.round(PRICES["куриное филе"]! * 1.5) + Math.round(PRICES["рис"]! * 0.5));
     expect(g.estCostRub).toBe(g.byDay[0].estCostRub + g.byDay[1].estCostRub);
   });
 

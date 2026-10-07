@@ -36,8 +36,8 @@ describe("filterRecipes", () => {
       mk("d5", "Пармезан", "пармезан", 120, 43),
     ];
     const f = filterRecipes(RR, { budget: "small", cookware: ["stove"] }).map(r => r.id);
-    expect(f).toContain("d2");                       // гречка — 22 ₽ за порцию
-    expect(f).not.toContain("d5");                   // пармезан — 292 ₽ за те же граммы белка
+    expect(f).toContain("d2");                       // гречка — 9 ₽ за порцию
+    expect(f).not.toContain("d4");                   // лосось — 700 ₽ за порцию, дороже всех за грамм белка
     expect(f.length).toBeLessThan(RR.length);
   });
 
