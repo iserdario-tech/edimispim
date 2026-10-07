@@ -11,6 +11,25 @@ const PREFS_KEY = "edimispim.pushPrefs";
 export const readPushPrefs = (): PushPrefs => ({ ...ALL_PUSHES, ...readLS<Partial<PushPrefs>>(PREFS_KEY, {}) });
 export const writePushPrefs = (p: PushPrefs): void => writeLS(PREFS_KEY, p);
 
+/**
+ * Человек включал напоминания. Переезжает в копии данных: после переустановки или на новом
+ * телефоне подписки нет (она у устройства), и без этой метки приложение молча жило бы без пушей —
+ * ровно так Сердар остался без напоминаний после переустановки ради нового значка.
+ */
+export const PUSH_WANTED_KEY = "edimispim.pushWanted";
+export const pushWanted = (): boolean => readLS<boolean>(PUSH_WANTED_KEY, false);
+/** Когда сервер последний раз подтвердил подписку (ISO) — чтобы на телефоне было видно, что всё дошло. */
+const SYNC_KEY = "edimispim.pushSyncAt";
+export const readPushSyncAt = (): string | null => readLS<string | null>(SYNC_KEY, null);
+
+/** Есть ли подписка на этом устройстве. Разрешение может быть, а подписки — нет (переустановка). */
+export async function pushSubscribed(): Promise<boolean> {
+  try {
+    const reg = await navigator.serviceWorker?.getRegistration();
+    return !!(await reg?.pushManager.getSubscription());
+  } catch { return false; }
+}
+
 // Публичный VAPID-ключ (пара к приватному JWK на Worker — см. app/.vapid.json)
 const VAPID_PUBLIC = "BL2WzWdDc3_XRNF9Q7M9lJP-SHQA6WSKaMYb32kKb7gZMqf9WX1R8ZkmhTbMdApqEu7xYQEFXxa-DXuDMQBx894";
 /**
@@ -56,10 +75,11 @@ export async function syncPushContext(profile: Profile, day?: PushDay, extra: Pu
     if (!reg) return;
     const sub = await reg.pushManager.getSubscription();
     if (!sub) return; // напоминания не включены — синхронизировать нечего
-    await fetch(BACKEND_URL + "/subscribe", {
+    const res = await fetch(BACKEND_URL + "/subscribe", {
       method: "POST", headers: { "content-type": "application/json" },
       body: JSON.stringify({ subscription: sub, profile, tzOffsetMin: -new Date().getTimezoneOffset(), ...(day ? { day } : {}), ...extra }),
     });
+    if (res.ok) writeLS(SYNC_KEY, new Date().toISOString());
   } catch { /* не критично: в следующий раз досинхронизируется */ }
 }
 
@@ -86,7 +106,14 @@ export async function enableNotifications(profile: Profile, day?: PushDay): Prom
     // Разрешение от браузера ещё не значит, что подписка дошла до сервера: раньше при
     // упавшем сервере человек всё равно читал «Готово!» и ждал напоминаний, которых не будет.
     if (!res.ok) return "Разрешение выдано, но сервер напоминаний не ответил. Попробуй ещё раз чуть позже.";
-    return "Готово! Напоминания включены.";
+    writeLS(PUSH_WANTED_KEY, true);
+    writeLS(SYNC_KEY, new Date().toISOString());
+    // сервер шлёт приветствие и возвращает код ответа Apple/Google: если доставка не прошла,
+    // человек узнаёт сразу, а не через неделю тишины
+    const j = (await res.json().catch(() => null)) as { welcome?: number } | null;
+    const w = j?.welcome ?? 0;
+    if (w && (w < 200 || w >= 300)) return `Подписка сохранена, но служба уведомлений не приняла пуш (код ${w}). Попробуй выключить и включить заново; если повторится — напиши автору этот код.`;
+    return w ? "Готово! Сейчас придёт первое уведомление." : "Готово! Напоминания включены.";
   } catch {
     return "Не получилось включить напоминания. Попробуй ещё раз (на айфоне — открой приложение с иконки на «Домой»).";
   }

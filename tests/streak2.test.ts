@@ -28,9 +28,18 @@ describe("серия с заморозками", () => {
 });
 
 describe("цифра на иконке", () => {
-  const day = { meals: [{ slot: "breakfast" }, { slot: "lunch" }, { slot: "dinner" }], totals: { kcal: 0, protein: 0, fiber: 0 } } as unknown as Day;
-  it("сколько приёмов не отмечено", () => {
-    expect(unmarkedToday(day, { planned: 3, marks: { breakfast: "ate" } })).toBe(2);
-    expect(unmarkedToday(null, undefined)).toBe(0);
+  const day = {
+    meals: [{ slot: "breakfast", timeMin: 450 }, { slot: "lunch", timeMin: 825 }, { slot: "dinner", timeMin: 1200 }],
+    totals: { kcal: 0, protein: 0, fiber: 0 },
+  } as unknown as Day;
+  it("только пропущенные: время прошло, отметки нет (решение Сердара — не все неотмеченные)", () => {
+    // 15:00: завтрак отмечен, обед пропущен, ужин ещё впереди → «1», а не «2»
+    expect(unmarkedToday(day, { planned: 3, marks: { breakfast: "ate" } }, 900)).toBe(1);
+    // утром до завтрака — ничего не пропущено, цифры нет
+    expect(unmarkedToday(day, undefined, 420)).toBe(0);
+    // 15 минут после обеда — ещё не «пропущен»
+    expect(unmarkedToday(day, undefined, 835)).toBe(1);
+    expect(unmarkedToday(day, undefined, 845)).toBe(2);
+    expect(unmarkedToday(null, undefined, 900)).toBe(0);
   });
 });

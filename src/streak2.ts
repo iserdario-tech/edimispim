@@ -40,6 +40,10 @@ export function streakWithFreezes(
   return count;
 }
 
-/** Цифра на иконке приложения: сколько приёмов сегодня ещё не отмечено. */
-export const unmarkedToday = (day: Day | null, eaten: DayEaten | undefined): number =>
-  day ? day.meals.filter(m => !eaten?.marks[m.slot]).length : 0;
+/**
+ * Цифра на иконке приложения: сколько приёмов сегодня ПРОПУЩЕНО — время прошло, отметки нет.
+ * Будущие не считаем: утром «4» читалось как четыре непонятных уведомления (решение Сердара, 2026-10-07).
+ * Запас 15 минут — тот же, что у «прошедшей» строки в ленте.
+ */
+export const unmarkedToday = (day: Day | null, eaten: DayEaten | undefined, nowMin: number): number =>
+  day ? day.meals.filter(m => m.timeMin < nowMin - 15 && !eaten?.marks[m.slot]).length : 0;
