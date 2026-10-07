@@ -9,6 +9,7 @@ interface Env {
   SUBS: KVNamespace;
   VAPID_PRIVATE: string;  // приватный VAPID-ключ (JWK-строка), секрет
   AI: Ai;                 // бесплатная ИИ Cloudflare для коуча (биндинг из wrangler.toml)
+  COACH_LIMIT?: string;   // только для локальной проверки коуча (`wrangler dev --var COACH_LIMIT:1000`); на сервере не задан
 }
 
 const COACH_DAILY_LIMIT = 40; // эндпоинт публичный — без лимита любой выест бесплатную квоту ИИ за день
@@ -123,7 +124,7 @@ export default {
 
     if (req.method === "POST" && url.pathname === "/coach") {
       const ip = req.headers.get("cf-connecting-ip") ?? "unknown";
-      if (await overLimit(env, "rl", ip, COACH_DAILY_LIMIT))
+      if (await overLimit(env, "rl", ip, Number(env.COACH_LIMIT ?? COACH_DAILY_LIMIT)))
         return new Response(JSON.stringify({ error: "На сегодня хватит вопросов — продолжим завтра." }), { status: 429, headers: JSON_CORS });
       const body = (await req.json()) as { messages?: CoachTurn[]; contextRU?: string };
       const messages = (body.messages ?? []).slice(-10); // держим короткий хвост: дешевле и достаточно
@@ -145,7 +146,7 @@ export default {
       const text = typeof body.text === "string" ? body.text.trim().slice(0, 300) : "";
       if (!text) return new Response(JSON.stringify({ error: "Напиши, что съел." }), { status: 400, headers: JSON_CORS });
       const ip = req.headers.get("cf-connecting-ip") ?? "unknown";
-      if (await overLimit(env, "rl", ip, COACH_DAILY_LIMIT))
+      if (await overLimit(env, "rl", ip, Number(env.COACH_LIMIT ?? COACH_DAILY_LIMIT)))
         return new Response(JSON.stringify({ error: "На сегодня хватит — продолжим завтра." }), { status: 429, headers: JSON_CORS });
       try {
         const est = await estimateFood(env.AI, text);
