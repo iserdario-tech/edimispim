@@ -1,5 +1,5 @@
 import { KNOWLEDGE } from "./knowledge.js";
-import { groqStream, type ChatMsg } from "./llm.js";
+import { groqStream, GroqError, GROQ_MODELS, type ChatMsg } from "./llm.js";
 
 // Бесплатная модель Cloudflare Workers AI — запасной провайдер (первый — Groq, см. llm.ts).
 // Хорошо тянет русский; квоту не превысить в деньги (на free-плане при исчерпании — просто ошибка).
@@ -84,17 +84,29 @@ export async function coachStream(args: {
 по-русски, на «ты», без ** и ###.`;
   const system = `${SYSTEM_RULES}\n\nСЕЙЧАС У ЧЕЛОВЕКА ТАК:\n${args.contextRU}\n\n${REMINDER}`;
   const messages: ChatMsg[] = [{ role: "system", content: system }, ...args.messages];
-  // Groq первым (лимит больше), Cloudflare — запасной: «недоступен» только когда легли оба
+  // Groq первым — три модели по очереди, у каждой свой минутный лимит; Cloudflare — запасной.
+  // «Недоступен» человек видит только когда легли все; «подожди минуту» — когда все упёрлись в лимит.
+  let busy = false;
   if (args.groqKey) {
-    try { const s = await groqStream(args.groqKey, messages, 1500, 0.4); console.log("coach via groq"); return s; }
-    catch (e) { console.log("groq failed, fallback to cloudflare:", String(e).slice(0, 200)); }
+    for (const model of GROQ_MODELS) {
+      try { const s = await groqStream(args.groqKey, model, messages, 1500, 0.4); console.log("coach via groq", model); return s; }
+      catch (e) { busy = e instanceof GroqError && e.status === 429; console.log("groq failed", model, String(e).slice(0, 160)); }
+    }
   }
-  console.log("coach via cloudflare");
-  return (await args.ai.run(MODEL as keyof AiModels, {
-    messages,
-    // Потолок — не рамка, а страховка от бесконечного ответа: длину задаёт вопрос (см. промпт).
-    max_tokens: 1500,
-    temperature: 0.4, // ниже — меньше выдумок, держится базы
-    stream: true,
-  } as any)) as unknown as ReadableStream;
+  try {
+    console.log("coach via cloudflare");
+    return (await args.ai.run(MODEL as keyof AiModels, {
+      messages,
+      // Потолок — не рамка, а страховка от бесконечного ответа: длину задаёт вопрос (см. промпт).
+      max_tokens: 1500,
+      temperature: 0.4, // ниже — меньше выдумок, держится базы
+      stream: true,
+    } as any)) as unknown as ReadableStream;
+  } catch (e) {
+    if (busy) throw new CoachBusy();
+    throw e;
+  }
 }
+
+/** Все провайдеры упёрлись в минутный лимит: это «подожди», а не «сломалось». */
+export class CoachBusy extends Error { constructor() { super("busy"); } }
