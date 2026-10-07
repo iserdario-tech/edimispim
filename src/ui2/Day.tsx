@@ -18,6 +18,8 @@ import { plusDaysISO } from "../today-date.js";
 import { photoFor, photoUrl } from "../food/photos.js";
 import { backupDue, daysSince } from "../ui/dataSafety.js";
 import { readCloud } from "../ui/cloudSync.js";
+import { readLS, writeLS } from "../ui/localStore.js";
+import { useExp, paceRU } from "./useExp.js";
 
 const FACES = [[1, "😩", "плохо"], [2, "😕", "так себе"], [3, "🙂", "норм"], [4, "😊", "хорошо"], [5, "😴", "отлично"]] as const;
 const YESTERDAY: [keyof Yesterday, string][] = [["lateDinner", "Ужин позже 21:00"], ["lateCaffeine", "Кофе после 14:00"], ["alcohol", "Алкоголь"]];
@@ -38,9 +40,16 @@ const SLOT_RU: Record<string, string> = { breakfast: "Завтрак", lunch: "�
  * строки — в шторке по тапу. Строка ленты — время, тарелка или значок, название и одна
  * строка подробностей. До первого действия — не больше сорока слов (критерий спеки).
  */
+const KCAL_SKIP = "edimispim.kcalSkip";
+
 export function Day({ app, day, now, onWhy, story, code }: { app: AppModel; day: DayModel; now: Date; onWhy: () => void; story?: { label: string; open: () => void }; code?: { code: string; onNoted: () => void } }) {
   const state = app.state!;
   const a = app.actions;
+  // вес идёт не по плану — предлагаем поправку сами, а не ждём, что человек найдёт её в «Я»
+  const exp = useExp(state, day.today);
+  const [kcalSkip, setKcalSkip] = useState(() => readLS<string | null>(KCAL_SKIP, null));
+  const kcal = exp?.r.status === "ready" && exp.r.step !== 0 && exp.r.nextChangeInDays === 0
+    && (!kcalSkip || daysSince(kcalSkip, day.today) >= 7) ? exp.r : null;
   const [recipe, setRecipe] = useState<NonNullable<TimelineRow["meal"]> | null>(null);
   const [info, setInfo] = useState<TimelineRow | null>(null);
   const [writing, setWriting] = useState<Slot | null>(null);
@@ -135,6 +144,22 @@ export function Day({ app, day, now, onWhy, story, code }: { app: AppModel; day:
               </span>
             </div>
           ))}
+        </section>
+      )}
+
+      {kcal && (
+        <section className="s-card">
+          <h2 className="s-h2">{kcal.step > 0 ? "Вес уходит быстро" : kcal.lossPerWeek < -0.05 ? "Вес растёт" : kcal.lossPerWeek < 0.05 ? "Вес стоит" : "Вес уходит медленно"}</h2>
+          <p className="s-muted">
+            Последние недели вес {paceRU(kcal.lossPerWeek)} в неделю. План — минус {exp!.tempo.toLocaleString("ru-RU")}.
+            {kcal.step > 0 ? " Так быстро вместе с жиром уходят мышцы." : ` По твоим записям ты тратишь ≈${kcal.tdee} ккал в день.`}
+          </p>
+          <div className="s-yn-btns">
+            <button className="s-btn food" onClick={() => { tap(); a.adjustKcal(kcal.step); }}>
+              {kcal.step < 0 ? `Убрать ${-kcal.step} ккал` : `Добавить ${kcal.step} ккал`}
+            </button>
+            <button className="s-btn ghost" onClick={() => { tap(); writeLS(KCAL_SKIP, day.today); setKcalSkip(day.today); }}>Позже</button>
+          </div>
         </section>
       )}
 
