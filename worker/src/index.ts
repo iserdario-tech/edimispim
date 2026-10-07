@@ -9,10 +9,11 @@ interface Env {
   SUBS: KVNamespace;
   VAPID_PRIVATE: string;  // приватный VAPID-ключ (JWK-строка), секрет
   AI: Ai;                 // бесплатная ИИ Cloudflare для коуча (биндинг из wrangler.toml)
+  GROQ_API_KEY?: string;  // второй провайдер (секрет `wrangler secret put GROQ_API_KEY`); без него — только Cloudflare
   COACH_LIMIT?: string;   // только для локальной проверки коуча (`wrangler dev --var COACH_LIMIT:1000`); на сервере не задан
 }
 
-const COACH_DAILY_LIMIT = 40; // эндпоинт публичный — без лимита любой выест бесплатную квоту ИИ за день
+const COACH_DAILY_LIMIT = 60; // эндпоинт публичный — без лимита любой выест бесплатную квоту ИИ за день
 // ponytail: счётчик в KV по IP; KV не строго консистентен, для потолка запросов этого хватает.
 async function overLimit(env: Env, prefix: string, ip: string, limit: number): Promise<boolean> {
   const key = `${prefix}:${ip}:${new Date().toISOString().slice(0, 10)}`;
@@ -136,7 +137,7 @@ export default {
       if (!messages.length || messages.some((m) => !m.content?.trim()))
         return new Response(JSON.stringify({ error: "bad request" }), { status: 400, headers: JSON_CORS });
       try {
-        const stream = await coachStream({ ai: env.AI, messages, contextRU: body.contextRU ?? "Ничего не известно." });
+        const stream = await coachStream({ ai: env.AI, ...(env.GROQ_API_KEY ? { groqKey: env.GROQ_API_KEY } : {}), messages, contextRU: body.contextRU ?? "Ничего не известно." });
         return new Response(stream, { headers: { ...CORS, "content-type": "text/event-stream" } });
       } catch (e) {
         console.error("coach error", String((e as any)?.message ?? e));
@@ -154,7 +155,7 @@ export default {
       if (await overLimit(env, "rl", ip, Number(env.COACH_LIMIT ?? COACH_DAILY_LIMIT)))
         return new Response(JSON.stringify({ error: "На сегодня хватит — продолжим завтра." }), { status: 429, headers: JSON_CORS });
       try {
-        const est = await estimateFood(env.AI, text);
+        const est = await estimateFood(env.AI, text, env.GROQ_API_KEY);
         if (!est) return new Response(JSON.stringify({ error: "Не понял, что это за еда. Попробуй написать иначе." }), { status: 422, headers: JSON_CORS });
         return new Response(JSON.stringify(est), { headers: JSON_CORS });
       } catch (e) {

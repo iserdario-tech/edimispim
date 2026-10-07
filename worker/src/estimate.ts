@@ -5,6 +5,8 @@
  * вне плана, не попадало никуда. Точность здесь грубая — модель прикидывает по типичным
  * порциям, ±30% это норма, — поэтому приложение везде показывает результат со знаком «≈».
  */
+import { groqText } from "./llm.js";
+
 const MODEL = "@cf/meta/llama-4-scout-17b-16e-instruct";
 
 const PROMPT = `Ты считаешь калории еды по описанию на русском. Человек пишет, что съел.
@@ -36,9 +38,15 @@ export function parseEstimate(raw: string): Estimate | null {
   return { kcal, protein, labelRU: ok.map(i => `${i.name} ≈ ${Math.round(i.kcal)}`).join(", ") };
 }
 
-export async function estimateFood(ai: Ai, text: string): Promise<Estimate | null> {
+export async function estimateFood(ai: Ai, text: string, groqKey?: string): Promise<Estimate | null> {
+  const messages = [{ role: "system" as const, content: PROMPT }, { role: "user" as const, content: text }];
+  // Groq первым, Cloudflare запасным — как у коуча
+  if (groqKey) {
+    try { return parseEstimate(await groqText(groqKey, messages, 300, 0.1)); }
+    catch (e) { console.log("groq estimate failed, fallback:", String(e).slice(0, 200)); }
+  }
   const res = (await ai.run(MODEL as keyof AiModels, {
-    messages: [{ role: "system", content: PROMPT }, { role: "user", content: text }],
+    messages,
     max_tokens: 300,
     temperature: 0.1,
   } as never)) as { response?: unknown; choices?: { message?: { content?: string } }[] };
