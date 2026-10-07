@@ -1,4 +1,4 @@
-import { generateDay, swapTo, type DayOptions } from "./planner";
+import { generateDay, swapTo, fitKcal, type DayOptions } from "./planner";
 import type { Day, MealCount, Recipe, Targets } from "./types";
 
 /**
@@ -41,13 +41,18 @@ export type DaySwaps = Record<string, string>;
 export function applySwaps(
   day: Day, swaps: DaySwaps | undefined, pool: Recipe[], targets: Targets, count: MealCount,
 ): void {
+  let changed = false;
   for (const [slot, id] of Object.entries(swaps ?? {})) {
     const index = day.meals.findIndex(m => m.slot === slot);
+    // то же блюдо не трогаем: замена пересчитала бы порцию, подогнанную под калории дня
+    if (index < 0 || day.meals[index]!.recipe.id === id) continue;
     const recipe = pool.find(r => r.id === id);
     // блюдо могло исчезнуть из набора (например, его скрыли «пальцем вниз») — тогда
     // остаётся то, что выбрал планировщик: это честнее, чем пустой приём
-    if (index >= 0 && recipe) swapTo(day, index, recipe, targets, count);
+    if (recipe) changed = swapTo(day, index, recipe, targets, count) || changed;
   }
+  // после замены порции снова подгоняются, чтобы день остался в ±3 % от цели
+  if (changed) fitKcal(day, targets);
 }
 
 export interface ScheduledDay {

@@ -65,9 +65,9 @@ export function useDay(state: StoredState, now: Date) {
   const noCook = !!state.noCookDays?.includes(today);
 
   const foodDay = useMemo(() => (!state.food || cheat ? null : todayFoodDay({
-    food: state.food, today, wokeHM, bedMin, ratings: state.ratings, swaps: state.swaps, noCookDays: state.noCookDays,
+    food: state.food, today, wokeHM, bedMin, ratings: state.ratings, swaps: state.swaps, menu: state.menu, noCookDays: state.noCookDays,
     night: { targetSleepMin: profile.targetSleepMin, quality, ...(sleptMin !== undefined ? { sleptMin } : {}) },
-  })), [state.food, cheat, today, wokeHM, bedMin, state.ratings, state.swaps, state.noCookDays, profile.targetSleepMin, quality, sleptMin]);
+  })), [state.food, cheat, today, wokeHM, bedMin, state.ratings, state.swaps, state.menu, state.noCookDays, profile.targetSleepMin, quality, sleptMin]);
 
   const eaten = state.eaten?.[today];
   const balanced = useMemo(() => (foodDay ? rebalance(foodDay.day, eaten) : null), [foodDay, eaten]);
@@ -83,7 +83,7 @@ export function useDay(state: StoredState, now: Date) {
       const next = state.food ? todayFoodDay({
         food: state.food, today: tomorrow, wokeHM: profile.anchorWakeHM,
         bedMin: expectedBedMin(parseHM(profile.anchorWakeHM), profile.targetSleepMin),
-        ratings: state.ratings, swaps: state.swaps, noCookDays: state.noCookDays,
+        ratings: state.ratings, swaps: state.swaps, menu: state.menu, noCookDays: state.noCookDays,
         night: { targetSleepMin: profile.targetSleepMin },
       }) : null;
       void syncPushContext(profile, {
@@ -91,7 +91,7 @@ export function useDay(state: StoredState, now: Date) {
       }, { meals: { [today]: toPush(balanced?.day.meals ?? []), [tomorrow]: toPush(next?.day.meals ?? []) } });
     }, 800);
     return () => clearTimeout(id);
-  }, [profile, today, mode, crunchEndHM, toggles, balanced, state.food, state.ratings, state.swaps, state.noCookDays]);
+  }, [profile, today, mode, crunchEndHM, toggles, balanced, state.food, state.ratings, state.swaps, state.menu, state.noCookDays]);
 
   const fact = foodDay ? eatenTotals(foodDay.day, eaten) : null;
   const dinner = foodDay?.day.meals.find(m => m.slot === "dinner");

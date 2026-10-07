@@ -13,6 +13,7 @@ import { toggleMark, markAllAte, setOwnSize, setOwnText, addExtra, removeExtra, 
 import type { Slot } from "../food/types.js";
 import { readLS, writeLS } from "./localStore.js";
 import { BACKUP_KEY } from "./dataSafety.js";
+import { remember, type MenuMemory } from "./menuMemory.js";
 
 /**
  * Данные из pospat и oheedet лежат на том же origin — подхватываем их, а не просим вводить заново.
@@ -200,6 +201,16 @@ export function useAppState() {
    * Ручная замена блюда. Хранится по дате и приёму: меню привязано к календарю,
    * поэтому замена в четверг должна остаться заменой в четверг, а не «в первом дне списка».
    */
+  /** Запомнить показанное меню новых дней — оно больше не меняется само. */
+  const rememberMenu = (key: string, days: MenuMemory["days"]) => {
+    setState((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, menu: remember(prev.menu, key, days, localDateISO()) };
+      persist(next);
+      return next;
+    });
+  };
+
   const saveSwap = (date: string, slot: string, recipeId: string) => {
     setState((prev) => {
       if (!prev) return prev;
@@ -262,7 +273,7 @@ export function useAppState() {
     state, update, saveFailed, backupAt, migrationNote,
     actions: {
       saveLog, markMeal, markAll, ownSize, ownWritten, extraAdd, extraRemove, rateDish, setCheatDay,
-      adjustKcal, markTuned, setNoCook, saveSwap, addWeight, backup, restore, setYesterday,
+      adjustKcal, markTuned, setNoCook, saveSwap, rememberMenu, addWeight, backup, restore, setYesterday,
     },
   };
 }
@@ -348,7 +359,7 @@ function todayMenuRU(state: StoredState): string[] {
       ...(log ? { quality: log.quality } : {}),
       ...(log?.bedHM ? { sleptMin: sleepDurationMin(log, p.targetSleepMin) } : {}),
     },
-    ratings: state.ratings, swaps: state.swaps, noCookDays: state.noCookDays,
+    ratings: state.ratings, swaps: state.swaps, menu: state.menu, noCookDays: state.noCookDays,
   });
   if (!fd.day.meals.length) return ["Меню на сегодня не собралось: ограничения выели все блюда."];
   const eaten = state.eaten?.[today];

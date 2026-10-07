@@ -692,7 +692,7 @@ function addProteinTopUp(day: Day, targets: Targets): void {
  * недобор добираем в самое белковое. Сладкое и вчерашние остатки не трогаем.
  */
 const KCAL_FIT = 1.03;
-function fitKcal(day: Day, targets: Targets): void {
+export function fitKcal(day: Day, targets: Targets): void {
   const T = targets.kcalTarget;
   const mains = day.meals.filter(m => !m.leftover && m.slot !== "dessert" && m.slot !== "snack");
   if (!mains.length) return;
