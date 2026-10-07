@@ -8,7 +8,11 @@
  * Лимит Groq — 8 000 токенов В МИНУТУ на каждую модель (промпт коуча ≈3 300): одна модель — это два
  * вопроса в минуту. Поэтому моделей три, по очереди: у каждой свой минутный лимит.
  */
-export interface ChatMsg { role: "system" | "user" | "assistant"; content: string }
+/** Текст или текст с картинкой (формат OpenAI, его понимают и Groq, и Cloudflare). */
+export type ContentPart = { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } };
+export interface ChatMsg { role: "system" | "user" | "assistant"; content: string | ContentPart[] }
+/** Единственная модель Groq, которая смотрит картинки; фото стоит 2 048 токенов. */
+export const VISION_MODEL = "qwen/qwen3.8-27b";
 
 const URL = "https://api.groq.com/openai/v1/chat/completions";
 /** По порядку: сильнейшая первой; остальные подхватывают, когда у первой кончился минутный лимит. */

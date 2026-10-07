@@ -183,13 +183,16 @@ export default {
     // «Напиши, что съел»: тот же дневной лимит, что у коуча — это тоже вызов модели
     if (req.method === "POST" && url.pathname === "/estimate") {
       // сначала проверяем запрос, потом тратим лимит: пустой запрос не должен съедать квоту
-      const body = (await req.json().catch(() => ({}))) as { text?: unknown; deviceId?: unknown };
+      const body = (await req.json().catch(() => ({}))) as { text?: unknown; image?: unknown; deviceId?: unknown };
       const text = typeof body.text === "string" ? body.text.trim().slice(0, 300) : "";
-      if (!text) return new Response(JSON.stringify({ error: "Напиши, что съел." }), { status: 400, headers: JSON_CORS });
+      // фото тарелки: data-URL JPEG/PNG/WebP, приложение ужимает до 768 px (≈100–200 КБ); потолок — защита от мусора
+      const image = typeof body.image === "string" && body.image.length <= 1_500_000
+        && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(body.image) ? body.image : "";
+      if (!text && !image) return new Response(JSON.stringify({ error: "Напиши, что съел, или сфотографируй." }), { status: 400, headers: JSON_CORS });
       if (await overLimit(env, "rl", whoOf(body, req), Number(env.COACH_LIMIT ?? COACH_DAILY_LIMIT)))
         return new Response(JSON.stringify({ error: "На сегодня хватит — продолжим завтра." }), { status: 429, headers: JSON_CORS });
       try {
-        const est = await estimateFood(env.AI, text, env.GROQ_API_KEY);
+        const est = await estimateFood(env.AI, text, env.GROQ_API_KEY, image || undefined);
         if (!est) return new Response(JSON.stringify({ error: "Не понял, что это за еда. Попробуй написать иначе." }), { status: 422, headers: JSON_CORS });
         return new Response(JSON.stringify(est), { headers: JSON_CORS });
       } catch (e) {
