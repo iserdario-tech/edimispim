@@ -5,12 +5,13 @@
  * Banana Cream #FFE74C, белый. Светлая тема — белый фон и голубовато-серые карточки,
  * тёмная — глубокий тёмно-синий. Еда — розово-красная, сон — балтийский синий, «готово» — зелёное.
  * Стекло — только у того, что плавает над контентом (панель вкладок, «?», «+», шторки).
- * Время суток — свечение сверху «Суток» (src/sky.ts). Пять размеров текста: 34 / 22 / 17 / 15 / 13.
+ * Время суток — свечение сверху «Суток» (src/sky.ts). Шрифт Helvetica, пять размеров: 34 / 22 / 17 / 15 / 13.
  */
 .v2 {
   --t1: 34px; --t2: 22px; --t3: 17px; --t4: 15px; --t5: 13px;
-  --round: ui-rounded, "SF Pro Rounded", -apple-system, system-ui, sans-serif;
-  --text: -apple-system, system-ui, "SF Pro Text", "Inter", sans-serif;
+  /* шрифт — Helvetica (выбор Сердара, 2026-10-07); --round оставлен именем для заголовков */
+  --round: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --text: "Helvetica Neue", Helvetica, Arial, sans-serif;
   --spring: cubic-bezier(.34, 1.56, .64, 1);
   --safe-b: env(safe-area-inset-bottom, 0px);
   color: var(--ink); font-family: var(--text); font-size: var(--t3);
@@ -57,6 +58,7 @@ html:root.v2.night {
 }
 /* :where — нулевая специфичность: общее правило не перебивает цвет конкретных кнопок */
 .v2 :where(button) { font: inherit; color: inherit; }
+.v2 :where(input, textarea, select) { font-family: var(--text); }  /* поля — тем же шрифтом, а не системным */
 
 /* фон и свечение неба. Подложка выше и ниже экрана на 120px: когда iOS оттягивает
    страницу при прокрутке или прячет панели Safari, под ней не должна открываться полоса
