@@ -48,7 +48,7 @@ export function EatSheet({ title, onClose, onSave }: {
         onChange={e => { setText(e.target.value); setResult(null); }}
         placeholder="Что съел?" aria-label="Что съел" />
       {!result && (
-        <button className="chip on" disabled={busy || !text.trim()} onClick={estimate}>
+        <button className="s-btn food" disabled={busy || !text.trim()} onClick={estimate}>
           {busy ? "Считаю…" : "Оценить"}
         </button>
       )}
@@ -58,7 +58,7 @@ export function EatSheet({ title, onClose, onSave }: {
           <b>≈ {result.kcal} ккал · белок {result.protein} г</b>
           <p className="small muted">{result.labelRU}. Это прикидка — точность около ±30%.</p>
           <div className="btn-row">
-            <button className="chip on" onClick={() => { tap(); onSave({ text: text.trim(), kcal: result.kcal, protein: result.protein }); onClose(); }}>
+            <button className="s-btn food" onClick={() => { tap(); onSave({ text: text.trim(), kcal: result.kcal, protein: result.protein }); onClose(); }}>
               Записать
             </button>
             <button className="linkbtn" onClick={() => setResult(null)}>поправить текст</button>

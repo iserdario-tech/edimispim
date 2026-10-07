@@ -374,3 +374,12 @@ html.v2 body { background: none; }  /* иначе фон body ложится п�
 .s-update button { min-height: 36px; padding: 0 16px; border: 0; border-radius: 18px; background: var(--food); color: #fff; font: 600 var(--t4) var(--round); cursor: pointer; }
 /* пока открыта шторка или настройки, плашку прячем: «Обновить» стёрло бы недописанное */
 html:has(.sheet, .s-settings) .s-update { display: none; }
+
+/* ─── формы, коуч, каталог — в той же гамме ───
+   Акцент темы (tokens.css) был индиго: в формах выбранные кнопки и «Сохранить» светились
+   фиолетовым. html:root.v2 — специфичнее :root:not([data-theme]) из tokens.css. */
+html:root.v2 { --accent: var(--food); --accent-press: #E68600; --accent-ink: #fff; --accent-dim: var(--food-ink); --accent-soft: rgba(255, 149, 0, .14); }
+.v2 a, .v2 .linkbtn { color: var(--food-ink); }
+/* выбранный вариант — как пилюля 2.0: чёрная в светлой теме, белая в тёмной */
+.v2 .chip.on, .v2 .rate-btn.on { background: var(--ink); border-color: transparent; color: var(--on-ink); }
+.v2 input[type="checkbox"], .v2 input[type="radio"] { accent-color: var(--ink); }

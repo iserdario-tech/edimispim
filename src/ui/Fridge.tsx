@@ -110,7 +110,7 @@ export function Fridge({ pantry, onPantry, pool }: {
               placeholder={`сколько, ${defaultUnit(name)}`} aria-label={`Количество, ${defaultUnit(name)}`}
               onChange={e => setQty(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter") add(); }} />
-            <button className="chip on" onClick={add} disabled={!name.trim() || !(+qty.replace(",", ".") > 0)}>
+            <button className="s-btn food" onClick={add} disabled={!name.trim() || !(+qty.replace(",", ".") > 0)}>
               Добавить
             </button>
           </div>
