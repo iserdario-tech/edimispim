@@ -45,7 +45,7 @@ describe("пуши еды — с учётом времени готовки", ()
     expect(mealPushes([meal("lunch", "13:00", 10)], parseHM("12:45"), 5, wake)[0]!.title).toBe("Через 15 мин — обед");
   });
   it("остатки — разогреть, а не готовить", () => {
-    expect(mealPushes([meal("lunch", "13:00", 60, { leftover: true })], parseHM("12:45"), 5, wake)[0]!.body).toBe("Разогрей вчерашний ужин: Рагу");
+    expect(mealPushes([meal("lunch", "13:00", 60, { leftover: true })], parseHM("12:45"), 5, wake)[0]!.body).toBe("Уже готово, разогрей: Рагу");
   });
   it("перекусы и сладкое не беспокоим", () => {
     expect(mealPushes([meal("snack", "16:00", 0), meal("dessert", "17:00", 0)], parseHM("15:45"), 5, wake)).toEqual([]);

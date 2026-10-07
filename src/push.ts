@@ -65,7 +65,7 @@ export function mealPushes(meals: PushMeal[], nowMin: number, slotMin: number, w
     if (!due(at, nowMin, slotMin)) return [];
     return [cook
       ? { kind: `meal:${m.slot}`, title: `Пора готовить ${ru}`, body: `${m.name} — ${m.cookMin} мин, к ${fmtHM(m.timeMin)}` }
-      : { kind: `meal:${m.slot}`, title: `Через ${m.timeMin - at} мин — ${ru}`, body: m.leftover ? `Разогрей вчерашний ужин: ${m.name}` : m.name }];
+      : { kind: `meal:${m.slot}`, title: `Через ${m.timeMin - at} мин — ${ru}`, body: m.leftover ? `Уже готово, разогрей: ${m.name}` : m.name }];
   });
 }
 

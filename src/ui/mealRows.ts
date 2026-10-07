@@ -63,8 +63,8 @@ export function mealRows(day: Day, bedMin: number, nowMin: number): TimelineRow[
     const kcal = Math.round(m.recipe.kcal * m.servings);
     const protein = Math.round(m.recipe.protein_g * m.servings);
     const portion = m.servings === 1 ? "" : ` · порция ×${m.servings}`;
-    // остатки вчерашнего ужина: время готовки тут неправда — готовить не надо
-    const time = m.leftover ? " · остатки вчерашнего ужина" : m.recipe.time_min ? ` · ${m.recipe.time_min} мин` : "";
+    // из кастрюли дня готовки: время готовки тут неправда — только разогреть
+    const time = m.leftover ? " · уже готово, разогреть" : m.recipe.time_min ? ` · ${m.recipe.time_min} мин` : "";
     return {
       time: fmtHM(m.timeMin),
       icon: ICON[m.slot] ?? "🍴",

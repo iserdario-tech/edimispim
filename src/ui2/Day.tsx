@@ -235,7 +235,7 @@ export function Day({ app, day, now, onWhy, story, code }: { app: AppModel; day:
           const m = r.slot ? eaten?.marks[r.slot] : undefined;
           const past = isPast(r, i);
           const detail = isFood
-            ? (m === "ate" ? "съел" : m === "own" ? "своё" : r.meal!.leftover ? "остатки вчерашнего ужина"
+            ? (m === "ate" ? "съел" : m === "own" ? "своё" : r.meal!.leftover ? "уже готово, разогреть"
               : `${Math.round(r.meal!.recipe.kcal * r.meal!.servings)} ккал${r.meal!.recipe.time_min ? ` · ${r.meal!.recipe.time_min} мин` : ""}`)
             : r.short ?? r.detail;
           return (
@@ -366,10 +366,11 @@ function OtherDay({ app, iso, offset, onBack }: { app: AppModel; iso: string; of
   const d = new Date(iso + "T12:00:00");
   return (
     <main className="s-screen">
+      {/* слева — назад по времени, справа — вперёд: со «вчера» в сегодня ведёт правая кнопка */}
       <div className="s-date-row">
-        <button className="s-nav-day" onClick={onBack}>‹ сегодня</button>
+        {offset < 0 ? <span /> : <button className="s-nav-day" onClick={onBack}>‹ сегодня</button>}
         <span className="s-date">{d.toLocaleDateString("ru-RU", { weekday: "long", day: "numeric", month: "long" })}</span>
-        <span />
+        {offset < 0 ? <button className="s-nav-day" onClick={onBack}>сегодня ›</button> : <span />}
       </div>
       <h1 className="s-title">{offset < 0 ? "Вчера" : "Завтра"}</h1>
       <p className="s-sub">
@@ -385,7 +386,7 @@ function OtherDay({ app, iso, offset, onBack }: { app: AppModel; iso: string; of
               <span className="s-plate"><img src={photoUrl(photoFor(m.recipe))} alt="" loading="lazy" decoding="async" />
                 {marks[m.slot] === "ate" && <i className="s-done"><Ico name="check" mono /></i>}</span>
               <span className="s-what"><b>{m.recipe.name}</b>
-                <span>{marks[m.slot] === "own" ? "ел своё" : `${Math.round(m.recipe.kcal * m.servings)} ккал${m.leftover ? " · остатки ужина" : ""}`}</span></span>
+                <span>{marks[m.slot] === "own" ? "ел своё" : `${Math.round(m.recipe.kcal * m.servings)} ккал${m.leftover ? " · уже готово" : ""}`}</span></span>
             </button>
           </li>
         ))}

@@ -39,6 +39,10 @@ export async function idOf(code: string, ns = "edimispim-id:"): Promise<string> 
   return hex(await crypto.subtle.digest("SHA-256", enc.encode(ns + normCode(code))));
 }
 
+/** Отпечаток текста — чтобы не слать копию, которая не изменилась. */
+export const fingerprint = async (text: string): Promise<string> =>
+  hex(await crypto.subtle.digest("SHA-256", enc.encode(text)));
+
 // ponytail: соль постоянная — код и так уникален на человека; 300 тыс. итераций ≈ полсекунды на iPhone
 async function keyOf(code: string): Promise<CryptoKey> {
   const base = await crypto.subtle.importKey("raw", enc.encode(normCode(code)), "PBKDF2", false, ["deriveKey"]);

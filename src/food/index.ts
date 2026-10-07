@@ -15,7 +15,7 @@ export {
 } from "./rampin";
 export {
   planBlock, planWindow, scheduleFor, applySwaps, dayNumber, isoOfDay,
-  type ScheduledDay, type DaySwaps,
+  type ScheduledDay, type DaySwaps, type DayOpts, type Finalize,
 } from "./schedule";
 export { buildGroceryList, scaleGrocery } from "./grocery";
 export type * from "./types";

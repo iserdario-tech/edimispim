@@ -548,3 +548,6 @@ input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.08); }
 .eat-result { margin-top: var(--sp-2); padding: var(--sp-3) var(--sp-4); border-radius: var(--r-control); background: var(--surface); }
 .eat-result b { font-size: var(--t-title3); }
 .eat-result p { margin: var(--sp-1) 0 0; }
+/* «С этикетки»: четыре числа в две колонки, чтобы форма влезала на экран без прокрутки */
+.eat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 var(--sp-3); }
+.eat-grid .fld { margin: var(--sp-2) 0; }

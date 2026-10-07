@@ -16,7 +16,7 @@ export function Install({ onContinue, onRestore }: { onContinue: () => void; onR
         <h2 className="s-h2">Поставь на экран «Домой»</h2>
         <ol className="s-steps">
           <li><span><Ico name="upload-square" /></span>Нажми «Поделиться» в Safari</li>
-          <li><span><Ico name="add-circle" /></span>Выбери «На экран „Домой“»</li>
+          <li><span><Ico name="add-circle" /></span>Выбери «На экран Домой»</li>
           <li><span><Ico name="check-circle" /></span>Нажми «Добавить»</li>
         </ol>
         <p className="s-muted">Открывай с иконки — так Safari не сотрёт твои данные.</p>

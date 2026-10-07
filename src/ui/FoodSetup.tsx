@@ -3,6 +3,7 @@ import type { FoodSettings } from "./storage.js";
 import type { Activity, Budget, MealCount, Sex, Sweets } from "../food/types.js";
 import { DEFAULT_PACE, PACES_RU, PACE_SPAN_RU, type RampPace } from "../food/rampin.js";
 import { localDateISO } from "../today-date.js";
+import { cookDaysOf } from "./dayOpts.js";
 import { JunctionScreening, junctionFrom, junctionResult, type JunctionValue } from "./JunctionScreening.js";
 
 const COOKWARE = [
@@ -90,7 +91,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
   const [pace, setPace] = useState<RampPace>(initial?.pace ?? DEFAULT_PACE);
   const [cookWeekday, setCookWeekday] = useState<number | undefined>(initial?.cookMin?.weekday);
   const [cookWeekend, setCookWeekend] = useState<number | undefined>(initial?.cookMin?.weekend);
-  const [leftovers, setLeftovers] = useState(!!initial?.leftovers);
+  const [cookDays, setCookDays] = useState<number>(initial ? cookDaysOf(initial) : 1);
   const [sweets, setSweets] = useState<Sweets>(initial?.constraints.sweets ?? "cook");
   const [household, setHousehold] = useState(initial?.household ?? 1);
   const [strength, setStrength] = useState(!!initial?.strength);
@@ -200,11 +201,18 @@ export function FoodSetup({ initial, onDone, onCancel }: {
             </div>
           </div>
         ))}
-        <label className="chk">
-          <input type="checkbox" checked={leftovers} onChange={e => setLeftovers(e.target.checked)} />
-          Готовлю ужин на два дня — обед назавтра из остатков
-        </label>
-        <p className="small muted">Час готовки в день превращается в час через день, и половина покупок совпадает.</p>
+        <div className="day-group">
+          <div className="day-group-label small muted">Готовлю сразу на</div>
+          <div className="seg" role="group" aria-label="На сколько дней готовить">
+            {([[1, "1 день"], [2, "2 дня"], [3, "3 дня"]] as const).map(([n, label]) => (
+              <button key={n} className={cookDays === n ? "seg-item on" : "seg-item"}
+                aria-pressed={cookDays === n} onClick={() => setCookDays(n)}>{label}</button>
+            ))}
+          </div>
+        </div>
+        <p className="small muted">
+          {cookDays === 1 ? "Обед и ужин каждый день новые." : `Обед и ужин готовятся раз в ${cookDays === 2 ? "два дня" : "три дня"}, в остальные дни их только разогреть. Продукты в покупках сразу на все дни.`}
+        </p>
         <div className="day-group">
           <div className="day-group-label small muted">Готовлю на</div>
           <div className="seg" role="group" aria-label="На сколько человек готовить">
@@ -334,7 +342,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
           ...(cookWeekday !== undefined || cookWeekend !== undefined
             ? { cookMin: { ...(cookWeekday !== undefined ? { weekday: cookWeekday } : {}), ...(cookWeekend !== undefined ? { weekend: cookWeekend } : {}) } }
             : {}),
-          ...(leftovers ? { leftovers: true } : {}),
+          ...(cookDays > 1 ? { cookDays: cookDays as 2 | 3 } : {}),
           ...(household > 1 ? { household } : {}),
           ...(strength ? { strength: true } : {}),
           // полные настройки открыты — карточка «донастрой» больше не нужна
