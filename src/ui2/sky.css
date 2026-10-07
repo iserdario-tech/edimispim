@@ -29,6 +29,7 @@ html:root.v2 {
   --ink: #10233A; --ink2: #5A6B80; --on-ink: #FFFFFF; --line: rgba(56, 97, 140, .18);
   --food: #FF5964; --food-ink: #D93A47; --food-soft: rgba(255, 89, 100, .14);
   --sleep: #38618C; --sleep-ink: #38618C; --sleep-soft: rgba(56, 97, 140, .14); --ok: #2FB36A;
+  --ico: #38618C; --ico2: #FF5964;   /* значки: основной тон и второй (Solar duotone) */
   --glass: rgba(255, 255, 255, .78); --shadow: 0 4px 18px rgba(16, 35, 58, .10);
   --sheet-glass: rgba(255, 255, 255, .95);
   /* имена tokens.css */
@@ -46,6 +47,7 @@ html:root.v2.night {
   --ink: #F3F7FB; --ink2: #9AAEC3; --on-ink: #0A1522; --line: rgba(157, 176, 196, .24);
   --food: #FF5964; --food-ink: #FF7A83; --food-soft: rgba(255, 89, 100, .18);
   --sleep: #5C8CC2; --sleep-ink: #86ABD6; --sleep-soft: rgba(92, 140, 194, .20); --ok: #30D158;
+  --ico: #86ABD6; --ico2: #FF7A83;
   --glass: rgba(19, 37, 56, .72); --shadow: 0 4px 18px rgba(0, 0, 0, .5);
   --sheet-glass: rgba(19, 37, 56, .95);
   --surface: var(--card); --surface-2: #1A2F47; --fg: var(--ink);
@@ -56,6 +58,31 @@ html:root.v2.night {
   --shadow-1: 0 1px 2px rgba(0, 0, 0, .5), 0 8px 24px rgba(0, 0, 0, .45);
   --shadow-2: 0 2px 8px rgba(0, 0, 0, .6), 0 20px 44px rgba(0, 0, 0, .55);
 }
+/* значки Solar: основной тон синий, второй (слой с opacity) — розовый; служебные — одним цветом */
+.ico { width: 1.25em; height: 1.25em; flex: none; color: var(--ico); vertical-align: -0.2em; }
+.ico [opacity] { fill: var(--ico2); opacity: 1; }
+.ico.mono { color: currentColor; }
+.ico.mono [opacity] { fill: currentColor; opacity: .45; }
+/* размеры по месту */
+.ico-plate { width: 26px; height: 26px; }
+.ico-go { width: 22px; height: 22px; }
+.s-face-emoji .ico { width: 30px; height: 30px; }
+/* у лиц розовый — весь круг: сплошной читался как «красные сердитые смайлы», светлее — спокойнее */
+.s-face-emoji .ico [opacity], .s-tour-faces .ico [opacity] { opacity: .45; }
+.s-list-ico .ico, .s-tile-ico .ico { width: 26px; height: 26px; }
+.s-meal-swap .ico { width: 22px; height: 22px; }
+.s-meal-done .ico { width: 22px; height: 22px; color: var(--ok); }
+.s-meal-done .ico [opacity] { fill: var(--ok); opacity: .35; }
+.sheet-close .ico { width: 16px; height: 16px; }
+.s-check .ico, .s-done .ico { width: 70%; height: 70%; }
+.s-search .ico { width: 20px; height: 20px; }
+.s-steps span .ico { width: 20px; height: 20px; }
+.rate-btn .ico { width: 18px; height: 18px; }
+/* на тёмной подложке (выбранная кнопка, история, тур) — светлее или одним цветом */
+.rate-btn.on .ico { color: var(--on-ink); }
+.rate-btn.on .ico [opacity] { fill: currentColor; opacity: .45; }
+.s-story .ico { --ico: #A9C6E6; --ico2: #FF8A92; }
+.s-tour-dot .ico { width: 22px; height: 22px; }
 /* :where — нулевая специфичность: общее правило не перебивает цвет конкретных кнопок */
 .v2 :where(button) { font: inherit; color: inherit; }
 .v2 :where(input, textarea, select) { font-family: var(--text); }  /* поля — тем же шрифтом, а не системным */

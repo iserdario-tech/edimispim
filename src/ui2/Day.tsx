@@ -19,9 +19,10 @@ import { photoFor, photoUrl } from "../food/photos.js";
 import { backupDue, daysSince } from "../ui/dataSafety.js";
 import { readCloud } from "../ui/cloudSync.js";
 import { readLS, writeLS } from "../ui/localStore.js";
+import { Ico, EmojiIco } from "./Ico.js";
 import { useExp, paceRU } from "./useExp.js";
 
-const FACES = [[1, "😩", "плохо"], [2, "😕", "так себе"], [3, "🙂", "норм"], [4, "😊", "хорошо"], [5, "😴", "отлично"]] as const;
+const FACES = [[1, "confounded-circle", "плохо"], [2, "sad-circle", "так себе"], [3, "expressionless-circle", "норм"], [4, "smile-circle", "хорошо"], [5, "emoji-funny-circle", "отлично"]] as const;
 const YESTERDAY: [keyof Yesterday, string][] = [["lateDinner", "Ужин позже 21:00"], ["lateCaffeine", "Кофе после 14:00"], ["alcohol", "Алкоголь"]];
 const SIZES = [["light", "лёгкое"], ["usual", "как в плане"], ["big", "плотное"]] as const;
 
@@ -86,7 +87,7 @@ export function Day({ app, day, now, onWhy, story, code }: { app: AppModel; day:
     <li className="s-row past">
       <div className="s-row-btn">
         <span className="s-time">{day.wokeHM}</span>
-        <span className="s-plate sleep"><span>🌙</span></span>
+        <span className="s-plate sleep"><Ico name="moon" className="ico-plate" /></span>
         <span className="s-what">
           <b>{day.sleptMin !== undefined ? `Ночь ${Math.floor(day.sleptMin / 60)} ч ${String(day.sleptMin % 60).padStart(2, "0")}` : "Ночь отмечена"}</b>
           <span>{["", "спал очень плохо", "спал плохо", "спал нормально", "спал хорошо", "спал отлично"][day.quality]}</span>
@@ -114,7 +115,7 @@ export function Day({ app, day, now, onWhy, story, code }: { app: AppModel; day:
       {story && (
         <button className="s-story-card" onClick={() => { tap(); story.open(); }}>
           <span><b>Твоя неделя</b><span>{story.label} · сон, еда, вес</span></span>
-          <span aria-hidden="true">→</span>
+          <Ico name="arrow-right" mono className="ico-go" />
         </button>
       )}
 
@@ -124,7 +125,7 @@ export function Day({ app, day, now, onWhy, story, code }: { app: AppModel; day:
           <div className="s-faces">
             {FACES.map(([q, face, ru]) => (
               <button key={q} className="s-face" onClick={() => { tap(); a.saveLog({ date: day.today, wokeHM: day.wokeHM, quality: q }); }}>
-                <span className="s-face-emoji">{face}</span><span className="s-face-ru">{ru}</span>
+                <span className="s-face-emoji"><Ico name={face} /></span><span className="s-face-ru">{ru}</span>
               </button>
             ))}
           </div>
@@ -199,8 +200,8 @@ export function Day({ app, day, now, onWhy, story, code }: { app: AppModel; day:
                     {/* «00:00 ночью»: «ночью» мелко под временем, а не второй крупной строкой */}
                     <span className="s-time">{r.time.replace(" ночью", "")}{r.time.endsWith(" ночью") && <small>ночью</small>}</span>
                     <span className={"s-plate" + (isFood ? "" : " sleep") + (i === day.nextIdx ? " big" : "")}>
-                      {isFood && r.photo ? <img src={r.photo} alt="" loading="lazy" decoding="async" /> : <span>{r.icon}</span>}
-                      {m === "ate" && <i className="s-done">✓</i>}
+                      {isFood && r.photo ? <img src={r.photo} alt="" loading="lazy" decoding="async" /> : <EmojiIco e={r.icon} className="ico-plate" />}
+                      {m === "ate" && <i className="s-done"><Ico name="check" mono /></i>}
                     </span>
                     <span className="s-what">
                       <b>{r.title}</b>
@@ -214,7 +215,7 @@ export function Day({ app, day, now, onWhy, story, code }: { app: AppModel; day:
                       const on = !eaten?.ownText?.[r.slot!] && (eaten?.sizes?.[r.slot!] ?? "usual") === sz;
                       return <button key={sz} className={on ? "s-pill on" : "s-pill"} onClick={() => { tap(); a.ownSize(day.today, r.slot!, sz as OwnSize); }}>{ru}</button>;
                     })}
-                    <button className={eaten?.ownText?.[r.slot] ? "s-pill on" : "s-pill"} onClick={() => setWriting(r.slot!)}>✎ написать, что ел</button>
+                    <button className={eaten?.ownText?.[r.slot] ? "s-pill on" : "s-pill"} onClick={() => setWriting(r.slot!)}><Ico name="pen" /> написать, что ел</button>
                   </div>
                 )}
               </li>
@@ -240,7 +241,7 @@ export function Day({ app, day, now, onWhy, story, code }: { app: AppModel; day:
         <button className="s-btn food s-wide" onClick={() => {
           tap();
           a.markAll(day.today, unmarked, planned, dayKcal, Object.fromEntries(unmarked.map(sl => [sl, portionOf(sl)])));
-        }}>✓ Весь день по плану</button>
+        }}><Ico name="check-circle" /> Весь день по плану</button>
       )}
 
       {showBackup && (
@@ -266,7 +267,7 @@ export function Day({ app, day, now, onWhy, story, code }: { app: AppModel; day:
           {recipe.slot && (
             <div className="s-sheet-actions">
               <button className={eaten?.marks[recipe.slot] === "ate" ? "s-btn food" : "s-btn"} onClick={() => { mark(recipe.slot, "ate"); setRecipe(null); }}>
-                {eaten?.marks[recipe.slot] === "ate" ? "✓ Съел" : "Съел"}
+                {eaten?.marks[recipe.slot] === "ate" ? <><Ico name="check" mono /> Съел</> : "Съел"}
               </button>
               <button className="s-btn ghost" onClick={() => { mark(recipe.slot, "own"); setRecipe(null); }}>Ел своё</button>
             </div>
@@ -324,7 +325,7 @@ function OtherDay({ app, iso, offset, onBack }: { app: AppModel; iso: string; of
             <button className="s-row-btn" onClick={() => setRecipe(m)}>
               <span className="s-time">{fmtHM(m.timeMin)}</span>
               <span className="s-plate"><img src={photoUrl(photoFor(m.recipe))} alt="" loading="lazy" decoding="async" />
-                {marks[m.slot] === "ate" && <i className="s-done">✓</i>}</span>
+                {marks[m.slot] === "ate" && <i className="s-done"><Ico name="check" mono /></i>}</span>
               <span className="s-what"><b>{m.recipe.name}</b>
                 <span>{marks[m.slot] === "own" ? "ел своё" : `${Math.round(m.recipe.kcal * m.servings)} ккал${m.leftover ? " · остатки ужина" : ""}`}</span></span>
             </button>

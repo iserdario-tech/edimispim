@@ -6,7 +6,7 @@ import { isLiquid, mlOf } from "../food/nutrients.js";
 import { photoFor, photoUrl } from "../food/photos.js";
 import { tap } from "./haptics.js";
 import { shareText, shareNoteRU } from "./share.js";
-import { IconThumb } from "./Icons.js";
+import { Ico } from "../ui2/Ico.js";
 
 export const pantryKey = (name: string, unit: string): string => `${name.toLowerCase().trim()}|${unit}`;
 
@@ -102,10 +102,10 @@ export function MealIngredients({ meal, rating, onRate, household = 1 }: {
           <span className="small muted">Как тебе блюдо?</span>
           <button className={rating === 1 ? "rate-btn on" : "rate-btn"} aria-pressed={rating === 1}
             aria-label="Нравится" title="Нравится — будет чаще"
-            onClick={() => { tap(); onRate(meal.recipe.id, 1); }}><IconThumb /></button>
+            onClick={() => { tap(); onRate(meal.recipe.id, 1); }}><Ico name="like" /></button>
           <button className={rating === -1 ? "rate-btn on down" : "rate-btn"} aria-pressed={rating === -1}
             aria-label="Не нравится" title="Не нравится — больше не предложу"
-            onClick={() => { tap(); onRate(meal.recipe.id, -1); }}><IconThumb down /></button>
+            onClick={() => { tap(); onRate(meal.recipe.id, -1); }}><Ico name="dislike" /></button>
           {rating === 1 && <span className="small muted">буду ставить чаще — примерно в четырёх днях недели из семи</span>}
           {/* Про возврат говорим сразу: после скрытия блюдо исчезает из меню вместе
               с этими кнопками, и без подсказки человек не знает, где его искать. */}
