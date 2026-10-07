@@ -147,7 +147,7 @@ html.v2 body { background: none; }  /* иначе фон body ложится п�
 }
 .s-fab {
   position: fixed; right: 16px; bottom: calc(92px + var(--safe-b)); z-index: 50;
-  width: 56px; height: 56px; border-radius: 28px; border: 0; cursor: pointer;
+  width: 56px; height: 56px; border-radius: 28px; border: 0; cursor: pointer; display: grid; place-items: center; padding: 0;
   background: var(--food); color: #fff; font: 500 30px/1 var(--round);
   box-shadow: 0 8px 22px rgba(255, 89, 100, .35); transition: transform .2s var(--spring);
 }
