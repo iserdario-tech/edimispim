@@ -21,7 +21,7 @@ export default defineConfig({
         runtimeCaching: [{
           urlPattern: /\/food\/[^/]+\.jpg$/,
           handler: "CacheFirst",
-          options: { cacheName: "food-photos", expiration: { maxEntries: 120 } },
+          options: { cacheName: "food-photos", expiration: { maxEntries: 200 } },  // 146 снимков с запасом
         }],
       },
       manifest: {

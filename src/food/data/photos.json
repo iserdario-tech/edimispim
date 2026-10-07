@@ -313,9 +313,9 @@
   },
   "falafel": {
     "file": "falafel.jpg",
-    "author": "yummyporky",
-    "license": "CC BY 2.0",
-    "source": "https://commons.wikimedia.org/wiki/File:Falafel_balls.jpg"
+    "author": "Anagoria",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:20240815_Falafel_Plate_Restaurant_The_Hummusapiens_Berlin_anagoria.jpg"
   },
   "stuffedpeppers": {
     "file": "stuffedpeppers.jpg",
@@ -448,5 +448,431 @@
     "author": "FDominec",
     "license": "CC BY-SA 4.0",
     "source": "https://commons.wikimedia.org/wiki/File:Recipes_cottage_cheese_pie_named_misa.jpg"
+  },
+  "kebab": {
+    "file": "kebab.jpg",
+    "author": "Lesya Dolyk",
+    "license": "CC BY-SA 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Lula_kebab.jpg"
+  },
+  "zrazy": {
+    "file": "zrazy.jpg",
+    "author": "Kuruni",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Zrazy1.jpg"
+  },
+  "bigos": {
+    "file": "bigos.jpg",
+    "author": "Alberto Racatumba from Spain / España",
+    "license": "CC BY 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Bigos_in_Krak%C3%B3w_(Rynek_G%C5%82%C3%B3wny).jpg"
+  },
+  "chakhokhbili": {
+    "file": "chakhokhbili.jpg",
+    "author": "Georgian Recipes at Georgia About",
+    "license": "CC BY 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Chakhokhbili_Closeup.jpg"
+  },
+  "ratatouille": {
+    "file": "ratatouille.jpg",
+    "author": "Marcus Guimarães",
+    "license": "CC BY 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Ratatouille.jpg"
+  },
+  "caesar": {
+    "file": "caesar.jpg",
+    "author": "Banej",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Caesar_Salad_from_Tony_Roma_Restaurant-_March_2024_02.jpg"
+  },
+  "olivier": {
+    "file": "olivier.jpg",
+    "author": "Jacek Halicki",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:2023_Sa%C5%82atka_jarzynowa_(1).jpg"
+  },
+  "caprese": {
+    "file": "caprese.jpg",
+    "author": "MOs810",
+    "license": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Insalata_Caprese_(from_Poznan).JPG"
+  },
+  "guacamole": {
+    "file": "guacamole.jpg",
+    "author": "Jon Sullivan",
+    "license": "Public domain",
+    "source": "https://commons.wikimedia.org/wiki/File:Guacamole_in_a_bowl_by_Jon_Sullivan_(4_April_2004).jpg"
+  },
+  "tunasalad": {
+    "file": "tunasalad.jpg",
+    "author": "HaJunkiyada",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Liat_Portal_for_Foodie_Disorder_-_Open_tuna_salad_sandwich_with_fresh_salad.jpg"
+  },
+  "quinoasalad": {
+    "file": "quinoasalad.jpg",
+    "author": "Geoff Peters from Vancouver, BC, Canada",
+    "license": "CC BY 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Quinoa_Salad_(5045982815).jpg"
+  },
+  "coleslaw": {
+    "file": "coleslaw.jpg",
+    "author": "John Thompson from Iqaluit",
+    "license": "CC BY-SA 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Ju_Xiang_Yuan,_Ottawa_-_Jellyfish_and_Cabbage_Salad_(6453804387).jpg"
+  },
+  "tomyum": {
+    "file": "tomyum.jpg",
+    "author": "Andy Li",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Tom_Yum_Goong_Noodle_Soup_-_Nok_Nok_Kitchen_at_The_Cow_2024-03-28.jpg"
+  },
+  "solyanka": {
+    "file": "solyanka.jpg",
+    "author": "Pannet",
+    "license": "CC BY 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Soljanka_food_05.jpg"
+  },
+  "kharcho": {
+    "file": "kharcho.jpg",
+    "author": "A.Savin",
+    "license": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Kharcho_meat_soup.jpg"
+  },
+  "shchi": {
+    "file": "shchi.jpg",
+    "author": "Шнапс",
+    "license": "Public domain",
+    "source": "https://commons.wikimedia.org/wiki/File:Schi.jpg"
+  },
+  "minestrone": {
+    "file": "minestrone.jpg",
+    "author": "Katrin Morenz from Aachen, Deutschland",
+    "license": "CC BY-SA 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Minestrone_soup.jpg"
+  },
+  "peasoup": {
+    "file": "peasoup.jpg",
+    "author": "jeffreyw",
+    "license": "CC BY 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Mmm..._split_pea_soup_(8139761028).jpg"
+  },
+  "chickennoodle": {
+    "file": "chickennoodle.jpg",
+    "author": "Nichijyou123",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Chicken_Noodle_Soup_US.jpg"
+  },
+  "beansoup": {
+    "file": "beansoup.jpg",
+    "author": "Gillgaramond",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Bean_soup_with_tomatoes_and_red_peppers.jpeg"
+  },
+  "nuggets": {
+    "file": "nuggets.jpg",
+    "author": "Mx. Granger",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Impossible_chicken_nuggets_2.jpg"
+  },
+  "skewers": {
+    "file": "skewers.jpg",
+    "author": "Amin",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Skewer_with_marinated_chicken_wings_bbq_barbeque.jpg"
+  },
+  "tandoori": {
+    "file": "tandoori.jpg",
+    "author": "pelican",
+    "license": "CC BY-SA 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Tandoori_chicken_Indian.jpg"
+  },
+  "oatcookies": {
+    "file": "oatcookies.jpg",
+    "author": "Paul Martin",
+    "license": "CC BY 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Oatmeal_Cookies_with_orange_zest,_golden_raisins,_and_chocolate_chips.jpg"
+  },
+  "vatrushka": {
+    "file": "vatrushka.jpg",
+    "author": "Ji-Elle",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Vatrushka_(Novgorod).jpg"
+  },
+  "granolabars": {
+    "file": "granolabars.jpg",
+    "author": "LironOmri12",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Granola_bars.jpg"
+  },
+  "brownie": {
+    "file": "brownie.jpg",
+    "author": "Wikimedia Commons",
+    "license": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Chocolate_brownies_without_table.jpg"
+  },
+  "pumpkinpudding": {
+    "file": "pumpkinpudding.jpg",
+    "author": "Aaron Gustafson from Hamden, CT, USA",
+    "license": "CC BY-SA 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Roasted_Pumpkin_Bread_Pudding.jpg"
+  },
+  "ribs": {
+    "file": "ribs.jpg",
+    "author": "Jeremy Noble from St. Paul, United States",
+    "license": "CC BY 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:First_ribs_of_the_trip_(4530303531).jpg"
+  },
+  "roastbeef": {
+    "file": "roastbeef.jpg",
+    "author": "Daderot",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Roast_beef_on_whole_wheat_bread_with_boiled_potato,_all_cold_-_Massachusetts.jpg"
+  },
+  "buzhenina": {
+    "file": "buzhenina.jpg",
+    "author": "Haydn Blackey from Cardiff, Wales",
+    "license": "CC BY-SA 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Black_Pork,_Pistacho_and_Catharellus_-_Epur_-_Lisbon_(52750868917).jpg"
+  },
+  "roastveg": {
+    "file": "roastveg.jpg",
+    "author": "HaJunkiyada",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Liat_Portal_for_Foodie_Disorder_-_Roasted_Antipasti_Vegetables.jpg"
+  },
+  "bolognese": {
+    "file": "bolognese.jpg",
+    "author": "Superbass",
+    "license": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Spaghetti_Bolognese_Lokal_K.jpg"
+  },
+  "carbonara": {
+    "file": "carbonara.jpg",
+    "author": "Javier Somoza",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Espaguetis_carbonara.jpg"
+  },
+  "pesto": {
+    "file": "pesto.jpg",
+    "author": "Missvain",
+    "license": "CC BY 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Swiss_Hotel_Bar_and_Restaurant_-_2021-08-28_-_Sarah_Stierch_02.jpg"
+  },
+  "shrimppasta": {
+    "file": "shrimppasta.jpg",
+    "author": "HaJunkiyada",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Liat_Portal_for_Foodie_Disorder_-_Fettuccine_with_Shrimp,_Scallops,_and_Spinach.jpg"
+  },
+  "salmonpasta": {
+    "file": "salmonpasta.jpg",
+    "author": "JIP",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Pasta_with_cold-smoked_salmon_and_peas_in_Loviisa.jpg"
+  },
+  "hotdog": {
+    "file": "hotdog.jpg",
+    "author": "Benimoto",
+    "license": "CC BY 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:My_hot_dog_at_Hot_Doug%27s.jpg"
+  },
+  "salmonsandwich": {
+    "file": "salmonsandwich.jpg",
+    "author": "Andy Li",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Smoked_salmon_sourdough_flatbread_melt_-_Taylors_2025-05-04.jpg"
+  },
+  "grilledcheese": {
+    "file": "grilledcheese.jpg",
+    "author": "jeffreyw",
+    "license": "CC BY 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Mmm..._grilled_ham_n_cheese_(5696849258).jpg"
+  },
+  "omelette": {
+    "file": "omelette.jpg",
+    "author": "Wagaung at English Wikipedia",
+    "license": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Cha-om_omelette.jpg"
+  },
+  "friedeggs": {
+    "file": "friedeggs.jpg",
+    "author": "Kgbo",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Breakfast_in_Australia;_bacon_and_fried_eggs_on_toast.jpg"
+  },
+  "frittata": {
+    "file": "frittata.jpg",
+    "author": "Andy Li",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Frittata_-_Bam%27s_Kitchen_2024-04-02.jpg"
+  },
+  "tofuscramble": {
+    "file": "tofuscramble.jpg",
+    "author": "Bart Everson",
+    "license": "CC BY 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Tofu_Scramble_in_New_Orleans.jpg"
+  },
+  "blini": {
+    "file": "blini.jpg",
+    "author": "Deror_avi",
+    "license": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Singer_Caf%C3%A9_-_Blini_with_sour_cream_and_red_caviar_IMG_3424.JPG"
+  },
+  "khachapuri": {
+    "file": "khachapuri.jpg",
+    "author": "Vyacheslav Argenberg",
+    "license": "CC BY 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Old_Tbilisi,_Georgian_khachapuri,_Georgia.jpg"
+  },
+  "potatocasserole": {
+    "file": "potatocasserole.jpg",
+    "author": "Andy Li",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Shepherds_pie_-_The_Kew_Greenhouse_Cafe_2025-05-14.jpg"
+  },
+  "cabbagepie": {
+    "file": "cabbagepie.jpg",
+    "author": "Kolforn (Kolforn)\nI'd appreciate if you could mail me (Kolforn@gmail.com) if you",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:-2020-12-27_Sauasge_rolls,_pork_pie_and_pickled_red_cabbage,_Trimingham_(2).JPG"
+  },
+  "lobio": {
+    "file": "lobio.jpg",
+    "author": "Svetlov Artem",
+    "license": "CC BY 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Lobio_Moscow_2023.jpg"
+  },
+  "chili": {
+    "file": "chili.jpg",
+    "author": "Aerith",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Chili_con_carne_cuisson.jpg"
+  },
+  "chickpeas": {
+    "file": "chickpeas.jpg",
+    "author": "Physicistjedi",
+    "license": "Public domain",
+    "source": "https://commons.wikimedia.org/wiki/File:Leblebi.jpg"
+  },
+  "friedrice": {
+    "file": "friedrice.jpg",
+    "author": "Vee Satayamas from Bangkok, Thailand",
+    "license": "CC BY 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Fried_rice_with_chicken_(17234644521).jpg"
+  },
+  "stuffedmushrooms": {
+    "file": "stuffedmushrooms.jpg",
+    "author": "Janet Hudson",
+    "license": "CC BY 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Kremed_Spinach_Stuffed_Mushrooms_on_white_serving_dish.jpg"
+  },
+  "deviledeggs": {
+    "file": "deviledeggs.jpg",
+    "author": "Marshall Astor from San Pedro, United States",
+    "license": "CC BY-SA 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Deviled_Eggs_-_3-23-08.jpg"
+  },
+  "grilledsalmon": {
+    "file": "grilledsalmon.jpg",
+    "author": "Petar Milošević",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Grilled_salmon.jpg"
+  },
+  "quiche": {
+    "file": "quiche.jpg",
+    "author": "Gerda Arendt",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Salmon_quiche,_Kirchh%C3%B6rde.jpg"
+  },
+  "stroganoff": {
+    "file": "stroganoff.jpg",
+    "author": "Pittaya Sroilong  (original file) ; cropped and retouched by Off-shell",
+    "license": "CC BY 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Beef_Stroganoff-02_cropped.jpg"
+  },
+  "millet": {
+    "file": "millet.jpg",
+    "author": "Edithobayaa1",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Oat_porridge_in_Ghana.jpg"
+  },
+  "shawarma": {
+    "file": "shawarma.jpg",
+    "author": "Siqbal at English Wikipedia",
+    "license": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Shawarma_Sandwich.jpg"
+  },
+  "burrito": {
+    "file": "burrito.jpg",
+    "author": "samuelfernandezrivera",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Burrito.JPG"
+  },
+  "gyros": {
+    "file": "gyros.jpg",
+    "author": "Antonio Fajardo i López",
+    "license": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Pita_giros.JPG"
+  },
+  "schnitzel": {
+    "file": "schnitzel.jpg",
+    "author": "Pastorius",
+    "license": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Chicken_schnitzel_and_mashed_potatoes.jpg"
+  },
+  "fishbatter": {
+    "file": "fishbatter.jpg",
+    "author": "Yaco*",
+    "license": "CC BY 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Tempura_01.jpg"
+  },
+  "teriyaki": {
+    "file": "teriyaki.jpg",
+    "author": "CNEcija12345",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Bowl_of_Teriyaki_chicken_and_beef_YakinikuCNE.jpg"
+  },
+  "sweetsour": {
+    "file": "sweetsour.jpg",
+    "author": "Walter Grassroot",
+    "license": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:%E8%8F%A0%E8%90%9D%E5%92%95%E5%99%9C%E8%82%89.jpg"
+  },
+  "padthai": {
+    "file": "padthai.jpg",
+    "author": "Takeaway",
+    "license": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Phat_Thai_kung_Chang_Khien_street_stall.jpg"
+  },
+  "ramen": {
+    "file": "ramen.jpg",
+    "author": "Guilhem Vellut from Paris, France",
+    "license": "CC BY 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Shio_Ramen,_Kodawari_Ramen,_Paris_001.jpg"
+  },
+  "udon": {
+    "file": "udon.jpg",
+    "author": "Mantelmoewe",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Udon_Tofu.jpg"
+  },
+  "smoothiebowl": {
+    "file": "smoothiebowl.jpg",
+    "author": "Anna Powell",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Chocolate_Green_Smoothie_Bowl.jpg"
+  },
+  "steamedfish": {
+    "file": "steamedfish.jpg",
+    "author": "Apeach316",
+    "license": "CC BY-SA 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Steamed_fish_in_dinner.jpg"
+  },
+  "mackerel": {
+    "file": "mackerel.jpg",
+    "author": "Natalka Ukraine",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Homemade_fish_smoking_-_Smoked_mackerel_presentation_01.jpg"
   }
 }
