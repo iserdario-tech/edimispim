@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Sheet } from "../ui/Sheet.js";
 import { WeightChart } from "../ui/Charts.js";
 import { toDayRecords } from "../ui/dayRecords.js";
@@ -21,7 +21,7 @@ import { tap } from "../ui/haptics.js";
 import { cloudUpload, readCloud, type CloudInfo } from "../ui/cloudSync.js";
 import { CodeRestore } from "./CodeRestore.js";
 import { createPair, joinPair, leavePair, type PairInfo } from "../ui/pairSync.js";
-import { enableNotifications, readPushPrefs, writePushPrefs, syncPushContext } from "../ui/notifications.js";
+import { enableNotifications, readPushPrefs, writePushPrefs, syncPushContext, pushSubscribed, readPushSyncAt } from "../ui/notifications.js";
 import type { PushPrefs } from "../push.js";
 import type { Profile } from "../index.js";
 import type { AppModel } from "./Shell.js";
@@ -402,10 +402,17 @@ const NOTIF_ROWS: [keyof PushPrefs, string, string][] = [
   ["sleep", "Сон", "свет утром, «как спалось?», за час до\u00a0отбоя"],
 ];
 
+const syncRU = (iso: string) => new Date(iso).toLocaleString("ru-RU", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
+
 /** Напоминания приходят заранее — чтобы успеть дойти до кухни или допить кофе. */
 function NotifSheet({ profile, onClose }: { profile: Profile; onClose: () => void }) {
   const [prefs, setPrefs] = useState(readPushPrefs);
   const [note, setNote] = useState("");
+  // разрешение может быть, а подписки на телефоне — нет (переустановка): тогда напоминаний не будет,
+  // хотя «Я» писало «включены». Показываем, что есть на самом деле, и когда сервер подтверждал.
+  const [sub, setSub] = useState<boolean | null>(null);
+  useEffect(() => { void pushSubscribed().then(setSub); }, [note]);
+  const syncAt = readPushSyncAt();
   const toggle = (k: keyof PushPrefs) => {
     tap();
     const next = { ...prefs, [k]: !prefs[k] };
@@ -414,10 +421,15 @@ function NotifSheet({ profile, onClose }: { profile: Profile; onClose: () => voi
   };
   return (
     <Sheet title="Напоминания" onClose={onClose}>
-      {!notifOn() && (
+      {(!notifOn() || sub === false) && (
         <button className="s-btn food s-wide" onClick={async () => setNote(await enableNotifications(profile))}>Включить напоминания</button>
       )}
       {note && <p className="s-small">{note}</p>}
+      {notifOn() && sub !== null && (
+        <p className="s-small">{sub
+          ? `Подписка на этом телефоне есть${syncAt ? ` · сервер подтвердил ${syncRU(syncAt)}` : " · сервер ещё не подтверждал"}.`
+          : "Разрешение есть, а подписки на этом телефоне нет — так бывает после переустановки. Нажми «Включить напоминания»."}</p>
+      )}
       <div className="s-rows">
         {NOTIF_ROWS.map(([k, title, sub]) => (
           <div key={k} className="s-yn">

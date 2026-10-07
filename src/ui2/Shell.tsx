@@ -197,8 +197,8 @@ function Main({ app, tab, setTab, now, glow, restoreInput, onRestore }: {
     return `${f(m)} – ${f(plusDaysISO(m, 6))}`;
   };
 
-  // цифра на иконке: сколько приёмов сегодня не отмечено (iOS 16.4+, только на экране «Домой»)
-  const badge = unmarkedToday(day.foodDay?.day ?? null, day.eaten);
+  // цифра на иконке: сколько приёмов сегодня пропущено (iOS 16.4+, только на экране «Домой»)
+  const badge = unmarkedToday(day.foodDay?.day ?? null, day.eaten, day.nowMin);
   useEffect(() => {
     const nav = navigator as Navigator & { setAppBadge?: (n: number) => Promise<void>; clearAppBadge?: () => Promise<void> };
     try { void (badge > 0 ? nav.setAppBadge?.(badge) : nav.clearAppBadge?.())?.catch(() => {}); } catch { /* не умеет — и ладно */ }
