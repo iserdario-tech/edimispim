@@ -51,12 +51,17 @@ export function todayFoodDay(a: {
    * номером дня служил день недели, а там — индекс в семидневке, и один и тот же
    * четверг показывал на двух экранах разную еду.
    */
-  const planned = scheduleFor(today, pool, iso => targetsForToday(base, food.startISO, iso, food.pace).targets, optsOf);
-  const dayOpts = { ...optsOf(today), offset: planned.offset, avoid: planned.avoid, ...(planned.leftover ? { leftover: planned.leftover } : {}) };
+  // запомненное меню, поверх — то, что человек поменял руками на экране «Еда»
+  const keptFor = (iso: string) => ({ ...rememberedFor(a.menu, food, iso, a.noCookDays), ...a.swaps?.[iso] });
+  // день готовки дорабатывается до того, как его кастрюля разойдётся по следующим дням:
+  // замена ужина в понедельник меняет и то, что разогревают во вторник
+  const planned = scheduleFor(today, pool, iso => targetsForToday(base, food.startISO, iso, food.pace).targets, optsOf,
+    d => applySwaps(d.day, keptFor(d.iso), pool, d.targets, food.mealCount));
+  const { cookDays: _c, noCook: _n, ...todayOpts } = optsOf(today);
+  const dayOpts = { ...todayOpts, offset: planned.offset, avoid: planned.avoid, ...(planned.fromPot ? { fromPot: planned.fromPot } : {}) };
   const day = generateAdaptedDay(safe, pool, dayOpts, a.night);
-  // запомненное меню, поверх — то, что человек поменял руками на экране «Еда»;
   // после плохой ночи запомненное не держим: день перестроен нарочно
-  const kept = { ...rememberedFor(a.menu, food, today, a.noCookDays), ...a.swaps?.[today] };
+  const kept = keptFor(today);
   applySwaps(day, day.simplified ? a.swaps?.[today] : kept, pool, safe, food.mealCount);
   // что поменялось из-за ночи — сравнение с днём после обычной ночи
   let changes: string[] = [];

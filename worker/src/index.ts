@@ -19,7 +19,22 @@ interface Env {
  * мои проверки с того же адреса. Общий потолок на всех — чтобы бесплатные квоты не выел чужой скрипт.
  */
 const COACH_DAILY_LIMIT = 120;
-const GLOBAL_DAILY_LIMIT = 900;   // Groq даёт 1 000 запросов в день
+/*
+ * Общего счётчика «на всех» больше нет. Настоящий потолок — у самих моделей: Groq на бесплатном
+ * плане даёт 200 000 токенов в день на модель (≈50 вопросов при промпте в 3 300), три модели ≈150,
+ * Cloudflare ещё ≈100. Счётчик на 900 не сработал бы никогда, а стоил запись в KV на каждый вопрос —
+ * из тысячи записей в сутки, которые есть у бесплатного KV на всё: подписки, копии, пару, крон.
+ */
+/*
+ * Только из приложения: адрес воркера виден в открытом репозитории, а квоты бесплатные и общие.
+ * Браузер всегда шлёт Origin на такой запрос; подделать его из скрипта можно, но чужой сайт
+ * из браузера — нет, а это и есть реальный способ выесть квоту. Для своих проверок curl'ом —
+ * `-H 'origin: https://iserdario-tech.github.io'`.
+ */
+const fromApp = (req: Request): boolean => {
+  const o = req.headers.get("origin") ?? "";
+  return o === "https://iserdario-tech.github.io" || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(o);
+};
 const whoOf = (body: { deviceId?: unknown }, req: Request): string =>
   typeof body.deviceId === "string" && /^[\w-]{8,64}$/.test(body.deviceId) ? `d:${body.deviceId}` : `ip:${req.headers.get("cf-connecting-ip") ?? "unknown"}`;
 // ponytail: счётчик в KV; KV не строго консистентен, для потолка запросов этого хватает.
@@ -27,7 +42,10 @@ async function overLimit(env: Env, prefix: string, ip: string, limit: number): P
   const key = `${prefix}:${ip}:${new Date().toISOString().slice(0, 10)}`;
   const used = Number((await env.SUBS.get(key)) ?? 0);
   if (used >= limit) return true;
-  await env.SUBS.put(key, String(used + 1), { expirationTtl: 172800 });
+  // кончились записи KV на сегодня — считать нечем; пропускаем, а не роняем ответ в 500:
+  // дневные квоты самих моделей всё равно не пробить
+  try { await env.SUBS.put(key, String(used + 1), { expirationTtl: 172800 }); }
+  catch (e) { console.log("limit counter failed", String(e).slice(0, 120)); }
   return false;
 }
 interface StoredSub {
@@ -54,8 +72,13 @@ export default {
   async fetch(req: Request, env: Env): Promise<Response> {
     if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
     const url = new URL(req.url);
+    if (req.method === "POST" && !fromApp(req)) return new Response("forbidden", { status: 403, headers: CORS });
     if (req.method === "POST" && url.pathname === "/subscribe") {
-      const body = (await req.json()) as Partial<StoredSub>;
+      // профиль и меню на два дня — это килобайты; больше — не приложение, а попытка забить хранилище
+      const raw = await req.text();
+      if (raw.length > 64_000) return new Response("too large", { status: 413, headers: CORS });
+      let body: Partial<StoredSub>;
+      try { body = JSON.parse(raw) as Partial<StoredSub>; } catch { return new Response("bad request", { status: 400, headers: CORS }); }
       if (!body?.subscription?.endpoint)
         return new Response("bad request", { status: 400, headers: CORS });
       // приложение шлёт сюда же тихие обновления профиля/дня — тогда запись уже есть
@@ -138,7 +161,7 @@ export default {
 
     if (req.method === "POST" && url.pathname === "/coach") {
       const body = (await req.json().catch(() => ({}))) as { messages?: CoachTurn[]; contextRU?: string; deviceId?: unknown };
-      if (await overLimit(env, "rl", whoOf(body, req), Number(env.COACH_LIMIT ?? COACH_DAILY_LIMIT)) || await overLimit(env, "rl", "all", GLOBAL_DAILY_LIMIT))
+      if (await overLimit(env, "rl", whoOf(body, req), Number(env.COACH_LIMIT ?? COACH_DAILY_LIMIT)))
         return new Response(JSON.stringify({ error: "На сегодня хватит вопросов — продолжим завтра." }), { status: 429, headers: JSON_CORS });
       // короткий хвост разговора, прошлые ответы обрезаны: лимиты считаются токенами, а коучу
       // для ответа хватает последних двух реплик
@@ -163,7 +186,7 @@ export default {
       const body = (await req.json().catch(() => ({}))) as { text?: unknown; deviceId?: unknown };
       const text = typeof body.text === "string" ? body.text.trim().slice(0, 300) : "";
       if (!text) return new Response(JSON.stringify({ error: "Напиши, что съел." }), { status: 400, headers: JSON_CORS });
-      if (await overLimit(env, "rl", whoOf(body, req), Number(env.COACH_LIMIT ?? COACH_DAILY_LIMIT)) || await overLimit(env, "rl", "all", GLOBAL_DAILY_LIMIT))
+      if (await overLimit(env, "rl", whoOf(body, req), Number(env.COACH_LIMIT ?? COACH_DAILY_LIMIT)))
         return new Response(JSON.stringify({ error: "На сегодня хватит — продолжим завтра." }), { status: 429, headers: JSON_CORS });
       try {
         const est = await estimateFood(env.AI, text, env.GROQ_API_KEY);

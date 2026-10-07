@@ -1,5 +1,5 @@
 import { generateDay, swapTo, fitKcal, type DayOptions } from "./planner";
-import type { Day, MealCount, Recipe, Targets } from "./types";
+import type { Day, MealCount, MealType, Recipe, Targets } from "./types";
 
 /**
  * Меню, привязанное к календарю, а не к позиции в списке.
@@ -63,11 +63,21 @@ export interface ScheduledDay {
   /** Что передать планировщику, чтобы получить ровно этот день (нужно для адаптации под сон). */
   offset: number;
   avoid: string[];
-  /** Вчерашний ужин, ставший обедом, — чтобы адаптация под сон собрала тот же день. */
-  leftover?: Recipe;
+  /** Обед и ужин из кастрюли дня готовки — чтобы адаптация под сон собрала тот же день. */
+  fromPot?: Partial<Record<MealType, Recipe>>;
+  /** Дата дня готовки, если еда из кастрюли. */
+  potISO?: string;
 }
 
-type DayOpts = Omit<DayOptions, "offset" | "avoid">;
+export type DayOpts = Omit<DayOptions, "offset" | "avoid" | "fromPot"> & {
+  /** Готовить сразу на столько дней: обед и ужин дня готовки повторяются следующие дни. */
+  cookDays?: number;
+  /** «Сегодня не готовлю»: кастрюлю в этот день не ставим, еду из неё — едим. */
+  noCook?: boolean;
+};
+
+/** Доработать собранный день (память меню, ручные замены) до того, как его кастрюля разойдётся по следующим дням. */
+export type Finalize = (d: ScheduledDay) => void;
 
 /**
  * Семидневный блок, в который попадает дата. Блоки нарезаны от эпохи, поэтому у каждой
@@ -77,6 +87,7 @@ export function planBlock(
   iso: string, pool: Recipe[],
   targetsOf: (iso: string) => Targets,
   optsOf: (iso: string) => DayOpts,
+  finalize?: Finalize,
 ): ScheduledDay[] {
   const start = Math.floor(dayNumber(iso) / 7) * 7;
   const out: ScheduledDay[] = [];
@@ -86,20 +97,31 @@ export function planBlock(
    * лучше, где-то на два хуже, а счёт вдвое дороже. Осталось как есть.
    */
   const avoid: string[] = [];
-  let prevDinner: Recipe | undefined;
+  /*
+   * «Готовлю на 2–3 дня»: обед и ужин дня готовки повторяются следующие дни, готовить
+   * их не надо. Дни готовки отсчитываются от начала блока, поэтому у даты они всегда
+   * одни и те же. ponytail: последний день блока готовит только на себя — кастрюля
+   * прошлого блока пришлось бы планировать заново; одна лишняя готовка в неделю.
+   */
+  let pot: { iso: string; meals: Partial<Record<MealType, Recipe>> } | undefined;
   for (let i = 0; i < 7; i++) {
     const n = start + i;
     const date = isoOfDay(n);
     const targets = targetsOf(date);
     const taken = [...avoid];
-    const opts = optsOf(date);
-    // ponytail: первый день блока остатков не получает — ужин прошлого блока пришлось бы
-    // планировать заново; один обед в неделю готовится как обычно
-    const leftover = opts.leftovers ? prevDinner : undefined;
-    const day = generateDay(targets, pool, { ...opts, offset: n, avoid: taken, ...(leftover ? { leftover } : {}) });
-    out.push({ iso: date, day, targets, offset: n, avoid: taken, ...(leftover ? { leftover } : {}) });
+    const { cookDays = 1, noCook, ...opts } = optsOf(date);
+    const cooking = cookDays <= 1 || i % cookDays === 0 || !pot;
+    const fromPot = cooking ? undefined : pot!.meals;
+    const day = generateDay(targets, pool, { ...opts, offset: n, avoid: taken, ...(fromPot ? { fromPot } : {}) });
+    const scheduled: ScheduledDay = { iso: date, day, targets, offset: n, avoid: taken, ...(fromPot ? { fromPot, potISO: pot!.iso } : {}) };
+    finalize?.(scheduled);
+    out.push(scheduled);
     for (const m of day.meals) avoid.push(m.recipe.id);
-    prevDinner = day.meals.find(m => m.slot === "dinner")?.recipe;
+    // в день «не готовлю» кастрюли нет: иначе следующие дни разогревали бы бутерброд
+    if (cooking && cookDays > 1 && !noCook) {
+      pot = { iso: date, meals: {} };
+      for (const m of day.meals) if (m.slot === "lunch" || m.slot === "dinner") pot.meals[m.recipe.meal_type] = m.recipe;
+    }
   }
   return out;
 }
@@ -109,8 +131,9 @@ export function scheduleFor(
   iso: string, pool: Recipe[],
   targetsOf: (iso: string) => Targets,
   optsOf: (iso: string) => DayOpts,
+  finalize?: Finalize,
 ): ScheduledDay {
-  return planBlock(iso, pool, targetsOf, optsOf).find(d => d.iso === iso)!;
+  return planBlock(iso, pool, targetsOf, optsOf, finalize).find(d => d.iso === iso)!;
 }
 
 /**
@@ -123,11 +146,12 @@ export function planWindow(
   startISO: string, count: number, pool: Recipe[],
   targetsOf: (iso: string) => Targets,
   optsOf: (iso: string) => DayOpts,
+  finalize?: Finalize,
 ): ScheduledDay[] {
   const out: ScheduledDay[] = [];
   let cursor = startISO;
   while (out.length < count) {
-    const block = planBlock(cursor, pool, targetsOf, optsOf);
+    const block = planBlock(cursor, pool, targetsOf, optsOf, finalize);
     const from = block.findIndex(d => d.iso === cursor);
     for (let i = from; i < block.length && out.length < count; i++) out.push(block[i]!);
     cursor = isoOfDay(dayNumber(block[block.length - 1]!.iso) + 1);

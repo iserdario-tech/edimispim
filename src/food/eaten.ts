@@ -23,8 +23,14 @@ export type MealMark = "ate" | "own";
  * а «лёгкое / как в плане / плотное» ответит за секунду.
  */
 export type OwnSize = "light" | "usual" | "big";
-/** Еда, записанная словами, и прикидка калорий к ней. */
-export interface WrittenFood { text: string; kcal: number; protein: number }
+/** Еда, записанная словами (прикидка коуча) или с этикетки (точно, `exact`). */
+export interface WrittenFood {
+  text: string; kcal: number; protein: number;
+  /** С этикетки: цифры человека, а не прикидка — в сводке без «≈». */
+  exact?: boolean;
+  /** Жиры и углеводы с этикетки, если вписал. */
+  fat?: number; carbs?: number;
+}
 export const OWN_FACTOR: Record<OwnSize, number> = { light: 0.6, usual: 1, big: 1.5 };
 
 export interface DayEaten {
@@ -126,7 +132,7 @@ export function eatenTotals(day: Day, eaten: DayEaten | undefined): EatenTotals 
       const k = OWN_FACTOR[eaten?.sizes?.[m.slot] ?? "usual"];
       kcal += written ? written.kcal : m.recipe.kcal * m.servings * k;
       protein += written ? written.protein : m.recipe.protein_g * m.servings * k;
-      estimated = true;
+      if (!written?.exact) estimated = true;
       continue;
     }
     ate++;
@@ -136,7 +142,7 @@ export function eatenTotals(day: Day, eaten: DayEaten | undefined): EatenTotals 
     fiber += m.recipe.fiber_g * m.servings * k;
   }
   // записанное словами вне плана — тоже прикидка
-  for (const x of eaten?.extras ?? []) { kcal += x.kcal; protein += x.protein; estimated = true; }
+  for (const x of eaten?.extras ?? []) { kcal += x.kcal; protein += x.protein; if (!x.exact) estimated = true; }
   return { kcal: Math.round(kcal), protein: Math.round(protein), fiber: Math.round(fiber), ate, marked, estimated };
 }
 
