@@ -61,7 +61,10 @@ export default {
         ...(body.prefs ? { prefs: body.prefs } : existing?.prefs ? { prefs: existing.prefs } : {}),
       }));
       if (existing) return new Response("ok", { headers: CORS }); // тихая синхронизация — без приветствия
-      // приветственный пуш — мгновенное подтверждение, что доставка работает (только при первой подписке)
+      // Приветственный пуш — мгновенное подтверждение, что доставка работает (только при первой подписке).
+      // Код ответа службы доставки (Apple/Google) уходит в приложение: «пуши не приходят» при пустом KV
+      // иначе не разобрать — телефон единственное место, где видно, что сказала служба.
+      let welcome = 0;
       try {
         const { endpoint, headers: h, body: pb } = await buildPushHTTPRequest({
           privateJWK: JSON.parse(env.VAPID_PRIVATE),
@@ -72,9 +75,11 @@ export default {
             options: { ttl: 600, urgency: "high" },
           },
         });
-        await fetch(endpoint, { method: "POST", headers: h, body: pb });
-      } catch (_) { /* не критично */ }
-      return new Response("ok", { headers: CORS });
+        const r = await fetch(endpoint, { method: "POST", headers: h, body: pb });
+        welcome = r.status;
+        console.log("welcome push", r.status, (await r.text().catch(() => "")).slice(0, 200));
+      } catch (e) { console.log("welcome push failed", String(e)); }
+      return new Response(JSON.stringify({ ok: true, welcome }), { headers: JSON_CORS });
     }
 
     /*
@@ -168,6 +173,7 @@ export default {
     // Ключ подписки — всегда push-endpoint, то есть https://… Без фильтра крон падал бы
     // на первом же служебном ключе и не рассылал НИЧЕГО.
     const list = await env.SUBS.list({ prefix: "https://" });
+    console.log("cron", list.keys.length, "subs");   // видно в `wrangler tail`: есть ли кому слать
     for (const k of list.keys) {
       const raw = await env.SUBS.get(k.name);
       if (!raw) continue;
@@ -222,9 +228,10 @@ export default {
             },
           });
           const res = await fetch(endpoint, { method: "POST", headers, body });
+          console.log("push", o.kind, res.status, new URL(endpoint).host);
           if (res.status === 404 || res.status === 410) { await env.SUBS.delete(k.name); }
           else { sent.kinds.push(o.kind); changed = true; }
-        } catch (_) { /* пропускаем сбойную отправку */ }
+        } catch (e) { console.log("push failed", o.kind, String(e)); }
       }
       if (changed) await env.SUBS.put(sentKey, JSON.stringify(sent), { expirationTtl: 172800 });
     }
