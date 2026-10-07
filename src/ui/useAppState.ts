@@ -322,7 +322,7 @@ export function coachContext(state: StoredState, now = new Date()): string {
     if (weekAgo.length >= 2) {
       const days = Math.max(1, (Date.parse(weekAgo.at(-1)!.date) - Date.parse(weekAgo[0]!.date)) / 86_400_000);
       const perWeek = Math.round(((weekAgo.at(-1)!.kg - weekAgo[0]!.kg) / days) * 7 * 10) / 10;
-      lines.push(`Вес за последние 4 недели: ${weekAgo[0]!.kg} → ${weekAgo.at(-1)!.kg} кг (${perWeek > 0 ? "+" : ""}${perWeek} кг в неделю). Отдельный замер прыгает на полкило из-за воды.`);
+      lines.push(`Вес за последние 4 недели: ${weekAgo[0]!.kg} → ${weekAgo.at(-1)!.kg} кг (${perWeek > 0 ? "+" : ""}${perWeek} кг в неделю). Отдельный замер прыгает на полкило из‑за воды.`);
     }
     const recent = Object.entries(state.eaten ?? {}).filter(([d]) => d >= plusDaysISO(today, -14) && d < today);
     if (recent.length) {

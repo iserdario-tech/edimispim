@@ -26,7 +26,7 @@ export function Onboarding({ initial, onDone, onRestore }: {
   return (
     <main className="wrap">
       <h1>Настройки сна</h1>
-      <p className="muted">От этого строится весь день — и сон, и еда.</p>
+      <p className="muted">От этого строится весь день — и сон, и еда.</p>
 
       {/* Видно только тем, кто открыл приложение с домашнего экрана: у установленной
           версии на iOS своё хранилище, и данные из Safari в неё не переезжают. */}
@@ -34,7 +34,7 @@ export function Onboarding({ initial, onDone, onRestore }: {
         <section className="card">
           <h3 className="card-h">Уже пользовался в браузере?</h3>
           <p className="small">
-            У приложения, добавленного на «Домой», <b>отдельная память</b> — так устроен iOS.
+            У приложения, добавленного на «Домой», <b>отдельная память</b> — так устроен iOS.
             Данные из Safari сюда сами не переедут, их нужно перенести файлом.
           </p>
           <p className="small muted">
@@ -89,7 +89,7 @@ export function Onboarding({ initial, onDone, onRestore }: {
       {/* Пустое поле времени — не мелочь: на нём приложение падало прямо по этой кнопке */}
       {(!isValidTime(form.wakeHM) || !isValidTime(form.bedHM)) && (
         <p className="note-warn small">
-          Заполни время подъёма и отбоя — от них считается весь план дня.
+          Заполни время подъёма и отбоя — от них считается весь план дня.
         </p>
       )}
       <button className="primary"
@@ -97,7 +97,7 @@ export function Onboarding({ initial, onDone, onRestore }: {
         onClick={() => onDone(buildProfile(form), runScreener(scr))}>
         Сохранить
       </button>
-      <p className="disclaimer">«edim & spim» — не медицинское приложение. При нарушениях сна или питания обратись к врачу.</p>
+      <p className="disclaimer">«edim & spim» — не медицинское приложение. При нарушениях сна или питания обратись к врачу.</p>
     </main>
   );
 }

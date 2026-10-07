@@ -191,14 +191,18 @@ function WeightSheet({ app, exp, records, onClose }: {
         <button className="s-btn food" type="submit" disabled={!kg}>Записать</button>
       </form>
       {weights.length >= 2 && <WeightChart weights={weights} goal={state.food?.profile.goalWeightKg} />}
-      {delta !== null && <p className="s-muted">С первого замера: {delta > 0 ? "+" : ""}{delta} кг. Одна цифра прыгает на полкило — смотри на линию.</p>}
+      {delta !== null && <p className="s-muted">С первого замера: {delta > 0 ? "+" : delta < 0 ? "−" : ""}{Math.abs(delta).toLocaleString("ru-RU")} кг. Одна цифра прыгает на полкило — смотри на линию.</p>}
       {ramp?.active && <p className="s-muted">{ramp.labelRU}. Потом меню остаётся на цели.</p>}
 
       {r && (
         <>
           <h3 className="s-why-h">Сколько ты тратишь на самом деле</h3>
           {r.status === "wait" && <p className="s-muted">Пока по формуле: ≈ {exp!.formula} ккал. Через {r.daysLeft} дн. посчитаю по твоим данным — взвешивайся 4 раза в неделю и отмечай все приёмы.</p>}
-          {r.status === "data" && <p className="s-muted">Не хватает записей за 4 недели: взвешиваний {r.weighIns} из {r.weighInsNeed}, недель с 5+ записанными днями — {r.weeksLogged} из {r.weeks}. Пока по формуле: ≈ {exp!.formula} ккал.</p>}
+          {/* только то, чего не хватает: «взвешиваний 27 из 16» читалось как ошибка */}
+          {r.status === "data" && <p className="s-muted">Не хватает записей за 4 недели: {[
+            r.weighIns < r.weighInsNeed ? `взвешиваний ${r.weighIns} из ${r.weighInsNeed}` : "",
+            r.weeksLogged < r.weeks ? `недель, где записано 5+ дней, — ${r.weeksLogged} из ${r.weeks}` : "",
+          ].filter(Boolean).join("; ")}. Пока по формуле: ≈ {exp!.formula} ккал.</p>}
           {r.status === "uncertain" && <p className="s-muted">≈ {r.tdee} ккал, но разброс ±{r.ci} — рано менять норму. Чаще взвешивайся.</p>}
           {r.status === "ready" && (
             <>
@@ -276,7 +280,7 @@ function SleepSheet({ app, day, records, onClose }: { app: AppModel; day: DayMod
 
 /**
  * «Готовим вдвоём»: меню общее (его задаёт тот, кто создал пару), порции у каждого свои
- * по его калориям, покупки — на обоих, галочки «взял» видны обоим.
+ * по его калориям, покупки — на обоих, галочки «взял» видны обоим.
  */
 function PairSheet({ pair, onPair, onClose }: { pair: PairInfo | null; onPair: (p: PairInfo | null) => void; onClose: () => void }) {
   const [code, setCode] = useState("");
@@ -292,7 +296,7 @@ function PairSheet({ pair, onPair, onClose }: { pair: PairInfo | null; onPair: (
   return (
     <Sheet title="Готовим вдвоём" onClose={onClose}>
       {!pair && <>
-        <p className="s-muted">Одно меню на двоих: блюда общие, а порции у каждого свои — по его калориям. Список покупок — на обоих, галочки «взял» видны обоим.</p>
+        <p className="s-muted">Одно меню на двоих: блюда общие, а порции у каждого свои — по его калориям. Список покупок — на обоих, галочки «взял» видны обоим.</p>
         <button className="s-btn food s-wide" onClick={() => { tap(); onPair(createPair()); }}>Создать пару</button>
         <h3 className="s-why-h">Есть код от партнёра?</h3>
         <div className="s-restore">
@@ -321,9 +325,9 @@ function PairSheet({ pair, onPair, onClose }: { pair: PairInfo | null; onPair: (
 const notifOn = () => typeof Notification !== "undefined" && Notification.permission === "granted";
 
 const NOTIF_ROWS: [keyof PushPrefs, string, string][] = [
-  ["food", "Еда", "«пора готовить» — за время готовки и ещё 10 минут"],
-  ["caffeine", "Кофе и дневной сон", "последний кофе — за 30 минут, сон — за 15"],
-  ["sleep", "Сон", "свет утром, «как спалось?», за час до отбоя"],
+  ["food", "Еда", "«пора готовить» — за время готовки и\u00a0ещё 10\u00a0минут"],
+  ["caffeine", "Кофе и дневной сон", "последний кофе — за 30\u00a0минут, сон — за\u00a015"],
+  ["sleep", "Сон", "свет утром, «как спалось?», за час до\u00a0отбоя"],
 ];
 
 /** Напоминания приходят заранее — чтобы успеть дойти до кухни или допить кофе. */
@@ -367,7 +371,7 @@ function ThemeSheet({ onClose }: { onClose: () => void }) {
           }}>{ru}</button>
         ))}
       </div>
-      <p className="s-small">Тёмное — чистый чёрный: вечером не слепит и бережёт батарею.</p>
+      <p className="s-small">Тёмное — глубокий синий: вечером не слепит глаза.</p>
     </Sheet>
   );
 }

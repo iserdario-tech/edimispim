@@ -74,20 +74,20 @@ export function QuickStart({ onDone, onRestore, onCloudRestored }: {
       {step === 1 && (
         <>
           <h1>Когда ты спишь?</h1>
-          <p className="muted">От подъёма и отбоя строится весь день — и сон, и еда.</p>
+          <p className="muted">От подъёма и отбоя строится весь день — и сон, и еда.</p>
           <label className="fld">Обычно встаю
             <input type="time" value={wakeHM} onChange={e => setWakeHM(e.target.value)} />
           </label>
           <label className="fld">Обычно ложусь
             <input type="time" value={bedHM} onChange={e => setBedHM(e.target.value)} />
           </label>
-          <p className="small muted">Остальное про сон (сова ты или жаворонок, сколько пьёшь кофе) поставим средним — поправишь в «Я → Настройки сна».</p>
-          {!timesOk && <p className="note-warn small">Заполни оба времени — от них считается весь план дня.</p>}
+          <p className="small muted">Остальное про сон (сова ты или жаворонок, сколько пьёшь кофе) поставим средним — поправишь в «Я → Настройки сна».</p>
+          {!timesOk && <p className="note-warn small">Заполни оба времени — от них считается весь план дня.</p>}
           <button className="primary" disabled={!timesOk} onClick={() => setStep(2)}>Дальше</button>
           {onRestore && (
             <p className="small muted">
               {isStandalone()
-                ? "Уже пользовался в Safari? У установленного приложения своя память — перенеси данные файлом копии."
+                ? "Уже пользовался в Safari? У установленного приложения своя память — перенеси данные файлом копии."
                 : "Уже есть копия данных?"}{" "}
               <button className="linkbtn small" onClick={onRestore}>Загрузить копию</button>
             </p>
@@ -124,11 +124,11 @@ export function QuickStart({ onDone, onRestore, onCloudRestored }: {
           </div>
           <p className="small muted">
             {pace === "none"
-              ? "Сразу калории для цели — если ты уже ешь примерно так."
+              ? "Сразу калории для цели — если ты уже ешь примерно так."
               : `За ${PACE_SPAN_RU[pace]} плавно снизим еду от привычной к\u00a0цели: так реже бросают в начале.`}
           </p>
           <p className="small muted">
-            Аллергии, технику на кухне, бюджет и время на готовку настроишь потом в «Я → Настройки еды» — меню соберётся уже сейчас.
+            Аллергии, технику на кухне, бюджет и время на готовку настроишь потом в «Я → Настройки еды» — меню соберётся уже сейчас.
           </p>
           <button className="primary" disabled={problems.length > 0} onClick={() => setStep(3)}>Дальше</button>
           <button className="linkbtn" onClick={() => setStep(1)}>← назад</button>
@@ -155,12 +155,12 @@ export function QuickStart({ onDone, onRestore, onCloudRestored }: {
             </label>
           ))}
           <JunctionScreening value={junction} onChange={setJunction} />
-          <button className="primary" onClick={finish}>Готово — показать мой день</button>
+          <button className="primary" onClick={finish}>Готово — показать мой день</button>
           <button className="linkbtn" onClick={() => setStep(2)}>← назад</button>
         </>
       )}
 
-      <p className="disclaimer">«edim & spim» — не медицинское приложение. При нарушениях сна или питания обратись к врачу.</p>
+      <p className="disclaimer">«edim & spim» — не медицинское приложение. При нарушениях сна или питания обратись к врачу.</p>
     </main>
   );
 }
