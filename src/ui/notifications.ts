@@ -73,7 +73,14 @@ export async function syncPushContext(profile: Profile, day?: PushDay, extra: Pu
     // getRegistration, а не ready: ready висит вечно, если service worker не зарегистрирован
     const reg = await navigator.serviceWorker.getRegistration();
     if (!reg) return;
-    const sub = await reg.pushManager.getSubscription();
+    let sub = await reg.pushManager.getSubscription();
+    // Разрешение дано, а подписки нет (сброс iOS, переустановка с сохранённым разрешением) —
+    // подписываемся молча: окна с вопросом не будет, а сервер снова узнает, куда слать.
+    // У Сердара было ровно так: «Я» писало «включены», а в хранилище сервера — ноль подписок.
+    if (!sub && typeof Notification !== "undefined" && Notification.permission === "granted") {
+      sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC) as BufferSource });
+      writeLS(PUSH_WANTED_KEY, true);
+    }
     if (!sub) return; // напоминания не включены — синхронизировать нечего
     const res = await fetch(BACKEND_URL + "/subscribe", {
       method: "POST", headers: { "content-type": "application/json" },

@@ -1,12 +1,17 @@
 import { defineConfig } from "vite";
+import { execSync } from "node:child_process";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
 // GitHub Pages отдаёт проект по пути /<имя-репо>/ — репозиторий должен называться "edimispim".
 // ⚠️ origin обязан совпасть со старыми приложениями (iserdario-tech.github.io), иначе
 // автоматическая миграция данных из pospat/oheedet через localStorage не сработает.
+// версия сборки — в «Я → О приложении»: по ней видно, обновилось ли приложение на телефоне
+const build = `${new Date().toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Moscow" })} · ${execSync("git rev-parse --short HEAD").toString().trim()}`;
+
 export default defineConfig({
   base: "/edimispim/",
+  define: { __BUILD__: JSON.stringify(build) },
   plugins: [
     react(),
     VitePWA({
