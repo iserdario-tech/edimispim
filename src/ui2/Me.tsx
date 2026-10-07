@@ -4,11 +4,13 @@ import { WeightChart } from "../ui/Charts.js";
 import { toDayRecords } from "../ui/dayRecords.js";
 import { expenditure } from "../expenditure.js";
 import { useExp, paceRU } from "./useExp.js";
+import { targetsFor } from "../ui/storage.js";
+import { targetsForToday } from "../food/index.js";
 import { plateau } from "../plateau.js";
 import { anchor, type AnchorResult } from "../anchor.js";
 import { sleepFoodLink, monthRecap } from "../sleep-food.js";
 import { weekStory } from "../weekStory.js";
-import { plusDaysISO } from "../today-date.js";
+import { plusDaysISO, localDateISO } from "../today-date.js";
 import { readTheme, applyTheme, type ThemeChoice } from "../ui/theme.js";
 import { PHOTOS } from "../food/photos.js";
 import { tap } from "../ui/haptics.js";
@@ -180,6 +182,8 @@ function WeightSheet({ app, exp, records, onClose }: {
   const plat = plateau(records, state.profile.targetSleepMin);
   const delta = weights.length >= 2 ? Math.round((weights.at(-1)!.kg - weights[0]!.kg) * 10) / 10 : null;
   const r = exp?.r;
+  const f = state.food;
+  const ramp = f ? targetsForToday(targetsFor(f), f.startISO, localDateISO(), f.pace).ramp : null;
   return (
     <Sheet title="Вес и калории" onClose={onClose}>
       <form className="s-inline" onSubmit={e => { e.preventDefault(); const v = +kg.replace(",", "."); if (v >= 30 && v <= 300) { tap(); app.actions.addWeight(v); setKg(""); } }}>
@@ -188,6 +192,7 @@ function WeightSheet({ app, exp, records, onClose }: {
       </form>
       {weights.length >= 2 && <WeightChart weights={weights} goal={state.food?.profile.goalWeightKg} />}
       {delta !== null && <p className="s-muted">С первого замера: {delta > 0 ? "+" : ""}{delta} кг. Одна цифра прыгает на полкило — смотри на линию.</p>}
+      {ramp?.active && <p className="s-muted">{ramp.labelRU}. Потом меню остаётся на цели.</p>}
 
       {r && (
         <>
