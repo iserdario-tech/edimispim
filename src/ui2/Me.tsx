@@ -1,15 +1,16 @@
 import { useMemo, useState } from "react";
 import { Sheet } from "../ui/Sheet.js";
 import { WeightChart } from "../ui/Charts.js";
-import { targetsFor } from "../ui/storage.js";
-import { targetsForToday } from "../food/index.js";
 import { toDayRecords } from "../ui/dayRecords.js";
 import { expenditure } from "../expenditure.js";
+import { useExp, paceRU } from "./useExp.js";
+import { targetsFor } from "../ui/storage.js";
+import { targetsForToday } from "../food/index.js";
 import { plateau } from "../plateau.js";
 import { anchor, type AnchorResult } from "../anchor.js";
 import { sleepFoodLink, monthRecap } from "../sleep-food.js";
 import { weekStory } from "../weekStory.js";
-import { plusDaysISO } from "../today-date.js";
+import { plusDaysISO, localDateISO } from "../today-date.js";
 import { readTheme, applyTheme, type ThemeChoice } from "../ui/theme.js";
 import { PHOTOS } from "../food/photos.js";
 import { tap } from "../ui/haptics.js";
@@ -65,23 +66,7 @@ export function Me({ app, day, cloud, onCloud, pair, onPair, onSettings, onStory
   const daysWith = first ? Math.round((Date.parse(day.today) - Date.parse(first)) / 86_400_000) + 1 : 0;
   const lastKg = state.weights?.at(-1)?.kg;
 
-  const exp = useMemo(() => {
-    if (!state.food) return null;
-    const base = targetsFor(state.food);
-    const unadjusted = targetsFor({ ...state.food, kcalAdjust: 0 });
-    const f = state.food;
-    const targetOf = (iso: string) => targetsForToday(f.kcalAdjustAt && iso < f.kcalAdjustAt ? unadjusted : base, f.startISO, iso, f.pace).targets.kcalTarget;
-    return {
-      formula: base.tdee, tempo: base.tempoKgPerWeek,
-      r: expenditure({
-        today: day.today, weights: state.weights ?? [], eaten: state.eaten ?? {}, mealCount: f.mealCount, targetOf,
-        currentTarget: targetOf(day.today),
-        ...(f.startISO ? { startISO: f.startISO } : {}),
-        ...(state.cheatDays ? { cheatDays: state.cheatDays } : {}),
-        ...(f.kcalAdjustAt ? { lastAdjustISO: f.kcalAdjustAt } : {}),
-      }),
-    };
-  }, [state.food, state.weights, state.eaten, state.cheatDays, day.today]);
+  const exp = useExp(state, day.today);
   const tdee = exp ? (exp.r.status === "ready" || exp.r.status === "uncertain" ? exp.r.tdee : exp.formula) : null;
 
   const ROWS: [MeSheet | "sleep-settings" | "food-settings" | "tour", string, string, string][] = [
@@ -197,6 +182,8 @@ function WeightSheet({ app, exp, records, onClose }: {
   const plat = plateau(records, state.profile.targetSleepMin);
   const delta = weights.length >= 2 ? Math.round((weights.at(-1)!.kg - weights[0]!.kg) * 10) / 10 : null;
   const r = exp?.r;
+  const f = state.food;
+  const ramp = f ? targetsForToday(targetsFor(f), f.startISO, localDateISO(), f.pace).ramp : null;
   return (
     <Sheet title="Вес и калории" onClose={onClose}>
       <form className="s-inline" onSubmit={e => { e.preventDefault(); const v = +kg.replace(",", "."); if (v >= 30 && v <= 300) { tap(); app.actions.addWeight(v); setKg(""); } }}>
@@ -205,6 +192,7 @@ function WeightSheet({ app, exp, records, onClose }: {
       </form>
       {weights.length >= 2 && <WeightChart weights={weights} goal={state.food?.profile.goalWeightKg} />}
       {delta !== null && <p className="s-muted">С первого замера: {delta > 0 ? "+" : ""}{delta} кг. Одна цифра прыгает на полкило — смотри на линию.</p>}
+      {ramp?.active && <p className="s-muted">{ramp.labelRU}. Потом меню остаётся на цели.</p>}
 
       {r && (
         <>
@@ -215,7 +203,7 @@ function WeightSheet({ app, exp, records, onClose }: {
           {r.status === "ready" && (
             <>
               <p className="s-big">≈ {r.tdee} <span className="s-small">ккал в день · ±{r.ci}</span></p>
-              <p className="s-muted">Вес снижался на {r.lossPerWeek} кг в неделю, план — на {exp!.tempo}.{r.step === 0 ? " Норма совпадает с расходом." : ""}</p>
+              <p className="s-muted">Вес {paceRU(r.lossPerWeek)} в неделю. План — минус {exp!.tempo.toLocaleString("ru-RU")}.{r.step === 0 ? " Норма совпадает с расходом." : ""}</p>
               {r.step !== 0 && r.nextChangeInDays > 0 && <p className="s-small">Следующая поправка — через {r.nextChangeInDays} дн.</p>}
               {r.step !== 0 && r.nextChangeInDays === 0 && (
                 <button className="s-btn food" onClick={() => { tap(); app.actions.adjustKcal(r.step); }}>
@@ -321,7 +309,7 @@ function PairSheet({ pair, onPair, onClose }: { pair: PairInfo | null; onPair: (
           <button className="s-btn ghost s-wide" onClick={() => { tap(); void navigator.clipboard?.writeText(pair.code); }}>Скопировать код</button>
         </>}
         <p className="s-muted">
-          {pair.role === "a" ? "Меню общее — его задаёшь ты в «Настройках еды»." : "Меню берётся у партнёра, свой приём можно заменить."}
+          {pair.role === "a" ? "Меню собирается по твоим «Настройкам еды»." : "Меню собирается по настройкам партнёра."} Блюдо, заменённое кнопкой ↻, меняется у обоих.
           {" "}{pair.otherKcal ? `Партнёр ест ≈${pair.otherKcal} ккал в день — покупки посчитаны на обоих.` : "Партнёр ещё не присоединился."}
         </p>
         <button className="s-btn ghost s-wide" onClick={() => { if (window.confirm("Выйти из пары? Меню снова станет только твоим.")) { leavePair(); onPair(null); } }}>Выйти из пары</button>

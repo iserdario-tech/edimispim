@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { Profile, ScreenerAnswers, ScreenerResult } from "../index.js";
 import { runScreener } from "../index.js";
 import type { Sex } from "../food/types.js";
-import { DEFAULT_PACE } from "../food/rampin.js";
+import { DEFAULT_PACE, PACES_RU, PACE_SPAN_RU, type RampPace } from "../food/rampin.js";
 import type { FoodSettings, StoredState } from "./storage.js";
 import { CodeRestore } from "../ui2/CodeRestore.js";
 import { buildProfile, isValidTime } from "./onboardingModel.js";
@@ -37,6 +37,7 @@ export function QuickStart({ onDone, onRestore, onCloudRestored }: {
   const [heightCm, setHeightCm] = useState(175);
   const [weightKg, setWeightKg] = useState(80);
   const [goalWeightKg, setGoalWeightKg] = useState(75);
+  const [pace, setPace] = useState<RampPace>(DEFAULT_PACE);
   const [scr, setScr] = useState<ScreenerAnswers>(emptyScreener);
   const [junction, setJunction] = useState(() => junctionFrom());
   const problems = checkProfile({ age, heightCm, weightKg, goalWeightKg });
@@ -49,7 +50,7 @@ export function QuickStart({ onDone, onRestore, onCloudRestored }: {
       profile: { sex, age, heightCm, weightKg, goalWeightKg, activity: "low" },
       constraints: { allergens: [], cookware: ["stove", "oven", "microwave"], budget: "medium", cuisines: [], dislikes: [] },
       mealCount: 4,
-      pace: DEFAULT_PACE,
+      pace,
       startISO: localDateISO(),
       screening: j.screening,
       screen: { nesFlagged: j.nesFlagged },
@@ -114,6 +115,18 @@ export function QuickStart({ onDone, onRestore, onCloudRestored }: {
             {num("Хочу весить, кг", goalWeightKg, setGoalWeightKg, true)}
           </div>
           {problems.length > 0 && <p className="note-warn small">Проверь: {problems.join("; ")}.</p>}
+          <p className="small muted">Как войти в дефицит калорий</p>
+          <div className="seg" role="group" aria-label="Как войти в дефицит">
+            {PACES_RU.map(([v, ru]) => (
+              <button key={v} className={pace === v ? "seg-item on" : "seg-item"} aria-pressed={pace === v}
+                onClick={() => setPace(v)}>{ru}</button>
+            ))}
+          </div>
+          <p className="small muted">
+            {pace === "none"
+              ? "Сразу калории для цели — если ты уже ешь примерно так."
+              : `За ${PACE_SPAN_RU[pace]} плавно снизим еду от привычной к\u00a0цели: так реже бросают в начале.`}
+          </p>
           <p className="small muted">
             Аллергии, технику на кухне, бюджет и время на готовку настроишь потом в «Я → Настройки еды» — меню соберётся уже сейчас.
           </p>

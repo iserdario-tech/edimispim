@@ -5,6 +5,7 @@ import { planPurchase } from "../food/packaging.js";
 import recipesJson from "../food/data/recipes.json";
 import { photoFor, photoUrl } from "../food/photos.js";
 import type { PairInfo } from "../ui/pairSync.js";
+import { byPartner } from "../pair.js";
 import { fmtHM } from "../time.js";
 import { Sheet } from "../ui/Sheet.js";
 import { MealIngredients } from "../ui/Grocery.js";
@@ -86,9 +87,9 @@ export function Eat({ app, week, pair, onShop, onSetupFood }: { app: AppModel; w
           );
         })}
       </div>
-      <p className="s-small s-day-total">{d.day.totals.kcal} ккал · белок {d.day.totals.protein} г</p>
+      <p className="s-small s-day-total">{d.day.totals.kcal} ккал · белок {d.day.totals.protein} · жиры {d.day.totals.fat} · углеводы {d.day.totals.carbs} г</p>
       {diagnosis && <p className="s-small s-day-total">{diagnosis}</p>}
-      {pair && <p className="s-small s-day-total">Готовите вдвоём: {pair.role === "b" ? "меню общее с партнёром, " : ""}порции у каждого свои, покупки — на двоих.</p>}
+      {pair && <p className="s-small s-day-total">Готовите вдвоём: меню общее, ↻ меняет блюдо у обоих. Порции у каждого свои, покупки — на двоих.</p>}
 
       {/* после быстрого старта меню по умолчанию — зовём донастроить, но не заставляем */}
       {state.food.tuned === false && (
@@ -111,7 +112,7 @@ export function Eat({ app, week, pair, onShop, onSetupFood }: { app: AppModel; w
                 <span className="s-plate"><img src={photoUrl(photoFor(m.recipe))} alt="" loading="lazy" decoding="async" /></span>
                 <span className="s-what">
                   <b>{m.recipe.name}</b>
-                  <span>{fmtHM(m.timeMin)} · {Math.round(m.recipe.kcal * m.servings)} ккал{m.leftover ? " · остатки ужина" : m.recipe.time_min ? ` · ${m.recipe.time_min} мин` : ""}</span>
+                  <span>{fmtHM(m.timeMin)} · {Math.round(m.recipe.kcal * m.servings)} ккал{m.leftover ? " · остатки ужина" : pair && byPartner(d.date, m.slot, m.recipe.id, pair.mine, pair.theirs) ? " · от партнёра" : m.recipe.time_min ? ` · ${m.recipe.time_min} мин` : ""}</span>
                 </span>
               </button>
               {done

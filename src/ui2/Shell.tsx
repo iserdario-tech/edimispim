@@ -25,9 +25,9 @@ import { Install } from "./Install.js";
 import { AskSheet } from "./AskSheet.js";
 import { Tour, TOUR_KEY } from "./Tour.js";
 import { readCloud, cloudUpload, markCodeNoted } from "../ui/cloudSync.js";
-import { readPair, syncPair } from "../ui/pairSync.js";
+import { readPair, syncPair, shareSwap } from "../ui/pairSync.js";
 import { localDateISO } from "../today-date.js";
-import { menuOf, mergeSwaps, pairFactor } from "../pair.js";
+import { menuOf, mergeSwaps, pairFactor, withPartnerSwaps } from "../pair.js";
 import { targetsForToday } from "../food/index.js";
 import { targetsFor } from "../ui/storage.js";
 import { isIOS, isStandalone } from "../ui/dataSafety.js";
@@ -116,11 +116,20 @@ function Main({ app, tab, setTab, now, glow, restoreInput, onRestore }: {
     const kcal = targetsForToday(targetsFor(food), food.startISO, localDateISO(), food.pace).targets.kcalTarget;
     return {
       ...real,
-      swaps: pair.role === "b" ? mergeSwaps(pair.menu, real.swaps) : real.swaps,
+      // меню пары (у «b»), поверх — свои замены, поверх них — более поздние замены партнёра
+      swaps: withPartnerSwaps(pair.role === "b" ? mergeSwaps(pair.menu, real.swaps) : real.swaps, pair.mine, pair.theirs),
       food: { ...food, household: pairFactor(kcal, pair.otherKcal) },
     };
   }, [real, pair]);
-  const view = useMemo(() => ({ ...app, state: pairState }), [app, pairState]);
+  const view = useMemo(() => !pair ? { ...app, state: pairState } : {
+    ...app, state: pairState,
+    // замена блюда в паре сразу уходит партнёру — у обоих в этом приёме одно блюдо
+    actions: { ...app.actions, saveSwap: (date: string, slot: string, id: string) => {
+      app.actions.saveSwap(date, slot, id);
+      void shareSwap(date, slot, id);   // время замены записывается сразу, до отправки
+      setPair(readPair());
+    } },
+  }, [app, pairState, pair]);
   const day = useDay(pairState, now);
   const [why, setWhy] = useState(false);
   // копия в облаке: при открытии и при сворачивании (сама не чаще раза в 3 часа)
