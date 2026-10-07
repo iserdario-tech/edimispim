@@ -20,6 +20,13 @@ export function EatSheet({ title, onClose, onSave }: {
   const [mode, setMode] = useState<"words" | "label">("words");
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
+  // фото тарелки: ужимается до 768 px прямо на телефоне — снимок с камеры весит 3–5 МБ, а модели хватает 100–200 КБ
+  const [photo, setPhoto] = useState<string | null>(null);
+  const pickPhoto = async (file: File | undefined) => {
+    if (!file) return;
+    try { setPhoto(await shrink(file)); setResult(null); setErr(""); }
+    catch { setErr("Не получилось открыть фото. Попробуй другое."); }
+  };
   // с этикетки: вес и КБЖУ — на 100 г (так пишут на упаковках) или на всё
   const [name, setName] = useState("");
   const [grams, setGrams] = useState("");
@@ -45,11 +52,12 @@ export function EatSheet({ title, onClose, onSave }: {
 
   const estimate = async () => {
     const q = text.trim();
-    if (!q || busy) return;
+    if ((!q && !photo) || busy) return;
     tap(); setBusy(true); setErr(""); setResult(null);
     try {
       const res = await fetch(BACKEND_URL + "/estimate", {
-        method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text: q, deviceId: deviceId() }),
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ text: q, ...(photo ? { image: photo } : {}), deviceId: deviceId() }),
       });
       const data = await res.json().catch(() => ({}));
       // старый воркер без /estimate отвечает 200 и не JSON — это тоже «недоступно», а не «≈ undefined»
@@ -97,31 +105,55 @@ export function EatSheet({ title, onClose, onSave }: {
       )}
       {mode === "words" && (<>
       <p className="small muted mt-0">
-        Пиши как есть: «гречка с котлетой», «два куска пиццы и чай». Коуч прикинет калории и белок.
-        Текст уходит только для оценки и нигде не хранится.
+        Сфотографируй тарелку или напиши как есть: «гречка с котлетой», «два куска пиццы и чай». Коуч прикинет
+        калории и белок. Фото и текст уходят только для оценки и нигде не хранятся.
       </p>
-      <textarea className="eat-text" rows={3} value={text} maxLength={300} autoFocus
+      {photo
+        ? <div className="eat-photo-wrap">
+            <img className="eat-photo" src={photo} alt="Фото еды" />
+            <button className="linkbtn" onClick={() => { setPhoto(null); setResult(null); }}>убрать фото</button>
+          </div>
+        : <label className="s-btn ghost eat-camera">
+            Сфотографировать
+            <input type="file" accept="image/*" capture="environment" hidden
+              onChange={e => { void pickPhoto(e.target.files?.[0]); e.target.value = ""; }} />
+          </label>}
+      <textarea className="eat-text" rows={photo ? 2 : 3} value={text} maxLength={300} autoFocus={!photo}
         onChange={e => { setText(e.target.value); setResult(null); }}
-        placeholder="Что съел?" aria-label="Что съел" />
+        placeholder={photo ? "Что не видно на фото: соус, добавка, размер" : "Что съел?"} aria-label="Что съел" />
       {!result && (
-        <button className="s-btn food" disabled={busy || !text.trim()} onClick={estimate}>
-          {busy ? "Считаю…" : "Оценить"}
+        <button className="s-btn food" disabled={busy || (!text.trim() && !photo)} onClick={estimate}>
+          {busy ? "Считаю…" : photo ? "Оценить по фото" : "Оценить"}
         </button>
       )}
       {err && <p className="small note-warn">{err}</p>}
       {result && (
         <div className="eat-result">
           <b>≈ {result.kcal} ккал · белок {result.protein} г</b>
-          <p className="small muted">{result.labelRU}. Это прикидка — точность около ±30%.</p>
+          <p className="small muted">{result.labelRU}. Это прикидка{photo ? " по фото" : ""} — точность около ±30%.</p>
           <div className="btn-row">
-            <button className="s-btn food" onClick={() => { tap(); onSave({ text: text.trim(), kcal: result.kcal, protein: result.protein }); onClose(); }}>
+            <button className="s-btn food" onClick={() => { tap(); onSave({ text: text.trim() || result.labelRU, kcal: result.kcal, protein: result.protein }); onClose(); }}>
               Записать
             </button>
-            <button className="linkbtn" onClick={() => setResult(null)}>поправить текст</button>
+            <button className="linkbtn" onClick={() => setResult(null)}>поправить</button>
           </div>
         </div>
       )}
       </>)}
     </Sheet>
   );
+}
+
+/**
+ * Ужать снимок до 768 px по длинной стороне и отдать JPEG data-URL.
+ * `createImageBitmap` с `imageOrientation` сам поворачивает по EXIF — снимок с телефона в кадре не ляжет набок.
+ */
+async function shrink(file: File, max = 768): Promise<string> {
+  const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
+  const k = Math.min(1, max / Math.max(bmp.width, bmp.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(bmp.width * k); canvas.height = Math.round(bmp.height * k);
+  canvas.getContext("2d")!.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+  bmp.close();
+  return canvas.toDataURL("image/jpeg", 0.7);
 }

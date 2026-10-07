@@ -5,7 +5,7 @@
  * вне плана, не попадало никуда. Точность здесь грубая — модель прикидывает по типичным
  * порциям, ±30% это норма, — поэтому приложение везде показывает результат со знаком «≈».
  */
-import { groqText, GROQ_MODELS } from "./llm.js";
+import { groqText, GROQ_MODELS, VISION_MODEL, type ChatMsg } from "./llm.js";
 
 const MODEL = "@cf/meta/llama-4-scout-17b-16e-instruct";
 
@@ -14,6 +14,17 @@ const PROMPT = `Ты считаешь калории еды по описани�
 {"items":[{"name":"шаурма","kcal":560,"protein":28}],"note":"одна фраза: из чего оценка"}
 Правила: kcal и protein — целые числа на весь указанный объём; напитки тоже считай;
 если это не еда или описание пустое — {"items":[],"note":"не похоже на еду"}.`;
+
+/*
+ * «Сфотографируй тарелку»: та же оценка, но по снимку. Модель смотрит на тарелку, приборы и упаковку;
+ * если в кадре этикетка с КБЖУ — берёт её. Точность та же, ±30 %, зато ввод — одно нажатие.
+ */
+const PHOTO_PROMPT = `Ты оцениваешь калории еды по фотографии. На фото — тарелка, упаковка или еда в руке.
+Определи, что это, и оцени порции по размеру тарелки, приборов и руки, если они видны. Если на упаковке
+видна этикетка с КБЖУ и весом — считай по ней. Ответь ТОЛЬКО JSON без пояснений, названия по-русски:
+{"items":[{"name":"гречка с котлетой","kcal":520,"protein":30}],"note":"одна фраза: из чего оценка"}
+Правила: kcal и protein — целые числа на всю порцию в кадре; напитки тоже считай;
+если еды в кадре нет — {"items":[],"note":"не похоже на еду"}.`;
 
 export interface Estimate { kcal: number; protein: number; labelRU: string }
 
@@ -38,10 +49,13 @@ export function parseEstimate(raw: string): Estimate | null {
   return { kcal, protein, labelRU: ok.map(i => `${i.name} ≈ ${Math.round(i.kcal)}`).join(", ") };
 }
 
-export async function estimateFood(ai: Ai, text: string, groqKey?: string): Promise<Estimate | null> {
-  const messages = [{ role: "system" as const, content: PROMPT }, { role: "user" as const, content: text }];
-  // Groq первым (модели по очереди), Cloudflare запасным — как у коуча
-  for (const model of groqKey ? GROQ_MODELS : []) {
+export async function estimateFood(ai: Ai, text: string, groqKey?: string, image?: string): Promise<Estimate | null> {
+  const user: ChatMsg["content"] = image
+    ? [{ type: "text", text: text || "Что на фото? Оцени калории и белок всего, что в кадре." }, { type: "image_url", image_url: { url: image } }]
+    : text;
+  const messages: ChatMsg[] = [{ role: "system", content: image ? PHOTO_PROMPT : PROMPT }, { role: "user", content: user }];
+  // Groq первым (модели по очереди; с фото — только та, что видит картинки), Cloudflare запасным — как у коуча
+  for (const model of groqKey ? (image ? [VISION_MODEL] : GROQ_MODELS) : []) {
     try { return parseEstimate(await groqText(groqKey!, model, messages, 300, 0.1)); }
     catch (e) { console.log("groq estimate failed", model, String(e).slice(0, 160)); }
   }
