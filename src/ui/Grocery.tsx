@@ -114,7 +114,7 @@ export function MealIngredients({ meal, rating, onRate, household = 1 }: {
       {ings.length > 0 && (
         <>
           <div className="small muted">
-            {household > 1 ? `Продукты на ${household} порции — твоя и ещё ${household - 1}` : "Продукты на эту порцию"}
+            {household > 1 ? (Number.isInteger(household) ? `Продукты на ${household} порции — твоя и ещё ${household - 1}` : "Продукты на двоих — твоя порция и партнёра") : "Продукты на эту порцию"}
           </div>
           <ul>
             {ings.map((i, k) => (
@@ -156,7 +156,7 @@ export function MealIngredients({ meal, rating, onRate, household = 1 }: {
           const text = [
             meal.recipe.name,
             "",
-            household > 1 ? `Продукты на ${household} порции:` : "Продукты:",
+            household > 1 ? (Number.isInteger(household) ? `Продукты на ${household} порции:` : "Продукты на двоих:") : "Продукты:",
             ...ings.map(i => `• ${i.name} — ${amountRU(i.qty, i.unit)}`),
             ...(steps.length ? ["", "Как готовить:", ...steps.map((st, k) => `${k + 1}. ${st}`)] : []),
           ].join("\n");

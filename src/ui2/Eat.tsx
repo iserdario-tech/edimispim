@@ -4,6 +4,7 @@ import { swapOptions, swapTo, swapDish, diagnosePool } from "../food/index.js";
 import { planPurchase } from "../food/packaging.js";
 import recipesJson from "../food/data/recipes.json";
 import { photoFor, photoUrl } from "../food/photos.js";
+import type { PairInfo } from "../ui/pairSync.js";
 import { fmtHM } from "../time.js";
 import { Sheet } from "../ui/Sheet.js";
 import { MealIngredients } from "../ui/Grocery.js";
@@ -23,7 +24,7 @@ const DOW = ["вс", "пн", "вт", "ср", "чт", "пт", "сб"];
  * 907 слов и 7.6 экрана. Теперь на экране один день — четыре карточки, — а всё остальное
  * открывается по тапу: рецепт и замена шторкой, каталог поиском, покупки отдельным экраном.
  */
-export function Eat({ app, week, onShop, onSetupFood }: { app: AppModel; week: WeekModel; onShop: () => void; onSetupFood: () => void }) {
+export function Eat({ app, week, pair, onShop, onSetupFood }: { app: AppModel; week: WeekModel; pair?: PairInfo | null; onShop: () => void; onSetupFood: () => void }) {
   const state = app.state!;
   const a = app.actions;
   const [idx, setIdx] = useState(0);
@@ -87,6 +88,7 @@ export function Eat({ app, week, onShop, onSetupFood }: { app: AppModel; week: W
       </div>
       <p className="s-small s-day-total">{d.day.totals.kcal} ккал · белок {d.day.totals.protein} г</p>
       {diagnosis && <p className="s-small s-day-total">{diagnosis}</p>}
+      {pair && <p className="s-small s-day-total">Готовите вдвоём: {pair.role === "b" ? "меню общее с партнёром, " : ""}порции у каждого свои, покупки — на двоих.</p>}
 
       {/* после быстрого старта меню по умолчанию — зовём донастроить, но не заставляем */}
       {state.food.tuned === false && (

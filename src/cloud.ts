@@ -34,8 +34,9 @@ export const isCode = (s: string): boolean => {
   return w.length === 4 && w.every(x => SET.has(x));
 };
 
-export async function idOf(code: string): Promise<string> {
-  return hex(await crypto.subtle.digest("SHA-256", enc.encode("edimispim-id:" + normCode(code))));
+/** Адрес на сервере. `ns` разводит копию и пару: один и тот же код дал бы один адрес. */
+export async function idOf(code: string, ns = "edimispim-id:"): Promise<string> {
+  return hex(await crypto.subtle.digest("SHA-256", enc.encode(ns + normCode(code))));
 }
 
 // ponytail: соль постоянная — код и так уникален на человека; 300 тыс. итераций ≈ полсекунды на iPhone

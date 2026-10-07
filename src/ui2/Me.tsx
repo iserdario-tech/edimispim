@@ -15,6 +15,7 @@ import { PHOTOS } from "../food/photos.js";
 import { tap } from "../ui/haptics.js";
 import { cloudUpload, readCloud, type CloudInfo } from "../ui/cloudSync.js";
 import { CodeRestore } from "./CodeRestore.js";
+import { createPair, joinPair, leavePair, type PairInfo } from "../ui/pairSync.js";
 import { enableNotifications, readPushPrefs, writePushPrefs, syncPushContext } from "../ui/notifications.js";
 import type { PushPrefs } from "../push.js";
 import type { Profile } from "../index.js";
@@ -26,7 +27,7 @@ const RU_PLURAL = new Intl.PluralRules("ru");
 /** 1 день, 2 дня, 5 дней */
 const dni = (n: number) => DNI[RU_PLURAL.select(n)]!;
 
-type MeSheet = null | "weight" | "sleep" | "stories" | "backup" | "notif" | "theme" | "about";
+type MeSheet = null | "weight" | "sleep" | "stories" | "pair" | "backup" | "notif" | "theme" | "about";
 
 /** Понедельник недели даты (ISO). */
 export const mondayOf = (iso: string): string => {
@@ -46,9 +47,10 @@ const weekLabel = (monday: string) => {
  * (вес и расход, сон и режим, истории недель) открываются шторками: на них заходят
  * раз в неделю, а не каждое утро, поэтому им не место на главном пути.
  */
-export function Me({ app, day, cloud, onCloud, onSettings, onStory, onRestore, onTour }: {
+export function Me({ app, day, cloud, onCloud, pair, onPair, onSettings, onStory, onRestore, onTour }: {
   app: AppModel; day: DayModel;
   cloud: CloudInfo | null; onCloud: (c: CloudInfo | null) => void;
+  pair: PairInfo | null; onPair: (p: PairInfo | null) => void;
   onSettings: (which: "sleep" | "food") => void;
   onStory: (monday: string) => void;
   onRestore: () => void;
@@ -88,6 +90,7 @@ export function Me({ app, day, cloud, onCloud, onSettings, onStory, onRestore, o
     ["stories", "▤", "Итоги недель", "каждый понедельник — новый"],
     ["sleep-settings", "⏰", "Настройки сна", `подъём ${state.profile.anchorWakeHM}`],
     ["food-settings", "🍽", "Настройки еды", state.food ? `${state.food.mealCount} приёма · ${state.food.household && state.food.household > 1 ? `на ${state.food.household}` : "на себя"}` : "не настроено"],
+    ["pair", "👫", "Готовим вдвоём", pair ? (pair.otherKcal ? `партнёр ≈${pair.otherKcal} ккал/день` : "ждём партнёра") : "общее меню, порции свои"],
     ["backup", "⤓", "Копия данных", cloud?.at ? `в облаке · ${cloud.at.split("-").reverse().slice(0, 2).join(".")}` : app.backupAt ? `файлом · ${app.backupAt.split("-").reverse().slice(0, 2).join(".")}` : "ещё не делал"],
     ["notif", "🔔", "Напоминания", notifOn() ? "заранее: еда, кофе, сон" : "выключены"],
     ["theme", "◐", "Оформление", { auto: "как в системе", light: "светлое", dark: "тёмное" }[readTheme()]],
@@ -165,6 +168,7 @@ export function Me({ app, day, cloud, onCloud, onSettings, onStory, onRestore, o
         </Sheet>
       )}
       {sheet === "theme" && <ThemeSheet onClose={() => setSheet(null)} />}
+      {sheet === "pair" && <PairSheet pair={pair} onPair={onPair} onClose={() => setSheet(null)} />}
       {sheet === "notif" && <NotifSheet profile={state.profile} onClose={() => setSheet(null)} />}
       {sheet === "about" && (
         <Sheet title="О приложении" onClose={() => setSheet(null)}>
@@ -278,6 +282,50 @@ function SleepSheet({ app, day, records, onClose }: { app: AppModel; day: DayMod
           </p>
         </>
       )}
+    </Sheet>
+  );
+}
+
+/**
+ * «Готовим вдвоём»: меню общее (его задаёт тот, кто создал пару), порции у каждого свои
+ * по его калориям, покупки — на обоих, галочки «взял» видны обоим.
+ */
+function PairSheet({ pair, onPair, onClose }: { pair: PairInfo | null; onPair: (p: PairInfo | null) => void; onClose: () => void }) {
+  const [code, setCode] = useState("");
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const join = async () => {
+    setBusy(true); setNote("");
+    const r = await joinPair(code);
+    setBusy(false);
+    if (typeof r === "string") setNote({ "bad-code": "Нужно четыре слова, например «лиса-река-гром-сыр».", "not-found": "Пары с таким кодом нет. Пусть партнёр откроет приложение и проверит код.", offline: "Нет связи. Попробуй ещё раз." }[r]);
+    else onPair(r);
+  };
+  return (
+    <Sheet title="Готовим вдвоём" onClose={onClose}>
+      {!pair && <>
+        <p className="s-muted">Одно меню на двоих: блюда общие, а порции у каждого свои — по его калориям. Список покупок — на обоих, галочки «взял» видны обоим.</p>
+        <button className="s-btn food s-wide" onClick={() => { tap(); onPair(createPair()); }}>Создать пару</button>
+        <h3 className="s-why-h">Есть код от партнёра?</h3>
+        <div className="s-restore">
+          <input type="text" value={code} placeholder="например: лиса-река-гром-сыр" autoCapitalize="none" autoCorrect="off" spellCheck={false}
+            aria-label="Код пары" onChange={e => setCode(e.target.value)} onKeyDown={e => { if (e.key === "Enter") void join(); }} />
+          <button className="s-btn ghost" disabled={busy || !code.trim()} onClick={() => void join()}>{busy ? "…" : "Присоединиться"}</button>
+          {note && <p className="s-small">{note}</p>}
+        </div>
+      </>}
+      {pair && <>
+        {pair.role === "a" && <>
+          <p className="s-muted">Отправь код партнёру — он введёт его у себя в «Я → Готовим вдвоём».</p>
+          <p className="s-code">{pair.code}</p>
+          <button className="s-btn ghost s-wide" onClick={() => { tap(); void navigator.clipboard?.writeText(pair.code); }}>Скопировать код</button>
+        </>}
+        <p className="s-muted">
+          {pair.role === "a" ? "Меню общее — его задаёшь ты в «Настройках еды»." : "Меню берётся у партнёра, свой приём можно заменить."}
+          {" "}{pair.otherKcal ? `Партнёр ест ≈${pair.otherKcal} ккал в день — покупки посчитаны на обоих.` : "Партнёр ещё не присоединился."}
+        </p>
+        <button className="s-btn ghost s-wide" onClick={() => { if (window.confirm("Выйти из пары? Меню снова станет только твоим.")) { leavePair(); onPair(null); } }}>Выйти из пары</button>
+      </>}
     </Sheet>
   );
 }
