@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { menuOf, mergeSwaps, pairFactor } from "../src/pair";
+import { menuOf, mergeSwaps, pairFactor, withPartnerSwaps, byPartner } from "../src/pair";
 
 /**
  * «Готовим вдвоём»: меню общее (его задаёт тот, кто создал пару), порции у каждого свои,
@@ -20,6 +20,26 @@ describe("общее меню", () => {
   });
   it("без пары — свои замены как есть", () => {
     expect(mergeSwaps(undefined, { x: { a: "1" } })).toEqual({ x: { a: "1" } });
+  });
+});
+
+describe("замены обоих", () => {
+  const D = "2026-10-08";
+  it("замена партнёра попадает в моё меню", () => {
+    expect(withPartnerSwaps({ [D]: { lunch: "l1" } }, {}, { [D]: { dinner: ["d9", 100] } }))
+      .toEqual({ [D]: { lunch: "l1", dinner: "d9" } });
+  });
+  it("на один приём побеждает более поздняя замена", () => {
+    expect(withPartnerSwaps({ [D]: { dinner: "d2" } }, { [D]: { dinner: ["d2", 200] } }, { [D]: { dinner: ["d9", 100] } }))
+      .toEqual({ [D]: { dinner: "d2" } });
+    expect(withPartnerSwaps({ [D]: { dinner: "d2" } }, { [D]: { dinner: ["d2", 100] } }, { [D]: { dinner: ["d9", 200] } }))
+      .toEqual({ [D]: { dinner: "d9" } });
+  });
+  it("подпись «от партнёра» — только если стоит именно его блюдо", () => {
+    const theirs = { [D]: { dinner: ["d9", 200] as [string, number] } };
+    expect(byPartner(D, "dinner", "d9", {}, theirs)).toBe(true);
+    expect(byPartner(D, "dinner", "d1", {}, theirs)).toBe(false);   // блюда нет в моём наборе — осталось моё
+    expect(byPartner(D, "dinner", "d9", { [D]: { dinner: ["d9", 300] } }, theirs)).toBe(false);
   });
 });
 
