@@ -98,6 +98,29 @@ export default {
       return data ? new Response(data, { headers: CORS }) : new Response("not found", { status: 404, headers: CORS });
     }
 
+    /*
+     * «Готовим вдвоём»: общие данные пары — меню, калории каждого, кладовка с галочками.
+     * Как и копия, всё зашифровано кодом пары на телефонах; здесь только адрес и шифр.
+     */
+    if (req.method === "POST" && (url.pathname === "/pair/put" || url.pathname === "/pair/get")) {
+      const ip = req.headers.get("cf-connecting-ip") ?? "unknown";
+      const body = (await req.json().catch(() => ({}))) as { id?: unknown; key?: unknown; data?: unknown };
+      const id = typeof body.id === "string" && /^[0-9a-f]{64}$/.test(body.id) ? body.id : null;
+      const key = typeof body.key === "string" && ["menu", "m-a", "m-b", "pantry"].includes(body.key) ? body.key : null;
+      if (!id || !key) return new Response("bad request", { status: 400, headers: CORS });
+      if (url.pathname === "/pair/put") {
+        const data = typeof body.data === "string" && body.data.length <= 200_000 && /^[A-Za-z0-9+/=]+$/.test(body.data) ? body.data : null;
+        if (!data) return new Response("bad request", { status: 400, headers: CORS });
+        if (await overLimit(env, "wp", ip, 150)) return new Response("limit", { status: 429, headers: CORS });
+        await env.SUBS.put(`pr:${id}:${key}`, data, { expirationTtl: 90 * 86400 });
+        return new Response("ok", { headers: CORS });
+      }
+      // ponytail: чтения без счётчика — счётчик сам стоил бы записи в KV на каждое чтение;
+      // адрес — хэш от кода из 36 бит, перебирать его через сеть бессмысленно
+      const data = await env.SUBS.get(`pr:${id}:${key}`);
+      return data ? new Response(data, { headers: CORS }) : new Response("not found", { status: 404, headers: CORS });
+    }
+
     if (req.method === "POST" && url.pathname === "/coach") {
       const ip = req.headers.get("cf-connecting-ip") ?? "unknown";
       if (await overLimit(env, "rl", ip, COACH_DAILY_LIMIT))
