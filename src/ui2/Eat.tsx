@@ -86,7 +86,7 @@ export function Eat({ app, week, pair, onShop, onSetupFood }: { app: AppModel; w
           );
         })}
       </div>
-      <p className="s-small s-day-total">{d.day.totals.kcal} ккал · белок {d.day.totals.protein} г</p>
+      <p className="s-small s-day-total">{d.day.totals.kcal} ккал · белок {d.day.totals.protein} · жиры {d.day.totals.fat} · углеводы {d.day.totals.carbs} г</p>
       {diagnosis && <p className="s-small s-day-total">{diagnosis}</p>}
       {pair && <p className="s-small s-day-total">Готовите вдвоём: {pair.role === "b" ? "меню общее с партнёром, " : ""}порции у каждого свои, покупки — на двоих.</p>}
 

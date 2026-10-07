@@ -360,7 +360,7 @@ function todayMenuRU(state: StoredState): string[] {
     return `${fmtHM(m.timeMin)} ${SLOT_RU[m.slot] ?? m.slot} — ${m.recipe.name}, ${Math.round(m.recipe.kcal * m.servings)} ккал${m.leftover ? ", остатки вчерашнего ужина" : ""}${status}`;
   });
   return [
-    `Меню на сегодня (цель ${fd.day.totals.kcal} ккал, белок ${fd.safe.proteinGTarget} г):`,
+    `Меню на сегодня (цель ${fd.day.totals.kcal} ккал, белок ${fd.safe.proteinGTarget} г; в меню белок ${fd.day.totals.protein} г, жиры ${fd.day.totals.fat} г, углеводы ${fd.day.totals.carbs} г, клетчатка ${fd.day.totals.fiber} г):`,
     ...lines,
     fact.marked
       ? `Съедено ${fact.estimated ? "примерно " : ""}${fact.kcal} ккал, белок ${fact.protein} г; осталось около ${Math.max(0, fd.day.totals.kcal - fact.kcal)} ккал.`
