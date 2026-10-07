@@ -29,7 +29,8 @@ const dateLabel = (d: Date) => d.toLocaleDateString("ru-RU", { weekday: "long", 
 const until = (min: number) => {
   if (min <= 0) return "сейчас";
   const h = Math.floor(min / 60), m = min % 60;
-  return `через ${h ? `${h} ч ${String(m).padStart(2, "0")}` : `${m} мин`}`;
+  // неразрывные пробелы: «через 31 мин» не рвётся на две строки, «мин» не повисает одно
+  return `через\u00a0${h ? `${h}\u00a0ч\u00a0${String(m).padStart(2, "0")}` : `${m}\u00a0мин`}`;
 };
 const SLOT_RU: Record<string, string> = { breakfast: "Завтрак", lunch: "Обед", dinner: "Ужин", dessert: "Сладкое", snack: "Перекус" };
 
