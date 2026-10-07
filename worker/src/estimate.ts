@@ -5,7 +5,7 @@
  * вне плана, не попадало никуда. Точность здесь грубая — модель прикидывает по типичным
  * порциям, ±30% это норма, — поэтому приложение везде показывает результат со знаком «≈».
  */
-import { groqText } from "./llm.js";
+import { groqText, GROQ_MODELS } from "./llm.js";
 
 const MODEL = "@cf/meta/llama-4-scout-17b-16e-instruct";
 
@@ -40,10 +40,10 @@ export function parseEstimate(raw: string): Estimate | null {
 
 export async function estimateFood(ai: Ai, text: string, groqKey?: string): Promise<Estimate | null> {
   const messages = [{ role: "system" as const, content: PROMPT }, { role: "user" as const, content: text }];
-  // Groq первым, Cloudflare запасным — как у коуча
-  if (groqKey) {
-    try { return parseEstimate(await groqText(groqKey, messages, 300, 0.1)); }
-    catch (e) { console.log("groq estimate failed, fallback:", String(e).slice(0, 200)); }
+  // Groq первым (модели по очереди), Cloudflare запасным — как у коуча
+  for (const model of groqKey ? GROQ_MODELS : []) {
+    try { return parseEstimate(await groqText(groqKey!, model, messages, 300, 0.1)); }
+    catch (e) { console.log("groq estimate failed", model, String(e).slice(0, 160)); }
   }
   const res = (await ai.run(MODEL as keyof AiModels, {
     messages,

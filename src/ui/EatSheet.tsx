@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Sheet } from "./Sheet.js";
 import { BACKEND_URL } from "./notifications.js";
 import { tap } from "./haptics.js";
+import { deviceId } from "./localStore.js";
 import type { WrittenFood } from "../food/eaten.js";
 
 /**
@@ -27,7 +28,7 @@ export function EatSheet({ title, onClose, onSave }: {
     tap(); setBusy(true); setErr(""); setResult(null);
     try {
       const res = await fetch(BACKEND_URL + "/estimate", {
-        method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text: q }),
+        method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text: q, deviceId: deviceId() }),
       });
       const data = await res.json().catch(() => ({}));
       // старый воркер без /estimate отвечает 200 и не JSON — это тоже «недоступно», а не «≈ undefined»

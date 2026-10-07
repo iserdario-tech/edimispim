@@ -20,3 +20,16 @@ export const writeLS = (key: string, v: unknown): void => {
 
 export const PANTRY_KEY = "edimispim.pantry";
 export const SHOP_KEY = "edimispim.shop";
+
+/**
+ * Случайный id устройства для дневного лимита коуча на сервере: лимит по IP ловил всех за одним
+ * роутером или в одной мобильной сети разом. Ничего о человеке не говорит, в копию данных не входит.
+ */
+export const deviceId = (): string => {
+  let id = readLS<string | null>("edimispim.device", null);
+  if (!id) {
+    id = typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36);
+    writeLS("edimispim.device", id);
+  }
+  return id;
+};

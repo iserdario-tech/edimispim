@@ -2,7 +2,7 @@ import { buildPushHTTPRequest } from "@pushforge/builder";
 import type { Profile, DayMode, DayToggles } from "../../src/index.js";
 import { planDay, parseHM } from "../../src/index.js";
 import { planPushes, mealPushes, checkinDue, ALL_PUSHES, type PushMeal, type PushPrefs } from "../../src/push.js";
-import { coachStream, type CoachTurn } from "./coach.js";
+import { coachStream, CoachBusy, type CoachTurn } from "./coach.js";
 import { estimateFood } from "./estimate.js";
 
 interface Env {
@@ -13,8 +13,16 @@ interface Env {
   COACH_LIMIT?: string;   // только для локальной проверки коуча (`wrangler dev --var COACH_LIMIT:1000`); на сервере не задан
 }
 
-const COACH_DAILY_LIMIT = 60; // эндпоинт публичный — без лимита любой выест бесплатную квоту ИИ за день
-// ponytail: счётчик в KV по IP; KV не строго консистентен, для потолка запросов этого хватает.
+/*
+ * Лимит вопросов в день — на УСТРОЙСТВО (приложение присылает свой случайный id), а не на IP:
+ * домашний Wi-Fi и мобильная сеть дают один IP на всех — Сердар упёрся в лимит, который выели
+ * мои проверки с того же адреса. Общий потолок на всех — чтобы бесплатные квоты не выел чужой скрипт.
+ */
+const COACH_DAILY_LIMIT = 120;
+const GLOBAL_DAILY_LIMIT = 900;   // Groq даёт 1 000 запросов в день
+const whoOf = (body: { deviceId?: unknown }, req: Request): string =>
+  typeof body.deviceId === "string" && /^[\w-]{8,64}$/.test(body.deviceId) ? `d:${body.deviceId}` : `ip:${req.headers.get("cf-connecting-ip") ?? "unknown"}`;
+// ponytail: счётчик в KV; KV не строго консистентен, для потолка запросов этого хватает.
 async function overLimit(env: Env, prefix: string, ip: string, limit: number): Promise<boolean> {
   const key = `${prefix}:${ip}:${new Date().toISOString().slice(0, 10)}`;
   const used = Number((await env.SUBS.get(key)) ?? 0);
@@ -129,17 +137,21 @@ export default {
     }
 
     if (req.method === "POST" && url.pathname === "/coach") {
-      const ip = req.headers.get("cf-connecting-ip") ?? "unknown";
-      if (await overLimit(env, "rl", ip, Number(env.COACH_LIMIT ?? COACH_DAILY_LIMIT)))
+      const body = (await req.json().catch(() => ({}))) as { messages?: CoachTurn[]; contextRU?: string; deviceId?: unknown };
+      if (await overLimit(env, "rl", whoOf(body, req), Number(env.COACH_LIMIT ?? COACH_DAILY_LIMIT)) || await overLimit(env, "rl", "all", GLOBAL_DAILY_LIMIT))
         return new Response(JSON.stringify({ error: "На сегодня хватит вопросов — продолжим завтра." }), { status: 429, headers: JSON_CORS });
-      const body = (await req.json()) as { messages?: CoachTurn[]; contextRU?: string };
-      const messages = (body.messages ?? []).slice(-10); // держим короткий хвост: дешевле и достаточно
-      if (!messages.length || messages.some((m) => !m.content?.trim()))
+      // короткий хвост разговора, прошлые ответы обрезаны: лимиты считаются токенами, а коучу
+      // для ответа хватает последних двух реплик
+      const messages = (body.messages ?? []).slice(-6).map(m =>
+        m?.role === "assistant" && typeof m.content === "string" && m.content.length > 700 ? { ...m, content: m.content.slice(0, 700) + "…" } : m);
+      if (!messages.length || messages.some((m) => !m?.content?.trim()))
         return new Response(JSON.stringify({ error: "bad request" }), { status: 400, headers: JSON_CORS });
       try {
         const stream = await coachStream({ ai: env.AI, ...(env.GROQ_API_KEY ? { groqKey: env.GROQ_API_KEY } : {}), messages, contextRU: body.contextRU ?? "Ничего не известно." });
         return new Response(stream, { headers: { ...CORS, "content-type": "text/event-stream" } });
       } catch (e) {
+        if (e instanceof CoachBusy)
+          return new Response(JSON.stringify({ error: "Много вопросов за минуту — подожди чуть-чуть и спроси снова." }), { status: 429, headers: JSON_CORS });
         console.error("coach error", String((e as any)?.message ?? e));
         return new Response(JSON.stringify({ error: "Коуч сейчас недоступен. Попробуй позже." }), { status: 502, headers: JSON_CORS });
       }
@@ -148,11 +160,10 @@ export default {
     // «Напиши, что съел»: тот же дневной лимит, что у коуча — это тоже вызов модели
     if (req.method === "POST" && url.pathname === "/estimate") {
       // сначала проверяем запрос, потом тратим лимит: пустой запрос не должен съедать квоту
-      const body = (await req.json().catch(() => ({}))) as { text?: unknown };
+      const body = (await req.json().catch(() => ({}))) as { text?: unknown; deviceId?: unknown };
       const text = typeof body.text === "string" ? body.text.trim().slice(0, 300) : "";
       if (!text) return new Response(JSON.stringify({ error: "Напиши, что съел." }), { status: 400, headers: JSON_CORS });
-      const ip = req.headers.get("cf-connecting-ip") ?? "unknown";
-      if (await overLimit(env, "rl", ip, Number(env.COACH_LIMIT ?? COACH_DAILY_LIMIT)))
+      if (await overLimit(env, "rl", whoOf(body, req), Number(env.COACH_LIMIT ?? COACH_DAILY_LIMIT)) || await overLimit(env, "rl", "all", GLOBAL_DAILY_LIMIT))
         return new Response(JSON.stringify({ error: "На сегодня хватит — продолжим завтра." }), { status: 429, headers: JSON_CORS });
       try {
         const est = await estimateFood(env.AI, text, env.GROQ_API_KEY);
