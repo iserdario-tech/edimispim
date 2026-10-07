@@ -87,7 +87,7 @@ export function Fridge({ pantry, onPantry, pool }: {
       <div className="menu-head">
         <h3 className="card-h m-0">Холодильник</h3>
         <button className="linkbtn small" onClick={() => setOpen(!open)}>
-          {open ? "свернуть" : items.length ? positionsRU(items.length) : "заполнить"}
+          {open ? "свернуть" : items.length ? positionsRU(items.length) : "добавить продукты"}
         </button>
       </div>
 
