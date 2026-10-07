@@ -3,12 +3,12 @@ import type { Yesterday } from "../effects.js";
 import type { DayLog } from "../index.js";
 import { todayFoodDay } from "./todayPlan.js";
 import { eatenTotals, rebalance } from "../food/eaten.js";
-import { expectedBedMin } from "../food/index.js";
-import { parseHM, fmtHM, sleepDurationMin } from "../index.js";
-import { loadState, saveState, exportAll, importAll, type FoodSettings, type StoredState } from "./storage.js";
+import { expectedBedMin, targetsForToday } from "../food/index.js";
+import { parseHM, fmtHM, sleepDurationMin, planDay } from "../index.js";
+import { loadState, saveState, exportAll, importAll, loadDayDraft, targetsFor, type FoodSettings, type StoredState } from "./storage.js";
 import { syncPushContext } from "./notifications.js";
 import { migrateAll } from "../migrate.js";
-import { localDateISO } from "../today-date.js";
+import { localDateISO, plusDaysISO } from "../today-date.js";
 import { toggleMark, markAllAte, setOwnSize, setOwnText, addExtra, removeExtra, type DayEaten, type MealMark, type OwnSize, type WrittenFood } from "../food/eaten.js";
 import type { Slot } from "../food/types.js";
 import { readLS, writeLS } from "./localStore.js";
@@ -268,25 +268,63 @@ export function useAppState() {
 }
 
 /** Короткая сводка «как дела сейчас» — чтобы коуч отвечал про этого человека, а не вообще. */
-export function coachContext(state: StoredState): string {
-  const last = state.history[state.history.length - 1];
+const dateRU = (iso: string) => new Date(iso + "T12:00:00").toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
+
+/**
+ * Что коуч знает о человеке. Без цифр он отвечал «скажи свой вес и цель» (они есть),
+ * считал темп похудения по шуму в замерах, советовал белок «0.8 г на кг» при цели
+ * приложения в 1.4 и кофе «до 15:00» при другом плане. Теперь — цели, траты, план дня,
+ * сон, отметки и время, всё словами (даты не «2026-10-05»).
+ */
+export function coachContext(state: StoredState, now = new Date()): string {
+  const today = localDateISO(now);
+  const p = state.profile;
+  const f = state.food;
   const weights = state.weights ?? [];
-  return [
-    // Стилевых указаний здесь больше нет: они дублировали промпт на Worker'е и требовали
-    // ровно обратного — «отвечай развёрнуто, 4–8 предложений». Отсюда и была вода.
-    "Приложение объединяет сон и питание: можешь отвечать и про еду, и про режим дня.",
-    `Обычный подъём: ${state.profile.anchorWakeHM}. Цель сна: ${(state.profile.targetSleepMin / 60).toFixed(1)} ч.`,
-    last ? `Последняя отмеченная ночь ${last.date}: подъём ${last.wokeHM}, качество ${last.quality}/5${last.hadAlcohol ? ", был алкоголь" : ""}.` : "Ночи пока не отмечались.",
-    state.food ? `Питание настроено: ${state.food.mealCount} ${state.food.mealCount < 5 ? "приёма" : "приёмов"} в день.` : "Питание пока не настроено.",
-    ...todayMenuRU(state),
-    weights.length >= 2
-      ? `Вес: с ${weights[0]!.kg} до ${weights[weights.length - 1]!.kg} кг за ${weights.length} замеров.`
-      : "",
-    state.screener?.flagged
-      ? `ВАЖНО, анкета показала признаки, требующие врача: ${state.screener.messagesRU.join(" ")}`
-      : "",
-  ].filter(Boolean).join("\n");
+  const nights = state.history.filter(h => h.date >= plusDaysISO(today, -7));
+  const timed = nights.filter(h => h.bedHM).map(h => sleepDurationMin(h, p.targetSleepMin));
+  const last = state.history[state.history.length - 1];
+  const draft = loadDayDraft(today);
+  const plan = planDay({ profile: p, ctx: { date: today, mode: draft?.mode ?? "normal", toggles: draft?.toggles ?? {} },
+    lastNight: { wokeHM: last?.date === today ? last.wokeHM : p.anchorWakeHM, quality: last?.date === today ? last.quality : 3 }, history: state.history });
+  const at = (k: string) => { const w = plan.windows.find(x => x.kind === k); return w ? fmtHM(w.startMin).replace(" (+1)", " ночью") : null; };
+
+  const lines: string[] = [
+    `Сейчас: ${now.toLocaleDateString("ru-RU", { weekday: "long", day: "numeric", month: "long" })}, ${fmtHM(now.getHours() * 60 + now.getMinutes())}.`,
+    `Сон: обычный подъём ${p.anchorWakeHM}, цель сна ${Math.round(p.targetSleepMin / 6) / 10} ч.`,
+    `План дня приложения: последний кофе до ${at("caffeine_last") ?? "—"}, отбой в ${at("target_bed") ?? "—"}${at("nap") ? `, короткий сон днём в ${at("nap")}` : ""}.`,
+    last ? `Последняя отмеченная ночь — ${dateRU(last.date)}: подъём ${last.wokeHM}${last.bedHM ? `, лёг в ${last.bedHM}` : ""}, качество ${last.quality} из 5${last.hadAlcohol ? ", был алкоголь" : ""}.` : "Ночи пока не отмечались.",
+    timed.length >= 3 ? `За неделю спал в среднем ${Math.floor(avg(timed) / 60)} ч ${Math.round(avg(timed) % 60)} мин.` : "",
+  ];
+  if (f) {
+    const t = targetsFor(f);
+    const { targets: tt, ramp } = targetsForToday(t, f.startISO, today, f.pace);
+    const kg = weights.at(-1)?.kg ?? f.profile.weightKg;
+    lines.push(
+      `О человеке: ${f.profile.sex === "f" ? "женщина" : "мужчина"}, ${f.profile.age} ${({ one: "год", few: "года" } as Record<string, string>)[new Intl.PluralRules("ru").select(f.profile.age)] ?? "лет"}, рост ${f.profile.heightCm} см, вес сейчас ${kg} кг, цель ${f.profile.goalWeightKg} кг.`,
+      `Тратит в день по формуле ≈${t.tdee} ккал. Цель приложения: ${t.kcalTarget} ккал в день и белок ${t.proteinGTarget} г — дефицит ≈${t.tdee - t.kcalTarget} ккал, это ≈${t.tempoKgPerWeek} кг в неделю.`,
+      ramp.active ? `Идёт плавный вход в дефицит: день ${ramp.day} из ${ramp.total}, сегодня цель ${tt.kcalTarget} ккал, дальше каждый день чуть меньше до ${ramp.kcalGoal}.` : "",
+      f.strength ? "Регулярно делает силовые — поэтому белок поднят." : "",
+      `Питание: ${f.mealCount} ${f.mealCount < 5 ? "приёма" : "приёмов"} в день; сладкое в меню каждый день и посчитано в калориях.`,
+    );
+    const weekAgo = weights.filter(w => w.date >= plusDaysISO(today, -28));
+    if (weekAgo.length >= 2) {
+      const days = Math.max(1, (Date.parse(weekAgo.at(-1)!.date) - Date.parse(weekAgo[0]!.date)) / 86_400_000);
+      const perWeek = Math.round(((weekAgo.at(-1)!.kg - weekAgo[0]!.kg) / days) * 7 * 10) / 10;
+      lines.push(`Вес за последние 4 недели: ${weekAgo[0]!.kg} → ${weekAgo.at(-1)!.kg} кг (${perWeek > 0 ? "+" : ""}${perWeek} кг в неделю). Отдельный замер прыгает на полкило из-за воды.`);
+    }
+    const recent = Object.entries(state.eaten ?? {}).filter(([d]) => d >= plusDaysISO(today, -14) && d < today);
+    if (recent.length) {
+      const own = recent.reduce((n, [, e]) => n + Object.values(e.marks).filter(m => m === "own").length, 0);
+      const extras = recent.reduce((n, [, e]) => n + (e.extras?.length ?? 0), 0);
+      lines.push(`За 2 недели еда отмечена в ${recent.length} дн.; «ел своё» — ${own} раз, съедено вне плана — ${extras} раз.`);
+    } else lines.push("Еду за последние 2 недели не отмечал — насколько он держится плана, неизвестно.");
+  } else lines.push("Питание пока не настроено.");
+  lines.push(...todayMenuRU(state));
+  if (state.screener?.flagged) lines.push(`ВАЖНО, анкета показала признаки, требующие врача: ${state.screener.messagesRU.join(" ")}`);
+  return lines.filter(Boolean).join("\n");
 }
+const avg = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
 
 const SLOT_RU: Record<string, string> = { breakfast: "завтрак", lunch: "обед", dinner: "ужин", dessert: "сладкое", snack: "перекус" };
 const SIZE_RU: Record<string, string> = { light: "лёгкое", usual: "как в плане", big: "плотное" };
