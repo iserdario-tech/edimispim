@@ -78,7 +78,7 @@ export function rampIn(
   const day = daysSince(startISO, todayISO);
   if (day < 1) {
     return { day: 1, total, kcalToday: Math.round(from), kcalGoal: goal, active: true,
-      labelRU: `Вход в режим: день 1 из ${total}` };
+      labelRU: `Вход в дефицит: день 1 из ${total}` };
   }
   if (day > total) {
     return { day: total, total, kcalToday: goal, kcalGoal: goal, active: false, labelRU: "" };
@@ -91,7 +91,7 @@ export function rampIn(
 
   return {
     day, total, kcalToday, kcalGoal: goal, active: true,
-    labelRU: `Вход в режим: день ${day} из ${total} · сегодня ${kcalToday} ккал, цель ${goal}`,
+    labelRU: `Вход в дефицит: день ${day} из ${total} · сегодня ${kcalToday} ккал, цель ${goal}`,
   };
 }
 

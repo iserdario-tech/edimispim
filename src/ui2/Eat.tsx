@@ -71,17 +71,13 @@ export function Eat({ app, week, pair, onShop, onSetupFood }: { app: AppModel; w
         </button>
       </div>
 
-      <div className="s-seg" role="group" aria-label="День">
-        {([[0, "Сегодня"], [1, "Завтра"]] as const).map(([i, ru]) => (
-          <button key={i} className={idx === i ? "on" : ""} aria-pressed={idx === i} onClick={() => { tap(); setIdx(i); }}>{ru}</button>
-        ))}
-      </div>
       <div className="s-week" role="group" aria-label="Неделя">
         {plan.days.map((x, i) => {
           const dt = new Date(x.date + "T12:00:00");
           return (
             <button key={x.date} className={idx === i ? "on" : ""} aria-pressed={idx === i} onClick={() => { tap(); setIdx(i); }}>
-              <span>{DOW[dt.getDay()]}</span><b>{dt.getDate()}</b>
+              {/* было ещё «Сегодня / Завтра» сверху — два переключателя одного и того же дня */}
+              <span className={i === 0 ? "s-week-today" : undefined}>{i === 0 ? "сегодня" : DOW[dt.getDay()]}</span><b>{dt.getDate()}</b>
             </button>
           );
         })}

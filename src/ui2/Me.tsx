@@ -4,8 +4,9 @@ import { WeightChart } from "../ui/Charts.js";
 import { toDayRecords } from "../ui/dayRecords.js";
 import { expenditure } from "../expenditure.js";
 import { useExp, paceRU } from "./useExp.js";
-import { DEFAULT_PACE, PACES_RU, type RampPace } from "../food/rampin.js";
+import { DEFAULT_PACE, PACES_RU, PACE_SPAN_RU, type RampPace } from "../food/rampin.js";
 import { Ico } from "./Ico.js";
+import { shareText, shareNoteRU } from "../ui/share.js";
 import type { IcoName } from "./icons.js";
 import { targetsFor } from "../ui/storage.js";
 import { targetsForToday } from "../food/index.js";
@@ -74,7 +75,7 @@ export function Me({ app, day, cloud, onCloud, pair, onPair, onSettings, onStory
 
   const ROWS: [MeSheet | "sleep-settings" | "food-settings" | "tour", IcoName, string, string][] = [
     ["weight", "scale", "Вес и калории", lastKg ? `${lastKg} кг · трата ${exp?.r.status === "ready" ? "по твоим данным" : "по формуле"}` : "записать первый вес"],
-    ["sleep", "moon-sleep", "Сон и режим", "во сколько ложишься, сон и еда"],
+    ["sleep", "moon-sleep", "Как ты спишь", "во сколько ложишься, сон и еда"],
     ["stories", "chart-2", "Итоги недель", "каждый понедельник — новый"],
     ["sleep-settings", "alarm", "Настройки сна", `подъём ${state.profile.anchorWakeHM}`],
     ["food-settings", "chef-hat", "Настройки еды", state.food ? `${state.food.mealCount} приёма · ${state.food.household && state.food.household > 1 ? `на ${state.food.household}` : "на себя"}` : "не настроено"],
@@ -246,7 +247,16 @@ function FreshStart({ app }: { app: AppModel }) {
   const [open, setOpen] = useState(false);
   const [kg, setKg] = useState(String(state.weights?.at(-1)?.kg ?? state.food?.profile.weightKg ?? ""));
   const [pace, setPace] = useState<RampPace>(DEFAULT_PACE);
-  if (!state.food) return null;
+  const food = state.food;
+  if (!food) return null;
+  // начал сегодня — показываем итог, а не кнопку: иначе казалось, что нажатие просто сворачивает форму
+  if (food.startISO === localDateISO()) {
+    const span = PACE_SPAN_RU[food.pace ?? DEFAULT_PACE];
+    return (
+      <p className="s-done-note"><Ico name="check-circle" /> Старт — сегодня, {new Date().toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}.
+        {" "}{span ? `Вход в дефицит — ${span}.` : "Сразу калории для цели."}</p>
+    );
+  }
   if (!open) return <button className="s-btn ghost s-wide" onClick={() => { tap(); setOpen(true); }}>Начинаю с сегодня</button>;
   const v = +kg.replace(",", ".");
   return (
@@ -257,13 +267,17 @@ function FreshStart({ app }: { app: AppModel }) {
       <div className="s-inline">
         <input type="text" inputMode="decimal" value={kg} onChange={e => setKg(e.target.value)} aria-label="Вес сейчас, кг" placeholder="кг" />
       </div>
+      <p className="s-small">Как войти в дефицит</p>
       <div className="s-seg" role="group" aria-label="Как войти в дефицит">
         {PACES_RU.map(([p, ru]) => (
           <button key={p} className={pace === p ? "on" : ""} aria-pressed={pace === p} onClick={() => setPace(p)}>{ru}</button>
         ))}
       </div>
-      <button className="s-btn food s-wide" disabled={!(v >= 30 && v <= 300)}
-        onClick={() => { tap(); app.actions.freshStart(v, pace); setOpen(false); }}>Начать с сегодня</button>
+      <div className="s-sheet-actions s-mt">
+        <button className="s-btn food" disabled={!(v >= 30 && v <= 300)}
+          onClick={() => { tap(); app.actions.freshStart(v, pace); setOpen(false); }}>Начать</button>
+        <button className="s-btn ghost" onClick={() => { tap(); setOpen(false); }}>Отмена</button>
+      </div>
     </>
   );
 }
@@ -277,7 +291,7 @@ function SleepSheet({ app, day, records, onClose }: { app: AppModel; day: DayMod
   const ym = d.toISOString().slice(0, 7);
   const recap = monthRecap(records, ym);
   return (
-    <Sheet title="Сон и режим" onClose={onClose}>
+    <Sheet title="Как ты спишь" onClose={onClose}>
       <h3 className="s-why-h">Ложишься в одно время?</h3>
       <p className="s-muted">{regularRU(anc)}</p>
 
@@ -331,12 +345,21 @@ function PairSheet({ pair, onPair, onClose }: { pair: PairInfo | null; onPair: (
     if (typeof r === "string") setNote({ "bad-code": "Нужно четыре слова, например «лиса-река-гром-сыр».", "not-found": "Пары с таким кодом нет. Пусть партнёр откроет приложение и проверит код.", offline: "Нет связи. Попробуй ещё раз." }[r]);
     else onPair(r);
   };
+  const [shareNote, setShareNote] = useState("");
+  const send = async (c: string) => {
+    tap();
+    setShareNote(shareNoteRU(await shareText("Готовим вдвоём", `Давай вести одно меню в edim & spim. Открой «Я → Готовим вдвоём → Тебе прислали код» и введи: ${c}`)));
+  };
+  // два сценария — двумя явными блоками: «я начинаю» и «мне прислали код»; люди не понимали, что из этого их
   return (
     <Sheet title="Готовим вдвоём" onClose={onClose}>
       {!pair && <>
-        <p className="s-muted">Одно меню на двоих: блюда общие, а порции у каждого свои — по его калориям. Список покупок — на обоих, галочки «взял» видны обоим.</p>
-        <button className="s-btn food s-wide" onClick={() => { tap(); onPair(createPair()); }}>Создать пару</button>
-        <h3 className="s-why-h">Есть код от партнёра?</h3>
+        <p className="s-muted">Одно меню на двоих: блюда общие, порции у каждого свои, список покупок — один на двоих.</p>
+        <h3 className="s-why-h">Ты начинаешь</h3>
+        <p className="s-small">Создай пару — появится код из четырёх слов. Отправь его тому, с кем готовишь.</p>
+        <button className="s-btn food s-wide s-mt0" onClick={() => { tap(); onPair(createPair()); }}>Создать пару</button>
+        <h3 className="s-why-h">Тебе прислали код</h3>
+        <p className="s-small">Введи четыре слова из сообщения.</p>
         <div className="s-restore">
           <input type="text" value={code} placeholder="например: лиса-река-гром-сыр" autoCapitalize="none" autoCorrect="off" spellCheck={false}
             aria-label="Код пары" onChange={e => setCode(e.target.value)} onKeyDown={e => { if (e.key === "Enter") void join(); }} />
@@ -344,18 +367,29 @@ function PairSheet({ pair, onPair, onClose }: { pair: PairInfo | null; onPair: (
           {note && <p className="s-small">{note}</p>}
         </div>
       </>}
-      {pair && <>
-        {pair.role === "a" && <>
-          <p className="s-muted">Отправь код партнёру — он введёт его у себя в «Я → Готовим вдвоём».</p>
-          <p className="s-code">{pair.code}</p>
-          <button className="s-btn ghost s-wide" onClick={() => { tap(); void navigator.clipboard?.writeText(pair.code); }}>Скопировать код</button>
-        </>}
+      {pair && pair.role === "a" && !pair.otherKcal && <>
+        <h3 className="s-why-h">Ждём партнёра</h3>
+        <ol className="s-steps-text">
+          <li>Отправь код партнёру.</li>
+          <li>Он открывает edim & spim → «Я» → «Готовим вдвоём» → «Тебе прислали код» и вводит слова.</li>
+          <li>Как только он войдёт, меню станет общим, а покупки посчитаются на двоих.</li>
+        </ol>
+        <p className="s-code">{pair.code}</p>
+        <div className="s-sheet-actions">
+          <button className="s-btn food" onClick={() => void send(pair.code)}>Отправить код</button>
+          <button className="s-btn ghost" onClick={() => { tap(); void navigator.clipboard?.writeText(pair.code); setShareNote("Код скопирован."); }}>Скопировать</button>
+        </div>
+        {shareNote && <p className="s-small">{shareNote}</p>}
+      </>}
+      {pair && (pair.role === "b" || pair.otherKcal) && <>
+        <h3 className="s-why-h">Вы в паре</h3>
         <p className="s-muted">
           {pair.role === "a" ? "Меню собирается по твоим «Настройкам еды»." : "Меню собирается по настройкам партнёра."} Блюдо, заменённое кнопкой <Ico name="refresh" />, меняется у обоих.
-          {" "}{pair.otherKcal ? `Партнёр ест ≈${pair.otherKcal} ккал в день — покупки посчитаны на обоих.` : "Партнёр ещё не присоединился."}
+          {pair.otherKcal ? ` Партнёр ест ≈${pair.otherKcal} ккал в день — покупки посчитаны на обоих.` : ""}
         </p>
-        <button className="s-btn ghost s-wide" onClick={() => { if (window.confirm("Выйти из пары? Меню снова станет только твоим.")) { leavePair(); onPair(null); } }}>Выйти из пары</button>
+        {pair.role === "a" && <p className="s-small">Код пары: {pair.code}</p>}
       </>}
+      {pair && <button className="s-btn ghost s-wide" onClick={() => { if (window.confirm("Выйти из пары? Меню снова станет только твоим.")) { leavePair(); onPair(null); } }}>Выйти из пары</button>}
     </Sheet>
   );
 }
