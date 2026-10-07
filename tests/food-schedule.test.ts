@@ -96,7 +96,7 @@ describe("ручные замены поверх плана", () => {
     const other = pool.filter(r => r.meal_type === d.day.meals[0]!.recipe.meal_type)
       .sort((a, b) => b.kcal - a.kcal)[0]!;
     applySwaps(d.day, { [slot]: other.id }, pool, d.targets, 4);
-    const sum = d.day.meals.reduce((s, m) => s + Math.round(m.recipe.kcal * m.servings), 0);
-    expect(d.day.totals.kcal).toBe(sum);
+    const sum = d.day.meals.reduce((s, m) => s + m.recipe.kcal * m.servings, 0);
+    expect(d.day.totals.kcal).toBe(Math.round(sum));
   });
 });

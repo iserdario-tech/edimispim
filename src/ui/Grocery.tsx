@@ -111,6 +111,12 @@ export function MealIngredients({ meal, rating, onRate, household = 1 }: {
         </div>
       )}
 
+      {meal.recipe.fat_g !== undefined && (
+        <p className="small muted">
+          {Math.round(meal.recipe.kcal * meal.servings)} ккал · белок {Math.round(meal.recipe.protein_g * meal.servings)} · жиры {Math.round(meal.recipe.fat_g * meal.servings)} · углеводы {Math.round((meal.recipe.carbs_g ?? 0) * meal.servings)} г
+        </p>
+      )}
+
       {ings.length > 0 && (
         <>
           <div className="small muted">

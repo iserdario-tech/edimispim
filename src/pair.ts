@@ -20,6 +20,28 @@ export function mergeSwaps(pair: PairMenu | undefined, own: PairMenu | undefined
 }
 
 /**
+ * Замены блюд обоих: каждый отправляет свои с временем, на один приём побеждает более поздняя.
+ * Кто бы ни нажал ↻ — у обоих стоит одно блюдо.
+ */
+export type PairSwaps = Record<string, Record<string, [id: string, ts: number]>>;
+
+export function withPartnerSwaps(swaps: PairMenu | undefined, mine: PairSwaps = {}, theirs: PairSwaps = {}): PairMenu {
+  const out: PairMenu = { ...swaps };
+  for (const [date, s] of Object.entries(theirs)) {
+    for (const [slot, [id, ts]] of Object.entries(s)) {
+      if ((mine[date]?.[slot]?.[1] ?? 0) < ts) out[date] = { ...(out[date] ?? {}), [slot]: id };
+    }
+  }
+  return out;
+}
+
+/** Стоит ли в этом приёме блюдо, которое выбрал партнёр, — для подписи в меню. */
+export function byPartner(date: string, slot: string, id: string, mine: PairSwaps = {}, theirs: PairSwaps = {}): boolean {
+  const t = theirs[date]?.[slot];
+  return !!t && t[0] === id && (mine[date]?.[slot]?.[1] ?? 0) < t[1];
+}
+
+/**
  * Во сколько раз продуктов больше, чем на мою порцию: 1 + калории партнёра / мои.
  * Шаг 0.05 — точнее весы на кухне не нужны. Нет данных — как будто порции равны.
  * ponytail: одна пропорция на всю неделю — по дням цели почти не отличаются.

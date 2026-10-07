@@ -25,6 +25,11 @@ describe("плавное вхождение в дефицит", () => {
     expect(r.day).toBe(1);
   });
 
+  it("за неделю: на 7-й день цель, на 8-й вход закончен", () => {
+    expect(rampIn(targets, "2026-08-07", "2026-08-13", "week").kcalToday).toBe(targets.kcalTarget);
+    expect(rampIn(targets, "2026-08-07", "2026-08-14", "week").active).toBe(false);
+  });
+
   it("в последний день лестницы — ровно цель", () => {
     const r = rampIn(targets, "2026-08-07", "2026-08-20", "normal");   // 14-й день
     expect(r.day).toBe(RAMP_DAYS.normal);

@@ -67,6 +67,8 @@ export interface Recipe {
   cuisine?: Cuisine;
   kcal: number;
   protein_g: number;
+  fat_g?: number;              // жиры и углеводы — из состава; у старых тестовых рецептов их нет
+  carbs_g?: number;
   fiber_g: number;             // всё — НА ПОРЦИЮ
   energy_density?: number;     // ккал/г — рычаг сытости
   cost_tier?: string;
@@ -98,7 +100,7 @@ export type MealCount = 2 | 3 | 4 | 5;
 
 export interface Day {
   meals: Meal[];
-  totals: { kcal: number; protein: number; fiber: number };
+  totals: { kcal: number; protein: number; fat: number; carbs: number; fiber: number };
   simplified?: boolean;        // день перестроен после плохой ночи (X24)
 }
 
