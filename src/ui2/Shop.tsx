@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { pullPantry } from "../ui/pairSync.js";
 import { planPurchase, type BuyLine } from "../food/packaging.js";
 import { SHOPS, DEFAULT_SHOP_ID } from "../food/shops.js";
 import { AISLES, OTHER, aisleOf, pantryKey, itemLink, amountRU, showsLeftover } from "../ui/Grocery.js";
@@ -18,6 +19,11 @@ const DOW = ["вс", "пн", "вт", "ср", "чт", "пт", "сб"];
  * из которой замена блюда предлагает «приготовить из того, что есть».
  */
 export function Shop({ week, onBack }: { week: WeekModel; onBack: () => void }) {
+  // вдвоём в магазине: галочки партнёра подтягиваются, пока список открыт
+  useEffect(() => {
+    const id = setInterval(() => { if (document.visibilityState === "visible") void pullPantry(week.setPantryQuiet); }, 10_000);
+    return () => clearInterval(id);
+  }, [week.setPantryQuiet]);
   const plan = week.plan!;
   const [view, setView] = useState<"buy" | "home">("buy");
   const [scope, setScope] = useState<"week" | number>("week");

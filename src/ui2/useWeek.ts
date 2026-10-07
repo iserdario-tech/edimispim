@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { parseHM } from "../index.js";
 import {
   buildGroceryList, scaleGrocery, expectedBedMin, planWindow, filterRecipes, applySwaps, targetsForToday,
@@ -10,8 +10,10 @@ import { dayOptsFor } from "../ui/dayOpts.js";
 import { readLS, writeLS, PANTRY_KEY } from "../ui/localStore.js";
 import type { Pantry } from "../food/packaging.js";
 import { localDateISO } from "../today-date.js";
+import { readPair, sharePantry } from "../ui/pairSync.js";
 
 const RECIPES = recipesJson as Recipe[];
+let shareTimer: ReturnType<typeof setTimeout> | undefined;
 
 /**
  * Меню на 7 дней и покупки — для «Еды» и «В магазине» 2.0.
@@ -23,7 +25,14 @@ const RECIPES = recipesJson as Recipe[];
 export function useWeek(state: StoredState) {
   const today = localDateISO();
   const [pantry, setPantry] = useState<Pantry>(() => readLS<Pantry>(PANTRY_KEY, {}));
-  const savePantry = (next: Pantry) => { setPantry(next); writeLS(PANTRY_KEY, next); };
+  // без отправки партнёру — для кладовки, пришедшей от партнёра
+  const setPantryQuiet = useCallback((next: Pantry) => { setPantry(next); writeLS(PANTRY_KEY, next); }, []);
+  // галочка «взял» — сразу партнёру, но не каждым тапом: пачка за 2 секунды уходит одной записью
+  const savePantry = (next: Pantry) => {
+    setPantryQuiet(next);
+    if (!readPair()) return;
+    clearTimeout(shareTimer); shareTimer = setTimeout(() => void sharePantry(next), 2000);
+  };
   const [rev, setRev] = useState(0);
   const food = state.food;
 
@@ -46,6 +55,6 @@ export function useWeek(state: StoredState) {
     // rev — после ручной замены день надо пересобрать с новым блюдом
   }, [food, state.profile, state.ratings, state.swaps, state.noCookDays, today, rev]);
 
-  return { today, plan, pantry, savePantry, bump: () => setRev(r => r + 1) };
+  return { today, plan, pantry, savePantry, setPantryQuiet, bump: () => setRev(r => r + 1) };
 }
 export type WeekModel = ReturnType<typeof useWeek>;

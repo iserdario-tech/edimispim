@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useAppState, pickUpOldApps } from "../ui/useAppState.js";
 import { QuickStart } from "../ui/QuickStart.js";
 import { syncPushContext } from "../ui/notifications.js";
@@ -25,6 +25,11 @@ import { Install } from "./Install.js";
 import { AskSheet } from "./AskSheet.js";
 import { Tour, TOUR_KEY } from "./Tour.js";
 import { readCloud, cloudUpload, markCodeNoted } from "../ui/cloudSync.js";
+import { readPair, syncPair } from "../ui/pairSync.js";
+import { localDateISO } from "../today-date.js";
+import { menuOf, mergeSwaps, pairFactor } from "../pair.js";
+import { targetsForToday } from "../food/index.js";
+import { targetsFor } from "../ui/storage.js";
 import { isIOS, isStandalone } from "../ui/dataSafety.js";
 import { unmarkedToday } from "../streak2.js";
 import { useDay } from "./useDay.js";
@@ -98,7 +103,25 @@ function Main({ app, tab, setTab, now, glow, restoreInput, onRestore }: {
   app: AppModel; tab: Tab2; setTab: (t: Tab2) => void; now: Date; glow: string; restoreInput: React.ReactNode;
   onRestore: () => void;
 }) {
-  const day = useDay(app.state as StoredState, now);
+  /*
+   * «Готовим вдвоём». Экраны получают состояние, где меню партнёра «b» — меню пары,
+   * а «на сколько готовить» — моя порция плюс порция партнёра по его калориям.
+   * Записи (отметки, замены) по-прежнему идут в настоящее состояние через app.actions.
+   */
+  const [pair, setPair] = useState(readPair);
+  const real = app.state as StoredState;
+  const pairState = useMemo((): StoredState => {
+    if (!pair || !real.food) return real;
+    const food = real.food;
+    const kcal = targetsForToday(targetsFor(food), food.startISO, localDateISO(), food.pace).targets.kcalTarget;
+    return {
+      ...real,
+      swaps: pair.role === "b" ? mergeSwaps(pair.menu, real.swaps) : real.swaps,
+      food: { ...food, household: pairFactor(kcal, pair.otherKcal) },
+    };
+  }, [real, pair]);
+  const view = useMemo(() => ({ ...app, state: pairState }), [app, pairState]);
+  const day = useDay(pairState, now);
   const [why, setWhy] = useState(false);
   // копия в облаке: при открытии и при сворачивании (сама не чаще раза в 3 часа)
   const [cloud, setCloud] = useState(readCloud);
@@ -123,7 +146,25 @@ function Main({ app, tab, setTab, now, glow, restoreInput, onRestore }: {
     return () => removeEventListener("hashchange", on);
   }, []);
   const [shop, setShop] = useState(false);
-  const week = useWeek(app.state as StoredState);
+  const week = useWeek(pairState);
+  // обмен с партнёром: при открытии и при возвращении в приложение
+  useEffect(() => {
+    const go = () => {
+      if (!readPair() || !real.food) return;
+      const food = real.food;
+      void syncPair({
+        kcal: targetsForToday(targetsFor(food), food.startISO, localDateISO(), food.pace).targets.kcalTarget,
+        ...(week.plan && readPair()?.role === "a" ? { menu: menuOf(week.plan.days) } : {}),
+        pantry: week.pantry, setPantry: week.setPantryQuiet,
+      }).then(p => p && setPair(p));
+    };
+    go();
+    const onShow = () => { if (document.visibilityState === "visible") go(); };
+    document.addEventListener("visibilitychange", onShow);
+    return () => document.removeEventListener("visibilitychange", onShow);
+    // ponytail: меню владельца уходит при открытии/возвращении, а не на каждую замену — партнёр
+    // увидит замену при следующем открытии, и KV не тратит запись на каждый тап
+  }, [pair?.code, week.plan]);
   const state = app.state as StoredState;
   const [settings, setSettings] = useState<null | "sleep" | "food">(null);
   const [storyWeek, setStoryWeek] = useState<string | null>(null);
@@ -163,12 +204,12 @@ function Main({ app, tab, setTab, now, glow, restoreInput, onRestore }: {
     <div className="v2-root">
       {/* свечение неба — только на «Сутках», остальные экраны однотонные */}
       <div className="s-sky" style={tab === "day" ? { backgroundImage: glow } : undefined} />
-      {tab === "day" && <Day app={app} day={day} now={now} onWhy={() => setWhy(true)}
+      {tab === "day" && <Day app={view} day={day} now={now} onWhy={() => setWhy(true)}
         code={cloud?.at && !cloud.noted ? { code: cloud.code, onNoted: () => { markCodeNoted(); setCloud(readCloud()); } } : undefined}
         story={offerStory ? { label: weekLabel(lastMonday), open: () => { setStoryWeek(lastMonday); writeLS("edimispim.storySeen", lastMonday); setSeen(lastMonday); } } : undefined} />}
-      {tab === "eat" && !shop && <Eat app={app} week={week} onShop={() => { setShop(true); window.scrollTo({ top: 0 }); }} onSetupFood={() => setSettings("food")} />}
+      {tab === "eat" && !shop && <Eat app={view} week={week} pair={pair} onShop={() => { setShop(true); window.scrollTo({ top: 0 }); }} onSetupFood={() => setSettings("food")} />}
       {tab === "eat" && shop && <Shop week={week} onBack={() => { setShop(false); window.scrollTo({ top: 0 }); }} />}
-      {tab === "me" && <Me app={app} day={day} cloud={cloud} onCloud={setCloud} onSettings={setSettings} onStory={setStoryWeek} onRestore={onRestore} onTour={() => setTour(true)} />}
+      {tab === "me" && <Me app={view} day={day} cloud={cloud} onCloud={setCloud} pair={pair} onPair={setPair} onSettings={setSettings} onStory={setStoryWeek} onRestore={onRestore} onTour={() => setTour(true)} />}
       {tour && <Tour onClose={closeTour} />}
       {storySlides && storyWeek && <Story slides={storySlides} label={`Неделя ${weekLabel(storyWeek)}`} onClose={() => setStoryWeek(null)} />}
 
@@ -180,8 +221,8 @@ function Main({ app, tab, setTab, now, glow, restoreInput, onRestore }: {
         <button className="s-tab-ask" aria-label="Спросить коуча" onClick={() => { tap(); setAsk(true); }}>?</button>
       </nav>
       <button className="s-fab" aria-label="Добавить" onClick={() => { tap(); setPlus("any"); }}>+</button>
-      {why && <WhySheet app={app} day={day} onClose={() => setWhy(false)} />}
-      {plus && <PlusSheet app={app} day={day} initial={plus === "night" ? "night" : null} onClose={() => { setPlus(false); if (location.hash) history.replaceState(null, "", location.pathname + location.search); }} />}
+      {why && <WhySheet app={view} day={day} onClose={() => setWhy(false)} />}
+      {plus && <PlusSheet app={view} day={day} initial={plus === "night" ? "night" : null} onClose={() => { setPlus(false); if (location.hash) history.replaceState(null, "", location.pathname + location.search); }} />}
       {ask && <AskSheet state={state} screen={tab} onClose={() => setAsk(false)} />}
       {restoreInput}
     </div>
