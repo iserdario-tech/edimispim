@@ -874,5 +874,29 @@
     "author": "Natalka Ukraine",
     "license": "CC BY-SA 4.0",
     "source": "https://commons.wikimedia.org/wiki/File:Homemade_fish_smoking_-_Smoked_mackerel_presentation_01.jpg"
+  },
+  "zefir": {
+    "file": "zefir.jpg",
+    "author": "Andy Johnson",
+    "license": "Public domain",
+    "source": "https://commons.wikimedia.org/wiki/File:Marshmallows.jpg"
+  },
+  "marmalade": {
+    "file": "marmalade.jpg",
+    "author": "Johnson524",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Karl_Gummies_side_view.jpg"
+  },
+  "dates": {
+    "file": "dates.jpg",
+    "author": "J.P.Lon",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Date_Fruits-Duo.jpg"
+  },
+  "chocapple": {
+    "file": "chocapple.jpg",
+    "author": "www.Pixel.la Free Stock Photos",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Dark-brown-milk-candy_(24298960866).jpg"
   }
 }

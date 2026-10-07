@@ -4,18 +4,8 @@ import { MealIngredients } from "./Grocery.js";
 import { Sheet } from "./Sheet.js";
 import { IconChevron } from "./Icons.js";
 import { photoFor, photoUrl } from "../food/photos.js";
-import treatsJson from "../food/data/treats.json";
+import { isNoCook } from "../food/planner.js";
 
-/**
- * Покупное сладкое: то, что не готовят, а покупают.
- *
- * Файл лежал в проекте с первой волны и не показывался нигде. А случай он закрывает
- * живой: вечером хочется сладкого, а печь творожное печенье сил нет. Отдельный фильтр,
- * потому что это не рецепты — у них нет ни состава, ни шагов, только честная порция
- * и калории, которые вписываются в дневную норму.
- */
-interface Treat { name: string; portion: string; kcal: number; note: string }
-const TREATS = treatsJson as Treat[];
 
 /**
  * Каталог: все блюда, какие есть в приложении.
@@ -29,7 +19,7 @@ const TREATS = treatsJson as Treat[];
  * они на то же самое: «нравится» ставится чаще, «не нравится» исчезает из меню совсем.
  */
 
-type Filter = MealType | "all" | "treats";
+type Filter = MealType | "all" | "nocook";
 
 const TYPES: { id: Filter; ru: string }[] = [
   { id: "all", ru: "Все" },
@@ -38,7 +28,7 @@ const TYPES: { id: Filter; ru: string }[] = [
   { id: "dinner", ru: "Ужины" },
   { id: "snack", ru: "Перекусы" },
   { id: "dessert", ru: "Сладкое" },
-  { id: "treats", ru: "Без готовки" },
+  { id: "nocook", ru: "Без готовки" },
 ];
 
 /** Сколько блюд показываем сразу. Три сотни строк разом телефон рисует заметно дольше. */
@@ -51,10 +41,11 @@ const PAGE = 24;
  * «творог» в названии нет вовсе. Вынесено из компонента, чтобы проверять тестом —
  * на телефоне кириллицу в поле не ввести.
  */
-export function searchRecipes(recipes: Recipe[], query: string, type: MealType | "all"): Recipe[] {
+export function searchRecipes(recipes: Recipe[], query: string, type: Filter): Recipe[] {
   const q = query.trim().toLowerCase();
   return recipes
-    .filter(r => type === "all" || r.meal_type === type)
+    // «без готовки» — покупное и то, что собирается за 10 минут без плиты и духовки
+    .filter(r => type === "all" || (type === "nocook" ? isNoCook(r) : r.meal_type === type))
     .filter(r => {
       if (!q) return true;
       const hay = [r.name, ...(r.ingredients ?? []).map(i => i.name)].join(" ").toLowerCase();
@@ -73,15 +64,7 @@ export function Catalog({ recipes, ratings, onRate }: {
   const [shown, setShown] = useState(PAGE);
   const [openDish, setOpenDish] = useState<string | null>(null);
 
-  const found = useMemo(
-    () => (type === "treats" ? [] : searchRecipes(recipes, query, type)),
-    [recipes, query, type],
-  );
-  const treats = useMemo(() => {
-    if (type !== "treats") return [];
-    const q = query.trim().toLowerCase();
-    return TREATS.filter(t => !q || (t.name + " " + t.note).toLowerCase().includes(q));
-  }, [type, query]);
+  const found = useMemo(() => searchRecipes(recipes, query, type), [recipes, query, type]);
 
   const reset = (next: () => void) => { next(); setShown(PAGE); setOpenDish(null); };
 
@@ -106,26 +89,10 @@ export function Catalog({ recipes, ratings, onRate }: {
           </div>
 
           <p className="small muted mt-0">
-            {type === "treats"
-              ? "Когда готовить нет сил: покупное сладкое с честной порцией. Одна штука вписывается в норму дня, пачка — нет."
-              : found.length === 0
+            {found.length === 0
                 ? "Ничего не нашлось. Попробуй другое слово — ищется и по составу."
                 : `Найдено: ${found.length}`}
           </p>
-
-          {type === "treats" && (
-            <ul className="day-meals">
-              {treats.map(t => (
-                <li key={t.name} className="meal-row catalog-row">
-                  <span className="meal-main">
-                    <b>{t.name}</b>
-                    <span className="small muted meal-meta">{t.portion} · {t.kcal} ккал</span>
-                    <span className="small muted">{t.note}</span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
 
           <ul className="day-meals">
             {found.slice(0, shown).map(r => {
