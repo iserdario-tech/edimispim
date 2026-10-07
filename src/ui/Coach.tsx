@@ -134,9 +134,9 @@ export function Coach({ contextRU }: { contextRU: string }) {
         {turns.length === 0 && !busy && (
           <div className="coach-empty">
             <div className="coach-empty-mark" aria-hidden="true"><IconCoachBubble /></div>
-            <p className="coach-empty-title">Спроси что угодно про сон, еду и режим</p>
+            <p className="coach-empty-title">Спроси о чём угодно</p>
             <p className="small muted">
-              Коуч видит твой режим и меню, отвечает по научной базе и не заменяет врача.
+              Коуч знает твой режим и меню, но отвечает на любые вопросы — не только про сон и еду.
             </p>
             <div className="chips">
               {HINTS.map((h) => (
