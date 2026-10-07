@@ -70,6 +70,10 @@ export function plateau(days: DayRecord[], targetSleepMin: number, since?: strin
   for (let w = WINDOW_DAYS + 7; ; w += 7) {
     const wider = fitLast(all, w);
     if (!wider || wider.change > FLAT_KG || wider.span <= fit.span) break;   // раньше вес шёл вниз или данных больше нет
+    // добавленная неделя должна быть на том же уровне: иначе хвост снижения засчитывался в «стоит»
+    const mean = (ws: DayRecord[]) => ws.reduce((a, d) => a + d.body!.weightKg!, 0) / ws.length;
+    const added = wider.weights.filter(d => d.date < fit!.weights[0]!.date);
+    if (added.length && mean(added) - mean(fit.weights) > FLAT_KG / 2) break;
     fit = wider;
   }
   const { weights, span } = fit;
