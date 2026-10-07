@@ -14,6 +14,7 @@ import type { Slot } from "../food/types.js";
 import { readLS, writeLS } from "./localStore.js";
 import { BACKUP_KEY } from "./dataSafety.js";
 import { remember, type MenuMemory } from "./menuMemory.js";
+import type { RampPace } from "../food/rampin.js";
 
 /**
  * Данные из pospat и oheedet лежат на том же origin — подхватываем их, а не просим вводить заново.
@@ -231,7 +232,26 @@ export function useAppState() {
       const date = localDateISO();
       const weights = [...(prev.weights ?? []).filter(w => w.date !== date), { date, kg }]
         .sort((a, b) => a.date.localeCompare(b.date));
-      const next = { ...prev, weights };
+      // норма считается от веса сейчас, а не от введённого при настройке: минус 7 кг —
+      // это примерно минус 70 ккал трат, и формула без этого всё сильнее завышала бы норму
+      const food = prev.food ? { ...prev.food, profile: { ...prev.food.profile, weightKg: kg } } : prev.food;
+      const next = { ...prev, weights, ...(food ? { food } : {}) };
+      persist(next);
+      return next;
+    });
+  };
+
+  /**
+   * «Начинаю с сегодня»: вход в дефицит заново, расчёт трат — только по записям с этого дня,
+   * старая поправка калорий снимается (она посчитана по старым данным). Ничего не удаляется.
+   */
+  const freshStart = (kg: number, pace: RampPace) => {
+    setState((prev) => {
+      if (!prev?.food) return prev;
+      const date = localDateISO();
+      const { kcalAdjust: _a, kcalAdjustAt: _b, ...food } = prev.food;
+      const weights = [...(prev.weights ?? []).filter(w => w.date !== date), { date, kg }].sort((a, b) => a.date.localeCompare(b.date));
+      const next = { ...prev, weights, food: { ...food, startISO: date, pace, profile: { ...food.profile, weightKg: kg } } };
       persist(next);
       return next;
     });
@@ -273,7 +293,7 @@ export function useAppState() {
     state, update, saveFailed, backupAt, migrationNote,
     actions: {
       saveLog, markMeal, markAll, ownSize, ownWritten, extraAdd, extraRemove, rateDish, setCheatDay,
-      adjustKcal, markTuned, setNoCook, saveSwap, rememberMenu, addWeight, backup, restore, setYesterday,
+      adjustKcal, markTuned, setNoCook, saveSwap, rememberMenu, addWeight, freshStart, backup, restore, setYesterday,
     },
   };
 }

@@ -30,23 +30,50 @@ const DAY_MS = 86_400_000;
 const daysBetween = (a: string, b: string): number =>
   Math.round((Date.parse(b) - Date.parse(a)) / DAY_MS);
 
-export function plateau(days: DayRecord[], targetSleepMin: number): PlateauResult {
-  const weights = days.filter(d => typeof d.body?.weightKg === "number");
-  if (weights.length < MIN_WEIGHTS) {
-    return { cause: "no_data", weeks: 0, messageRU: "" };
-  }
-
+/**
+ * Смотрим последние 3 недели, а не весь срок: раньше сравнивался самый первый вес с последним,
+ * и «минус 5 кг за два месяца, потом три недели на месте» плато не считалось. И не две точки,
+ * а линию тренда: одно «водное» взвешивание ±0,5 кг иначе включало и выключало плато.
+ * `since` — дата старта («Начинаю с сегодня»): записи до неё не в счёт.
+ */
+const WINDOW_DAYS = 21;
+type Fit = { weights: DayRecord[]; span: number; change: number } | null;
+function fitLast(all: DayRecord[], windowDays: number): Fit {
+  const lastDate = all.at(-1)?.date;
+  const weights = lastDate ? all.filter(d => daysBetween(d.date, lastDate) < windowDays) : [];
+  if (weights.length < MIN_WEIGHTS) return null;
   const first = weights[0]!;
-  const last = weights[weights.length - 1]!;
-  // период считаем ВКЛЮЧИТЕЛЬНО: 14 отметок подряд — это две недели наблюдения,
-  // хотя разница между крайними датами всего 13 дней
-  const span = daysBetween(first.date, last.date) + 1;
-  if (span < MIN_DAYS) return { cause: "no_data", weeks: 0, messageRU: "" };
+  // период считаем ВКЛЮЧИТЕЛЬНО: 14 отметок подряд — это две недели наблюдения
+  const span = daysBetween(first.date, weights.at(-1)!.date) + 1;
+  if (span < MIN_DAYS) return null;
+  // снижение по линии тренда за период (наклон регрессии × длина)
+  const xs = weights.map(w => daysBetween(first.date, w.date)), ys = weights.map(w => w.body!.weightKg!);
+  const mx = xs.reduce((a, b) => a + b, 0) / xs.length, my = ys.reduce((a, b) => a + b, 0) / ys.length;
+  const sxx = xs.reduce((a, x) => a + (x - mx) ** 2, 0);
+  const slope = sxx ? xs.reduce((a, x, i) => a + (x - mx) * (ys[i]! - my), 0) / sxx : 0;
+  return { weights, span, change: -slope * (span - 1) };
+}
 
-  const change = first.body!.weightKg! - last.body!.weightKg!;
-  if (change > FLAT_KG) {
+export function plateau(days: DayRecord[], targetSleepMin: number, since?: string): PlateauResult {
+  const all = days.filter(d => typeof d.body?.weightKg === "number" && (!since || d.date >= since));
+  // плато решают последние 3 недели — а длину считаем назад, пока вес так же стоит
+  let fit = fitLast(all, WINDOW_DAYS);
+  if (!fit) {
+    // взвешиваний за 3 недели мало — смотрим на весь доступный срок, как раньше
+    const longer = all.length ? fitLast(all, daysBetween(all[0]!.date, all.at(-1)!.date) + 1) : null;
+    if (!longer) return { cause: "no_data", weeks: 0, messageRU: "" };
+    fit = longer;
+  }
+  if (fit.change > FLAT_KG) {
     return { cause: "not_plateau", weeks: 0, messageRU: "" };   // вес идёт вниз — не плато
   }
+  for (let w = WINDOW_DAYS + 7; ; w += 7) {
+    const wider = fitLast(all, w);
+    if (!wider || wider.change > FLAT_KG || wider.span <= fit.span) break;   // раньше вес шёл вниз или данных больше нет
+    fit = wider;
+  }
+  const { weights, span } = fit;
+  const first = weights[0]!;
 
   const weeks = Math.round(span / 7);
   const window = days.filter(d => daysBetween(first.date, d.date) >= 0);
@@ -66,7 +93,7 @@ export function plateau(days: DayRecord[], targetSleepMin: number): PlateauResul
   if (sleepLeaks && foodLeaks) {
     return {
       cause: "both", weeks,
-      messageRU: `Вес стоит ${weeks} недел${weeks === 1 ? "ю" : weeks < 5 ? "и" : "ь"}. За это время недобор сна был больше чем в трети ночей, и по плану еды прошло меньше половины дней. Начинать проще со сна: на недосыпе план еды сам собой становится тяжелее.`,
+      messageRU: `Вес стоит ${weeks} недел${weeks === 1 ? "ю" : weeks < 5 ? "и" : "ь"}. За это время недобор сна был больше чем в трети ночей, и по плану еды прошло меньше двух дней из трёх. Начинать проще со сна: на недосыпе план еды сам собой становится тяжелее.`,
     };
   }
   if (sleepLeaks) {
@@ -78,7 +105,7 @@ export function plateau(days: DayRecord[], targetSleepMin: number): PlateauResul
   if (foodLeaks) {
     return {
       cause: "food", weeks,
-      messageRU: `Вес стоит ${weeks} недел${weeks === 1 ? "ю" : weeks < 5 ? "и" : "ь"}. Сон в порядке, а вот по плану еды прошло меньше половины дней — похоже, дело в этом. Может, план слишком плотный: попробуй схему попроще.`,
+      messageRU: `Вес стоит ${weeks} недел${weeks === 1 ? "ю" : weeks < 5 ? "и" : "ь"}. Сон в порядке, а вот по плану еды прошло меньше двух дней из трёх — похоже, дело в этом. Может, план слишком плотный: попробуй схему попроще.`,
     };
   }
   return {
