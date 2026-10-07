@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { Ico } from "../ui2/Ico.js";
 import { createPortal } from "react-dom";
 
 /**
@@ -35,7 +36,7 @@ export function Sheet({ title, onClose, children }: {
         <div className="sheet-grip" />
         <div className="sheet-head">
           <strong>{title}</strong>
-          <button className="sheet-close" onClick={onClose} aria-label="Закрыть">✕</button>
+          <button className="sheet-close" onClick={onClose} aria-label="Закрыть"><Ico name="close" mono /></button>
         </div>
         <div className="sheet-body">{children}</div>
       </div>
