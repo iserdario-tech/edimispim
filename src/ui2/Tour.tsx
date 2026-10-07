@@ -29,19 +29,19 @@ const SLIDES: { kicker: string; title: string; text: string; demo: ReactNode }[]
     demo: <><span className="s-tour-small">вторник, 6 октября</span><b className="s-tour-word">Обычный день</b><span className="s-tour-next">Ужин в 20:00 · через 2 ч</span></>,
   },
   {
-    kicker: "Лента", title: "Отмечай еду одним движением",
-    text: "Смахни строку влево — «съел», вправо — «ел своё». Тап по строке — рецепт и продукты.",
-    demo: <div className="s-tour-swipe"><Chip c="← съел ✓" k="ok" /><Dot c={<Ico name="plate" />} k="food" /><Chip c="своё →" k="food" /></div>,
+    kicker: "Лента", title: "Отмечай еду одним касанием",
+    text: "Кружок справа — «съел». Смахни строку вправо — «ел своё». Нажми на строку — рецепт и продукты.",
+    demo: <div className="s-tour-swipe"><Dot c={<Ico name="plate" />} k="food" /><span className="s-tour-check"><Ico name="check" mono /></span><i className="s-tour-small">съел</i><Chip c="своё →" k="food" /></div>,
   },
   {
-    kicker: "Кнопка i", title: "Почему день такой",
+    kicker: "Под заголовком", title: "Почему день такой",
     text: "Что поменялось из-за ночи и из чего сложился план. Там же — переключатели на сегодня.",
-    demo: <><Dot c="i" k="i" /><div className="s-tour-chips"><Chip c="Не готовлю" /><Chip c="Ем без плана" /><Chip c="Работаю допоздна" /></div></>,
+    demo: <><span className="s-tour-chip light"><Ico name="question-circle" /> Почему день такой</span><div className="s-tour-chips"><Chip c="Не готовлю" /><Chip c="Ем без плана" /><Chip c="Работаю допоздна" /></div></>,
   },
   {
-    kicker: "+ и ?", title: "Записать и спросить",
-    text: "«+» — съел, своё словами, вес, ночь. «?» — вопрос коучу: он видит твой день и меню.",
-    demo: <div className="s-tour-pair"><span><Dot c={<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5v15M4.5 12h15" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" /></svg>} k="plus" /><i>записать</i></span><span><Dot c="?" /><i>спросить</i></span></div>,
+    kicker: "+ и «Спросить»", title: "Записать и спросить",
+    text: "«+» — съел, своё словами, вес, ночь. «Спросить» — вопрос коучу: он видит твой день и меню.",
+    demo: <div className="s-tour-pair"><span><Dot c={<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5v15M4.5 12h15" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" /></svg>} k="plus" /><i>записать</i></span><span><span className="s-tour-chip"><Ico name="chat-round-dots" /> Спросить</span><i>вопрос коучу</i></span></div>,
   },
   {
     kicker: "Еда", title: "Меню на неделю и покупки",
