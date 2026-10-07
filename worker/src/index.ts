@@ -100,14 +100,14 @@ export default {
     }
 
     /*
-     * «Готовим вдвоём»: общие данные пары — меню, калории каждого, кладовка с галочками.
+     * «Готовим вдвоём»: общие данные пары — меню, калории и замены блюд каждого, кладовка с галочками.
      * Как и копия, всё зашифровано кодом пары на телефонах; здесь только адрес и шифр.
      */
     if (req.method === "POST" && (url.pathname === "/pair/put" || url.pathname === "/pair/get")) {
       const ip = req.headers.get("cf-connecting-ip") ?? "unknown";
       const body = (await req.json().catch(() => ({}))) as { id?: unknown; key?: unknown; data?: unknown };
       const id = typeof body.id === "string" && /^[0-9a-f]{64}$/.test(body.id) ? body.id : null;
-      const key = typeof body.key === "string" && ["menu", "m-a", "m-b", "pantry"].includes(body.key) ? body.key : null;
+      const key = typeof body.key === "string" && ["menu", "m-a", "m-b", "s-a", "s-b", "pantry"].includes(body.key) ? body.key : null;
       if (!id || !key) return new Response("bad request", { status: 400, headers: CORS });
       if (url.pathname === "/pair/put") {
         const data = typeof body.data === "string" && body.data.length <= 200_000 && /^[A-Za-z0-9+/=]+$/.test(body.data) ? body.data : null;

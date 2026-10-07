@@ -309,7 +309,7 @@ function PairSheet({ pair, onPair, onClose }: { pair: PairInfo | null; onPair: (
           <button className="s-btn ghost s-wide" onClick={() => { tap(); void navigator.clipboard?.writeText(pair.code); }}>Скопировать код</button>
         </>}
         <p className="s-muted">
-          {pair.role === "a" ? "Меню общее — его задаёшь ты в «Настройках еды»." : "Меню берётся у партнёра, свой приём можно заменить."}
+          {pair.role === "a" ? "Меню собирается по твоим «Настройкам еды»." : "Меню собирается по настройкам партнёра."} Блюдо, заменённое кнопкой ↻, меняется у обоих.
           {" "}{pair.otherKcal ? `Партнёр ест ≈${pair.otherKcal} ккал в день — покупки посчитаны на обоих.` : "Партнёр ещё не присоединился."}
         </p>
         <button className="s-btn ghost s-wide" onClick={() => { if (window.confirm("Выйти из пары? Меню снова станет только твоим.")) { leavePair(); onPair(null); } }}>Выйти из пары</button>

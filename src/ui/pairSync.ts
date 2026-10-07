@@ -1,15 +1,17 @@
 import { makeCode, normCode, isCode, idOf, encrypt, decrypt } from "../cloud.js";
-import type { PairMenu } from "../pair.js";
+import type { PairMenu, PairSwaps } from "../pair.js";
 import type { Pantry } from "../food/packaging.js";
 import { readLS, writeLS } from "./localStore.js";
 import { BACKEND_URL } from "./notifications.js";
+import { localDateISO, plusDaysISO } from "../today-date.js";
 
 /**
  * «Готовим вдвоём» на телефоне.
  *
  * Тот, кто создал пару, — «a»: его меню общее. Вошедший по коду — «b». Каждый публикует
  * свои калории (по ним партнёр считает покупки на двоих), «a» — меню на неделю,
- * оба — кладовку с галочками «взял». Всё шифруется кодом пары.
+ * оба — свои замены блюд (побеждает более поздняя) и кладовку с галочками «взял».
+ * Всё шифруется кодом пары.
  */
 const KEY = "edimispim.pair";
 export interface PairInfo {
@@ -20,6 +22,9 @@ export interface PairInfo {
   otherKcal?: number;
   sent?: Record<string, string>;
   pantryTs?: number;
+  /** Замены блюд, сделанные в паре: мои и партнёра — с временем, чтобы побеждала последняя. */
+  mine?: PairSwaps;
+  theirs?: PairSwaps;
 }
 
 export const readPair = (): PairInfo | null => readLS<PairInfo | null>(KEY, null);
@@ -80,20 +85,23 @@ export const leavePair = () => writePair(null);
 export async function syncPair(own: { kcal: number; menu?: PairMenu; pantry: Pantry; setPantry: (p: Pantry) => void }): Promise<PairInfo | null> {
   let p = readPair();
   if (!p) return null;
-  const other = p.role === "a" ? "m-b" : "m-a";
+  const otherRole = p.role === "a" ? "b" : "a";
   await put(p, `m-${p.role}`, { kcal: own.kcal });
+  await put(p, `s-${p.role}`, p.mine ?? {});   // если замена не ушла сразу (не было сети) — уйдёт сейчас
   if (p.role === "a" && own.menu) await put(p, "menu", own.menu);
 
-  const [o, menu, pantry] = await Promise.all([
-    get<{ kcal: number }>(p.code, other),
+  const [o, menu, pantry, swaps] = await Promise.all([
+    get<{ kcal: number }>(p.code, `m-${otherRole}`),
     p.role === "b" ? get<PairMenu>(p.code, "menu") : Promise.resolve(null),
     get<{ ts: number; pantry: Pantry }>(p.code, "pantry"),
+    get<PairSwaps>(p.code, `s-${otherRole}`),
   ]);
   p = readPair();
   if (!p) return null;
   const next: PairInfo = { ...p };
   if (o && o !== "offline") next.otherKcal = o.kcal;
   if (menu && menu !== "offline") next.menu = menu;
+  if (swaps && swaps !== "offline") next.theirs = swaps;
   // кладовка: побеждает более свежая отметка — с какого бы телефона её ни поставили
   if (pantry && pantry !== "offline" && pantry.ts > (p.pantryTs ?? 0)) {
     next.pantryTs = pantry.ts;
@@ -121,4 +129,16 @@ export async function sharePantry(pantry: Pantry): Promise<void> {
   const ts = Date.now();
   writePair({ ...p, pantryTs: ts });
   await put(p, "pantry", { ts, pantry });
+}
+
+/** Моя замена блюда (↻) — сразу партнёру: у обоих в этом приёме будет одно блюдо. */
+export async function shareSwap(date: string, slot: string, id: string): Promise<void> {
+  const p = readPair();
+  if (!p) return;
+  const keep = plusDaysISO(localDateISO(), -1);   // прошлое партнёру не нужно — список не растёт
+  const mine: PairSwaps = Object.fromEntries(Object.entries(p.mine ?? {}).filter(([d]) => d >= keep));
+  mine[date] = { ...(mine[date] ?? {}), [slot]: [id, Date.now()] };
+  const next = { ...p, mine };
+  writePair(next);
+  await put(next, `s-${p.role}`, mine);
 }
