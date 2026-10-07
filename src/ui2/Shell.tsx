@@ -183,11 +183,15 @@ function Main({ app, tab, setTab, now, glow, restoreInput, onRestore }: {
   const closeTour = () => { writeLS(TOUR_KEY, true); setTour(false); };
   // история прошлой недели: карточка на «Сутках» с понедельника по среду, пока не открыта
   const lastMonday = plusDaysISO(mondayOf(day.today), -7);
-  const records = toDayRecords(state.history, state.weights ?? [], state.eaten ?? {}, state.cheatDays ?? []);
-  const storySlides = storyWeek ? weekStory(records, storyWeek, state.profile.targetSleepMin) : null;
+  // useNow тикает каждую минуту — истории недели без memo пересчитывались бы на каждый тик
+  const records = useMemo(() => toDayRecords(state.history, state.weights ?? [], state.eaten ?? {}, state.cheatDays ?? []),
+    [state.history, state.weights, state.eaten, state.cheatDays]);
+  const storySlides = useMemo(() => storyWeek ? weekStory(records, storyWeek, state.profile.targetSleepMin) : null,
+    [records, storyWeek, state.profile.targetSleepMin]);
   const [seen, setSeen] = useState(() => readLS<string | null>("edimispim.storySeen", null));
   const dow = (new Date(day.today + "T12:00:00Z").getUTCDay() + 6) % 7;
-  const offerStory = dow <= 2 && seen !== lastMonday && !!weekStory(records, lastMonday, state.profile.targetSleepMin);
+  const hasLastStory = useMemo(() => !!weekStory(records, lastMonday, state.profile.targetSleepMin), [records, lastMonday, state.profile.targetSleepMin]);
+  const offerStory = dow <= 2 && seen !== lastMonday && hasLastStory;
   const weekLabel = (m: string) => {
     const f = (iso: string) => new Date(iso + "T12:00:00").toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
     return `${f(m)} – ${f(plusDaysISO(m, 6))}`;
@@ -231,9 +235,10 @@ function Main({ app, tab, setTab, now, glow, restoreInput, onRestore }: {
         {/* было «?» — читалось как «помощь»; это вопрос коучу */}
         <button className="s-tab-ask" aria-label="Спросить коуча" onClick={() => { tap(); setAsk(true); }}><Ico name="chat-round-dots" />Спросить</button>
       </nav>
-      {/* плюс нарисован, а не буквой: у Helvetica «+» сидит ниже середины и съезжал в круге */}
-      <button className="s-fab" aria-label="Добавить" onClick={() => { tap(); setPlus("any"); }}><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5v15M4.5 12h15" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" /></svg></button>
-      {why && <WhySheet app={view} day={day} onClose={() => setWhy(false)} />}
+      {/* плюс нарисован, а не буквой: у Helvetica «+» сидит ниже середины и съезжал в круге.
+          В магазине его нет: там только список, и он закрывал последние строки */}
+      {!(tab === "eat" && shop) && <button className="s-fab" aria-label="Добавить" onClick={() => { tap(); setPlus("any"); }}><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5v15M4.5 12h15" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" /></svg></button>}
+      {why &&<WhySheet app={view} day={day} onClose={() => setWhy(false)} />}
       {plus && <PlusSheet app={view} day={day} initial={plus === "night" ? "night" : null} onClose={() => { setPlus(false); if (location.hash) history.replaceState(null, "", location.pathname + location.search); }} />}
       {ask && <AskSheet state={state} screen={tab} onClose={() => setAsk(false)} />}
       {restoreInput}

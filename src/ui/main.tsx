@@ -2,12 +2,20 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { readTheme, applyTheme } from "./theme.js";
 import { Shell, UpdateBanner, UPDATE_EVENT } from "../ui2/Shell.js";
+import { Crash } from "../ui2/Crash.js";
 import "../ui2/sky.css";
 import { askPersistentStorage } from "./dataSafety.js";
 import "./ui.css";
 
 // тема ставится до первой отрисовки, иначе экран мигнёт чужим фоном
 applyTheme(readTheme());
+// классы оболочки 2.0 — тоже до первого кадра: Shell ставит их в эффекте, то есть после
+// отрисовки, и первый кадр был серым (светлая) или чёрным (тёмная) по старым токенам
+{
+  const t = readTheme();
+  document.documentElement.classList.add("v2");
+  document.documentElement.classList.toggle("night", t === "dark" || (t === "auto" && matchMedia("(prefers-color-scheme: dark)").matches));
+}
 
 /**
  * Приложение не масштабируется щипком.
@@ -91,5 +99,5 @@ askPersistentStorage();
 try { localStorage.removeItem("edimispim.v2"); } catch { /* приватный режим */ }
 
 createRoot(document.getElementById("root")!).render(
-  <React.StrictMode><Shell /><UpdateBanner /></React.StrictMode>
+  <React.StrictMode><Crash><Shell /></Crash><UpdateBanner /></React.StrictMode>
 );

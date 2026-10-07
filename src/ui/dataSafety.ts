@@ -7,8 +7,21 @@
  * Отсюда две защиты: звать установить приложение и напоминать сохранить копию.
  */
 
+import { exportAll } from "./storage.js";
+import { localDateISO } from "../today-date.js";
+
 /** Когда человек последний раз сохранял копию — ISO-дата. Только на этом устройстве. */
 export const BACKUP_KEY = "edimispim.backupAt";
+
+/** Скачать копию всех данных файлом. Возвращает дату копии (ISO). */
+export function downloadBackup(): string {
+  const today = localDateISO();
+  const url = URL.createObjectURL(new Blob([exportAll()], { type: "application/json" }));
+  const a = document.createElement("a");
+  a.href = url; a.download = `edim-spim-копия-${today}.json`;
+  a.click(); URL.revokeObjectURL(url);
+  return today;
+}
 
 /**
  * Запущено ли приложение с домашнего экрана, а не из браузера.

@@ -30,7 +30,7 @@ export function amountRU(qty: number, unit: string): string {
  * там это предупреждение «успей съесть» — и когда его заметно много.
  */
 export const showsLeftover = (line: BuyLine): boolean =>
-  line.leftover > 0 &&
+  line.leftover > 0 && !line.bunch &&   // «пучок · останется 45 г» — шум: пучок и есть пучок
   line.perishDays !== undefined && line.perishDays <= 14 &&
   line.leftover >= line.need * 0.25;
 
