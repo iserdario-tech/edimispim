@@ -41,7 +41,7 @@ const SLIDES: { kicker: string; title: string; text: string; demo: ReactNode }[]
   {
     kicker: "+ и ?", title: "Записать и спросить",
     text: "«+» — съел, своё словами, вес, ночь. «?» — вопрос коучу: он видит твой день и меню.",
-    demo: <div className="s-tour-pair"><span><Dot c="+" k="plus" /><i>записать</i></span><span><Dot c="?" /><i>спросить</i></span></div>,
+    demo: <div className="s-tour-pair"><span><Dot c={<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5v15M4.5 12h15" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" /></svg>} k="plus" /><i>записать</i></span><span><Dot c="?" /><i>спросить</i></span></div>,
   },
   {
     kicker: "Еда", title: "Меню на неделю и покупки",
