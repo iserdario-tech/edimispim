@@ -1,3 +1,4 @@
+import { Ico } from "./Ico.js";
 /**
  * Первый экран на iPhone в Safari: «поставь на экран „Домой“».
  *
@@ -14,9 +15,9 @@ export function Install({ onContinue, onRestore }: { onContinue: () => void; onR
       <section className="s-card">
         <h2 className="s-h2">Поставь на экран «Домой»</h2>
         <ol className="s-steps">
-          <li><span>⬆</span>Нажми «Поделиться» в Safari</li>
-          <li><span>＋</span>Выбери «На экран „Домой“»</li>
-          <li><span>✓</span>Нажми «Добавить»</li>
+          <li><span><Ico name="upload-square" /></span>Нажми «Поделиться» в Safari</li>
+          <li><span><Ico name="add-circle" /></span>Выбери «На экран „Домой“»</li>
+          <li><span><Ico name="check-circle" /></span>Нажми «Добавить»</li>
         </ol>
         <p className="s-muted">Открывай с иконки — так Safari не сотрёт твои данные.</p>
       </section>

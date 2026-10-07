@@ -4,6 +4,8 @@ import { WeightChart } from "../ui/Charts.js";
 import { toDayRecords } from "../ui/dayRecords.js";
 import { expenditure } from "../expenditure.js";
 import { useExp, paceRU } from "./useExp.js";
+import { Ico } from "./Ico.js";
+import type { IcoName } from "./icons.js";
 import { targetsFor } from "../ui/storage.js";
 import { targetsForToday } from "../food/index.js";
 import { plateau } from "../plateau.js";
@@ -69,18 +71,18 @@ export function Me({ app, day, cloud, onCloud, pair, onPair, onSettings, onStory
   const exp = useExp(state, day.today);
   const tdee = exp ? (exp.r.status === "ready" || exp.r.status === "uncertain" ? exp.r.tdee : exp.formula) : null;
 
-  const ROWS: [MeSheet | "sleep-settings" | "food-settings" | "tour", string, string, string][] = [
-    ["weight", "⚖", "Вес и калории", lastKg ? `${lastKg} кг · трата ${exp?.r.status === "ready" ? "по твоим данным" : "по формуле"}` : "записать первый вес"],
-    ["sleep", "☾", "Сон и режим", "во сколько ложишься, сон и еда"],
-    ["stories", "▤", "Итоги недель", "каждый понедельник — новый"],
-    ["sleep-settings", "⏰", "Настройки сна", `подъём ${state.profile.anchorWakeHM}`],
-    ["food-settings", "🍽", "Настройки еды", state.food ? `${state.food.mealCount} приёма · ${state.food.household && state.food.household > 1 ? `на ${state.food.household}` : "на себя"}` : "не настроено"],
-    ["pair", "👫", "Готовим вдвоём", pair ? (pair.otherKcal ? `партнёр ≈${pair.otherKcal} ккал/день` : "ждём партнёра") : "общее меню, порции свои"],
-    ["backup", "⤓", "Копия данных", cloud?.at ? `в облаке · ${cloud.at.split("-").reverse().slice(0, 2).join(".")}` : app.backupAt ? `файлом · ${app.backupAt.split("-").reverse().slice(0, 2).join(".")}` : "ещё не делал"],
-    ["notif", "🔔", "Напоминания", notifOn() ? "заранее: еда, кофе, сон" : "выключены"],
-    ["theme", "◐", "Оформление", { auto: "как в системе", light: "светлое", dark: "тёмное" }[readTheme()]],
-    ["tour", "?", "Как устроено приложение", "кнопки и экраны за минуту"],
-    ["about", "ℹ", "О приложении", "наука и фото"],
+  const ROWS: [MeSheet | "sleep-settings" | "food-settings" | "tour", IcoName, string, string][] = [
+    ["weight", "scale", "Вес и калории", lastKg ? `${lastKg} кг · трата ${exp?.r.status === "ready" ? "по твоим данным" : "по формуле"}` : "записать первый вес"],
+    ["sleep", "moon-sleep", "Сон и режим", "во сколько ложишься, сон и еда"],
+    ["stories", "chart-2", "Итоги недель", "каждый понедельник — новый"],
+    ["sleep-settings", "alarm", "Настройки сна", `подъём ${state.profile.anchorWakeHM}`],
+    ["food-settings", "chef-hat", "Настройки еды", state.food ? `${state.food.mealCount} приёма · ${state.food.household && state.food.household > 1 ? `на ${state.food.household}` : "на себя"}` : "не настроено"],
+    ["pair", "users-group-rounded", "Готовим вдвоём", pair ? (pair.otherKcal ? `партнёр ≈${pair.otherKcal} ккал/день` : "ждём партнёра") : "общее меню, порции свои"],
+    ["backup", "cloud-download", "Копия данных", cloud?.at ? `в облаке · ${cloud.at.split("-").reverse().slice(0, 2).join(".")}` : app.backupAt ? `файлом · ${app.backupAt.split("-").reverse().slice(0, 2).join(".")}` : "ещё не делал"],
+    ["notif", "bell", "Напоминания", notifOn() ? "заранее: еда, кофе, сон" : "выключены"],
+    ["theme", "palette", "Оформление", { auto: "как в системе", light: "светлое", dark: "тёмное" }[readTheme()]],
+    ["tour", "question-circle", "Как устроено приложение", "кнопки и экраны за минуту"],
+    ["about", "info-circle", "О приложении", "наука и фото"],
   ];
 
   return (
@@ -104,7 +106,7 @@ export function Me({ app, day, cloud, onCloud, pair, onPair, onSettings, onStory
             else if (id === "tour") onTour();
             else setSheet(id);
           }}>
-            <span className="s-list-ico">{ico}</span>
+            <span className="s-list-ico"><Ico name={ico} /></span>
             <span className="s-what"><b>{title}</b><span>{sub}</span></span>
             <span className="s-list-go" aria-hidden="true">›</span>
           </button>
@@ -159,6 +161,8 @@ export function Me({ app, day, cloud, onCloud, pair, onPair, onSettings, onStory
         <Sheet title="О приложении" onClose={() => setSheet(null)}>
           <p>edim & spim строит день от сна: ужин за три часа до отбоя, после плохой ночи — те же калории, но день проще.</p>
           <p className="s-muted">Честная рамка: сон не сжигает калории — он меняет аппетит и самоконтроль. Кофеин маскирует недосып, а не заменяет его. Оценки помечены «≈», личные сопоставления — наблюдения, а не выводы. Это не медицинское приложение.</p>
+          <h3 className="s-why-h">Значки</h3>
+          <p className="s-small">Solar — <a href="https://www.figma.com/community/file/1166831539721848736" target="_blank" rel="noopener noreferrer">480 Design</a>, лицензия CC BY 4.0.</p>
           <h3 className="s-why-h">Фотографии блюд</h3>
           <p className="s-small">Снимки подобраны по типу блюда с Викисклада, свободные лицензии.</p>
           <ul className="s-credits">
@@ -313,7 +317,7 @@ function PairSheet({ pair, onPair, onClose }: { pair: PairInfo | null; onPair: (
           <button className="s-btn ghost s-wide" onClick={() => { tap(); void navigator.clipboard?.writeText(pair.code); }}>Скопировать код</button>
         </>}
         <p className="s-muted">
-          {pair.role === "a" ? "Меню собирается по твоим «Настройкам еды»." : "Меню собирается по настройкам партнёра."} Блюдо, заменённое кнопкой ↻, меняется у обоих.
+          {pair.role === "a" ? "Меню собирается по твоим «Настройкам еды»." : "Меню собирается по настройкам партнёра."} Блюдо, заменённое кнопкой <Ico name="refresh" />, меняется у обоих.
           {" "}{pair.otherKcal ? `Партнёр ест ≈${pair.otherKcal} ккал в день — покупки посчитаны на обоих.` : "Партнёр ещё не присоединился."}
         </p>
         <button className="s-btn ghost s-wide" onClick={() => { if (window.confirm("Выйти из пары? Меню снова станет только твоим.")) { leavePair(); onPair(null); } }}>Выйти из пары</button>

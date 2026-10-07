@@ -6,6 +6,7 @@ import recipesJson from "../food/data/recipes.json";
 import { photoFor, photoUrl } from "../food/photos.js";
 import type { PairInfo } from "../ui/pairSync.js";
 import { byPartner } from "../pair.js";
+import { Ico } from "./Ico.js";
 import { fmtHM } from "../time.js";
 import { Sheet } from "../ui/Sheet.js";
 import { MealIngredients } from "../ui/Grocery.js";
@@ -66,9 +67,7 @@ export function Eat({ app, week, pair, onShop, onSetupFood }: { app: AppModel; w
       <div className="s-head s-head-between">
         <h1 className="s-title">Еда</h1>
         <button className="s-i s-search" aria-label="Все блюда" onClick={() => setSearch(true)}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
-            <circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.5 15.5 21 21" />
-          </svg>
+          <Ico name="magnifer" mono />
         </button>
       </div>
 
@@ -89,7 +88,7 @@ export function Eat({ app, week, pair, onShop, onSetupFood }: { app: AppModel; w
       </div>
       <p className="s-small s-day-total">{d.day.totals.kcal} ккал · белок {d.day.totals.protein} · жиры {d.day.totals.fat} · углеводы {d.day.totals.carbs} г</p>
       {diagnosis && <p className="s-small s-day-total">{diagnosis}</p>}
-      {pair && <p className="s-small s-day-total">Готовите вдвоём: меню общее, ↻ меняет блюдо у обоих. Порции у каждого свои, покупки — на двоих.</p>}
+      {pair && <p className="s-small s-day-total">Готовите вдвоём: меню общее, <Ico name="refresh" /> меняет блюдо у обоих. Порции у каждого свои, покупки — на двоих.</p>}
 
       {/* после быстрого старта меню по умолчанию — зовём донастроить, но не заставляем */}
       {state.food.tuned === false && (
@@ -116,8 +115,8 @@ export function Eat({ app, week, pair, onShop, onSetupFood }: { app: AppModel; w
                 </span>
               </button>
               {done
-                ? <span className="s-meal-done" aria-label="съедено">✓</span>
-                : <button className="s-meal-swap" aria-label={`Заменить: ${m.recipe.name}`} onClick={() => { tap(); setSwapping(k); }}>↻</button>}
+                ? <span className="s-meal-done" aria-label="съедено"><Ico name="check-circle" /></span>
+                : <button className="s-meal-swap" aria-label={`Заменить: ${m.recipe.name}`} onClick={() => { tap(); setSwapping(k); }}><Ico name="refresh" /></button>}
             </div>
           );
         })}
@@ -125,7 +124,7 @@ export function Eat({ app, week, pair, onShop, onSetupFood }: { app: AppModel; w
 
       <button className="s-shop" onClick={() => { tap(); onShop(); }}>
         <span><b>Список покупок</b><span>{toBuy.length ? `${toBuy.length} продуктов на неделю · ≈${plan.grocery.estCostRub.toLocaleString("ru-RU")} ₽` : "всё есть дома"}</span></span>
-        <span aria-hidden="true">→</span>
+        <Ico name="arrow-right" mono className="ico-go" />
       </button>
 
       {recipe && (
