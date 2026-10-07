@@ -17,6 +17,7 @@ import { parseHM } from "../index.js";
 import { plusDaysISO } from "../today-date.js";
 import { photoFor, photoUrl } from "../food/photos.js";
 import { backupDue, daysSince } from "../ui/dataSafety.js";
+import { readCloud } from "../ui/cloudSync.js";
 
 const FACES = [[1, "😩", "плохо"], [2, "😕", "так себе"], [3, "🙂", "норм"], [4, "😊", "хорошо"], [5, "😴", "отлично"]] as const;
 const YESTERDAY: [keyof Yesterday, string][] = [["lateDinner", "Ужин позже 21:00"], ["lateCaffeine", "Кофе после 14:00"], ["alcohol", "Алкоголь"]];
@@ -37,7 +38,7 @@ const SLOT_RU: Record<string, string> = { breakfast: "Завтрак", lunch: "�
  * строки — в шторке по тапу. Строка ленты — время, тарелка или значок, название и одна
  * строка подробностей. До первого действия — не больше сорока слов (критерий спеки).
  */
-export function Day({ app, day, now, onWhy, story }: { app: AppModel; day: DayModel; now: Date; onWhy: () => void; story?: { label: string; open: () => void } }) {
+export function Day({ app, day, now, onWhy, story, code }: { app: AppModel; day: DayModel; now: Date; onWhy: () => void; story?: { label: string; open: () => void }; code?: { code: string; onNoted: () => void } }) {
   const state = app.state!;
   const a = app.actions;
   const [recipe, setRecipe] = useState<NonNullable<TimelineRow["meal"]> | null>(null);
@@ -64,7 +65,9 @@ export function Day({ app, day, now, onWhy, story }: { app: AppModel; day: DayMo
   const dinnerMin = day.foodDay?.day.meals.find(m => m.slot === "dinner")?.timeMin ?? 19 * 60;
   const daysWithData = new Set([...state.history.map(h => h.date), ...Object.keys(state.eaten ?? {})]).size;
   // Safari стирает данные сайта после недели простоя — раз в неделю зовём сохранить копию
-  const showBackup = backupDue(app.backupAt ?? null, day.today, daysWithData);
+  // облачная копия считается копией: файл просим, только если и облако давно не обновлялось
+  const lastCopy = [app.backupAt, readCloud()?.at].filter((x): x is string => !!x).sort().at(-1) ?? null;
+  const showBackup = backupDue(lastCopy, day.today, daysWithData);
   const yAns = state.yesterday?.[day.today] ?? {};
   const askYesterday = day.word.phase === "morning" && YESTERDAY.some(([k]) => yAns[k] === undefined);
 
@@ -132,6 +135,18 @@ export function Day({ app, day, now, onWhy, story }: { app: AppModel; day: DayMo
               </span>
             </div>
           ))}
+        </section>
+      )}
+
+      {code && (
+        <section className="s-card">
+          <h2 className="s-h2">Код для восстановления</h2>
+          <p className="s-code">{code.code}</p>
+          <p className="s-muted">Копия теперь сама уходит в облако. Поменяешь телефон или переустановишь — всё вернётся по этому коду. Сделай скриншот.</p>
+          <div className="s-sheet-actions">
+            <button className="s-btn ghost" onClick={() => { tap(); void navigator.clipboard?.writeText(code.code); }}>Скопировать</button>
+            <button className="s-btn food" onClick={() => { tap(); code.onNoted(); }}>Записал</button>
+          </div>
         </section>
       )}
 
