@@ -229,7 +229,8 @@ function Main({ app, tab, setTab, now, glow, restoreInput, onRestore }: {
         ))}
         <button className="s-tab-ask" aria-label="Спросить коуча" onClick={() => { tap(); setAsk(true); }}>?</button>
       </nav>
-      <button className="s-fab" aria-label="Добавить" onClick={() => { tap(); setPlus("any"); }}>+</button>
+      {/* плюс нарисован, а не буквой: у Helvetica «+» сидит ниже середины и съезжал в круге */}
+      <button className="s-fab" aria-label="Добавить" onClick={() => { tap(); setPlus("any"); }}><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5v15M4.5 12h15" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" /></svg></button>
       {why && <WhySheet app={view} day={day} onClose={() => setWhy(false)} />}
       {plus && <PlusSheet app={view} day={day} initial={plus === "night" ? "night" : null} onClose={() => { setPlus(false); if (location.hash) history.replaceState(null, "", location.pathname + location.search); }} />}
       {ask && <AskSheet state={state} screen={tab} onClose={() => setAsk(false)} />}
