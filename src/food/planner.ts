@@ -173,9 +173,27 @@ export function filterRecipes(recipes: Recipe[], c: Constraints = {}): Recipe[] 
     if ((r.cookware ?? []).some(w => !cookware.has(w))) return false;
     // мягкий фильтр кухни: universal проходит всегда и покрывает все слоты → план не пустеет
     if (cuisines.length && r.cuisine !== "universal" && !cuisines.includes(r.cuisine as never)) return false;
+    if (r.meal_type === "dessert" && !sweetOk(r, c.sweets)) return false;
     return true;
   });
   return applyBudget(fit, c.budget);
+}
+
+/**
+ * Какое сладкое ставить. Сердар: «готовить самому десерты — это заеб тот ещё».
+ * «Куплю готовое» — только покупное (шоколад с яблоком, пломбир с ягодами…),
+ * «без готовки» — покупное плюс собранное за 10 минут без плиты, духовки и микроволновки,
+ * «готовлю сам» и по умолчанию — домашние десерты, как было до этой настройки.
+ */
+const HEAT = new Set(["stove", "oven", "microwave", "multicooker", "airfryer"]);
+/** Готовое из магазина или собирается за 10 минут без плиты, духовки и микроволновки. */
+export const isNoCook = (r: Recipe): boolean =>
+  (r.tags ?? []).includes("ready") || ((r.time_min ?? 99) <= 10 && !(r.cookware ?? []).some(w => HEAT.has(w)));
+export function sweetOk(r: Recipe, sweets: Constraints["sweets"]): boolean {
+  const ready = (r.tags ?? []).includes("ready");
+  if (sweets === "buy") return ready;
+  if (sweets === "nocook") return isNoCook(r);
+  return !ready;
 }
 
 function recomputeTotals(day: Day): void {

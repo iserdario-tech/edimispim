@@ -16,7 +16,6 @@
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { pathToFileURL } from "node:url";
 import { NUTRIENTS, macrosOf } from "../src/food/nutrients";
 import { PRICES, UNKNOWN_PRICE } from "../src/food/prices";
 import { hasHint } from "../src/food/ingredients";
@@ -114,7 +113,7 @@ if (!draftPath) {
   console.error("укажи файл черновика: npx vite-node scripts/add-recipes.ts scripts/drafts/<файл>.ts");
   process.exit(1);
 } else {
-  const { DRAFT } = (await import(pathToFileURL(resolve(draftPath)).href)) as { DRAFT: Draft[] };
+  const { DRAFT } = (await import(resolve(draftPath)))  // путь, не file-URL: в URL пробелы папки становятся %20, и vite-node его не находит as { DRAFT: Draft[] };
   const existing = JSON.parse(readFileSync(RECIPES_PATH, "utf8")) as Recipe[];
 
   const problems = [...checkMeta(DRAFT, existing), ...checkProducts(DRAFT)];

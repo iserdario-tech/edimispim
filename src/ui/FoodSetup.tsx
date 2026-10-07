@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import type { FoodSettings } from "./storage.js";
-import type { Activity, Budget, MealCount, Sex } from "../food/types.js";
+import type { Activity, Budget, MealCount, Sex, Sweets } from "../food/types.js";
 import { DEFAULT_PACE, PACES_RU, PACE_SPAN_RU, type RampPace } from "../food/rampin.js";
 import { localDateISO } from "../today-date.js";
 import { JunctionScreening, junctionFrom, junctionResult, type JunctionValue } from "./JunctionScreening.js";
@@ -91,6 +91,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
   const [cookWeekday, setCookWeekday] = useState<number | undefined>(initial?.cookMin?.weekday);
   const [cookWeekend, setCookWeekend] = useState<number | undefined>(initial?.cookMin?.weekend);
   const [leftovers, setLeftovers] = useState(!!initial?.leftovers);
+  const [sweets, setSweets] = useState<Sweets>(initial?.constraints.sweets ?? "cook");
   const [household, setHousehold] = useState(initial?.household ?? 1);
   const [strength, setStrength] = useState(!!initial?.strength);
   // скрининг стыка — общий компонент с быстрым стартом
@@ -216,6 +217,21 @@ export function FoodSetup({ initial, onDone, onCancel }: {
           </div>
           <p className="small muted">Калории считаются только на тебя, продукты в списке покупок — на всех.</p>
         </div>
+        {/* «готовить самому десерты — это заеб тот ещё»: сладкое можно не готовить вовсе */}
+        <div className="day-group">
+          <div className="day-group-label small muted">Сладкое</div>
+          <div className="seg" role="group" aria-label="Сладкое">
+            {([["buy", "Покупное"], ["nocook", "Без готовки"], ["cook", "Готовлю сам"]] as const).map(([v, ru]) => (
+              <button key={v} className={sweets === v ? "seg-item on" : "seg-item"}
+                aria-pressed={sweets === v} onClick={() => setSweets(v)}>{ru}</button>
+            ))}
+          </div>
+          <p className="small muted">
+            {sweets === "buy" ? "Шоколад с яблоком, пломбир с ягодами, батончик — купить и съесть порцию."
+              : sweets === "nocook" ? "Покупное и десерты за 10 минут без плиты и духовки."
+              : "Домашние десерты: запеканки, печенье, суфле — есть и долгие."}
+          </p>
+        </div>
       </section>
 
       <section className="card">
@@ -307,6 +323,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
           profile: { sex, age, heightCm, weightKg, goalWeightKg, activity },
           constraints: {
             allergens: allergens as never, cookware, budget, cuisines: [],
+            ...(sweets !== "cook" ? { sweets } : {}),
             dislikes: [
               ...dislikes.split(",").map(s => s.trim()).filter(Boolean),
               ...(noRare ? RARE_INGREDIENTS : []),

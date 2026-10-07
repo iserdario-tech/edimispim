@@ -12,8 +12,9 @@
 """
 import json, os, subprocess, sys, urllib.parse, urllib.request
 
-OUT = os.path.expanduser("~/Desktop/edimispim/app/.worktrees/lab/public/food")
-META = os.path.expanduser("~/Desktop/edimispim/app/.worktrees/lab/src/food/data/photos.json")
+HERE = os.path.dirname(os.path.abspath(__file__))
+OUT = os.path.join(HERE, "../public/food")
+META = os.path.join(HERE, "../src/food/data/photos.json")
 UA = "edimispim/1.0 (personal app; mmmikeshinoda@gmail.com)"
 
 # архетип → поисковый запрос на Викискладе
@@ -89,6 +90,11 @@ KINDS = {
     "casserole":  "cottage cheese casserole",
     "mousse":     "chocolate mousse",
     # йогурт и творог с ягодами берут этот снимок: отдельные с Викисклада не нашлись приличные
+    # волна 43: покупное сладкое
+    "chocapple":    "dark chocolate squares",
+    "zefir":        "zefir marshmallow",
+    "marmalade":    "gummy candies",
+    "dates":        "medjool dates fruit",
     "granola":    "granola with yogurt",
     "kasha":      "millet porridge bowl",
     "bruschetta": "bruschetta tomato",

@@ -87,6 +87,8 @@ export function MealIngredients({ meal, rating, onRate, household = 1 }: {
   if (!ings.length && !steps.length) return <div className="meal-ings small muted">Рецепт не указан.</div>;
 
   const photo = photoFor(meal.recipe);
+  // покупное сладкое: его не готовят, а покупают — и подписи другие
+  const ready = (meal.recipe.tags ?? []).includes("ready");
   return (
     <div className="meal-ings">
       {/* Широкое фото сверху: карточка блюда — единственное место, где человек решает,
@@ -136,7 +138,9 @@ export function MealIngredients({ meal, rating, onRate, household = 1 }: {
       {/* про происхождение говорим всегда: тишина у «домашних» рецептов читалась как
           «этот тоже откуда-то взят», а половина набора написана для приложения */}
       <p className="small muted mt-3">
-        {meal.recipe.source ? (
+        {ready ? (
+          <>Готовое из магазина; калории посчитаны по справочнику продуктов.</>
+        ) : meal.recipe.source ? (
           <>
             Рецепт с <a href={meal.recipe.source} target="_blank" rel="noopener noreferrer">источника</a> —
             состав оттуда, калории пересчитаны приложением по справочнику продуктов.
@@ -149,7 +153,7 @@ export function MealIngredients({ meal, rating, onRate, household = 1 }: {
       {steps.length > 0 && (
         <>
           <div className="small muted mt-3">
-            Как готовить{meal.recipe.time_min ? ` · ${meal.recipe.time_min} мин` : ""}
+            {ready ? "Как есть" : `Как готовить${meal.recipe.time_min ? ` · ${meal.recipe.time_min} мин` : ""}`}
           </div>
           <ol className="recipe-steps small">
             {steps.map((st, k) => <li key={k}>{st}</li>)}

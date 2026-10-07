@@ -22437,5 +22437,268 @@
       "Добавь чечевицу, залей водой вровень и вари пятнадцать минут.",
       "Влей кокосовое молоко, брось шпинат и дай ему осесть."
     ]
+  },
+  {
+    "id": "t1",
+    "name": "Тёмный шоколад и яблоко",
+    "meal_type": "dessert",
+    "cuisine": "universal",
+    "kcal": 198,
+    "protein_g": 2.2,
+    "fat_g": 8.8,
+    "carbs_g": 30.4,
+    "fiber_g": 5.8,
+    "energy_density": 1.16,
+    "cookware": [],
+    "allergens": [],
+    "tags": [
+      "ready"
+    ],
+    "difficulty": 1,
+    "time_min": 1,
+    "ingredients": [
+      {
+        "name": "тёмный шоколад 70%",
+        "qty": 20,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "яблоко",
+        "qty": 150,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Отломи 3–4 дольки шоколада, яблоко нарежь дольками."
+    ]
+  },
+  {
+    "id": "t2",
+    "name": "Греческий йогурт с ягодами и мёдом",
+    "meal_type": "dessert",
+    "cuisine": "universal",
+    "kcal": 166,
+    "protein_g": 17.7,
+    "fat_g": 0.9,
+    "carbs_g": 23.2,
+    "fiber_g": 2.8,
+    "energy_density": 0.64,
+    "cookware": [],
+    "allergens": [
+      "milk"
+    ],
+    "tags": [
+      "ready"
+    ],
+    "difficulty": 1,
+    "time_min": 2,
+    "ingredients": [
+      {
+        "name": "греческий йогурт",
+        "qty": 170,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "ягоды замороженные",
+        "qty": 80,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      },
+      {
+        "name": "мёд",
+        "qty": 10,
+        "unit": "г",
+        "category": "бакалея"
+      }
+    ],
+    "steps": [
+      "Выложи йогурт в миску, сверху ягоды и мёд."
+    ]
+  },
+  {
+    "id": "t3",
+    "name": "Протеиновый батончик",
+    "meal_type": "dessert",
+    "cuisine": "universal",
+    "kcal": 180,
+    "protein_g": 15,
+    "fat_g": 6,
+    "carbs_g": 18.5,
+    "fiber_g": 4,
+    "energy_density": 3.6,
+    "cookware": [],
+    "allergens": [
+      "milk",
+      "soy"
+    ],
+    "tags": [
+      "ready"
+    ],
+    "difficulty": 1,
+    "time_min": 1,
+    "ingredients": [
+      {
+        "name": "протеиновый батончик",
+        "qty": 50,
+        "unit": "г",
+        "category": "бакалея"
+      }
+    ],
+    "steps": [
+      "Один батончик. Бери тот, где белка 15 г и больше, без сахарной глазури."
+    ]
+  },
+  {
+    "id": "t4",
+    "name": "Зефир и груша",
+    "meal_type": "dessert",
+    "cuisine": "universal",
+    "kcal": 177,
+    "protein_g": 0.8,
+    "fat_g": 0.2,
+    "carbs_g": 45.3,
+    "fiber_g": 4.7,
+    "energy_density": 0.98,
+    "cookware": [],
+    "allergens": [
+      "egg"
+    ],
+    "tags": [
+      "ready"
+    ],
+    "difficulty": 1,
+    "time_min": 1,
+    "ingredients": [
+      {
+        "name": "зефир",
+        "qty": 30,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "груша",
+        "qty": 150,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Одна зефирка (половинка большой) и спелая груша."
+    ]
+  },
+  {
+    "id": "t5",
+    "name": "Мармелад и мандарины",
+    "meal_type": "dessert",
+    "cuisine": "universal",
+    "kcal": 179,
+    "protein_g": 2.7,
+    "fat_g": 0.5,
+    "carbs_g": 42.1,
+    "fiber_g": 2.7,
+    "energy_density": 0.99,
+    "cookware": [],
+    "allergens": [],
+    "tags": [
+      "ready"
+    ],
+    "difficulty": 1,
+    "time_min": 1,
+    "ingredients": [
+      {
+        "name": "мармелад",
+        "qty": 30,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "мандарин",
+        "qty": 150,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Горсть мармелада — штук 5–6 — и два мандарина."
+    ]
+  },
+  {
+    "id": "t6",
+    "name": "Финики с грецкими орехами",
+    "meal_type": "dessert",
+    "cuisine": "universal",
+    "kcal": 181,
+    "protein_g": 2.8,
+    "fat_g": 9.8,
+    "carbs_g": 21.9,
+    "fiber_g": 3,
+    "energy_density": 4.03,
+    "cookware": [],
+    "allergens": [
+      "nuts"
+    ],
+    "tags": [
+      "ready"
+    ],
+    "difficulty": 1,
+    "time_min": 1,
+    "ingredients": [
+      {
+        "name": "финики",
+        "qty": 30,
+        "unit": "г",
+        "category": "бакалея"
+      },
+      {
+        "name": "грецкие орехи",
+        "qty": 15,
+        "unit": "г",
+        "category": "орехи"
+      }
+    ],
+    "steps": [
+      "3–4 финика и 3–4 половинки грецкого ореха — сладко и сытно."
+    ]
+  },
+  {
+    "id": "t7",
+    "name": "Пломбир с ягодами",
+    "meal_type": "dessert",
+    "cuisine": "universal",
+    "kcal": 174,
+    "protein_g": 2.6,
+    "fat_g": 9.2,
+    "carbs_g": 21.6,
+    "fiber_g": 2.8,
+    "energy_density": 1.25,
+    "cookware": [],
+    "allergens": [
+      "milk"
+    ],
+    "tags": [
+      "ready"
+    ],
+    "difficulty": 1,
+    "time_min": 1,
+    "ingredients": [
+      {
+        "name": "пломбир",
+        "qty": 60,
+        "unit": "г",
+        "category": "молочное"
+      },
+      {
+        "name": "ягоды замороженные",
+        "qty": 80,
+        "unit": "г",
+        "category": "овощи/фрукты"
+      }
+    ],
+    "steps": [
+      "Два шарика пломбира в пиалу, сверху ягоды."
+    ]
   }
 ]
