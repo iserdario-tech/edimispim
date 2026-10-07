@@ -34,6 +34,8 @@ const until = (min: number) => {
   return `через\u00a0${h ? `${h}\u00a0ч\u00a0${String(m).padStart(2, "0")}` : `${m}\u00a0мин`}`;
 };
 const SLOT_RU: Record<string, string> = { breakfast: "Завтрак", lunch: "Обед", dinner: "Ужин", dessert: "Сладкое", snack: "Перекус" };
+const DELA: Record<string, string> = { one: "дело", few: "дела", many: "дел", other: "дела" };
+const dela = (n: number) => DELA[new Intl.PluralRules("ru").select(n)]!;
 
 /**
  * «Сутки» 2.0: слово дня, одна строка «что дальше» и лента суток на фоне неба.
@@ -81,6 +83,16 @@ export function Day({ app, day, now, onWhy, story, code }: { app: AppModel; day:
   const showBackup = backupDue(lastCopy, day.today, daysWithData);
   const yAns = state.yesterday?.[day.today] ?? {};
   const askYesterday = day.word.phase === "morning" && YESTERDAY.some(([k]) => yAns[k] === undefined);
+
+  // Прошедшее сворачивается, как «Выполнено · показать» в «Напоминаниях»: вечером лента
+  // начиналась с утра, а «сейчас» и ужин были на полтора экрана ниже. Неотмеченный приём
+  // остаётся на виду — его как раз надо отметить.
+  const [showPast, setShowPast] = useState(false);
+  const isPast = (r: TimelineRow, i: number) => r.startMin < day.nowMin - 15 && i !== day.nextIdx;
+  const hidden = new Set(day.rows.filter((r, i) => isPast(r, i) && !(r.kind === "food" && r.slot && !eaten?.marks[r.slot])));
+  const pastCount = hidden.size + (day.logged ? 1 : 0);
+  const collapsible = pastCount >= 3;
+  const collapsed = collapsible && !showPast;
 
   // строка «ночь»: прошлая ночь — первая точка суток, как в макете
   const nightRow = day.logged ? (
@@ -166,6 +178,15 @@ export function Day({ app, day, now, onWhy, story, code }: { app: AppModel; day:
         </section>
       )}
 
+      {/* запись на диск не удалась — молчать нельзя: следующая отметка может пропасть */}
+      {app.saveFailed && (
+        <section className="s-card">
+          <h2 className="s-h2">Не получилось сохранить</h2>
+          <p className="s-muted">Место в памяти кончилось или браузер в приватном режиме. Отметки могут пропасть — сохрани копию и открой приложение заново.</p>
+          <button className="s-btn food" onClick={() => { tap(); a.backup(); }}>Сохранить копию</button>
+        </section>
+      )}
+
       {code && (
         <section className="s-card">
           <h2 className="s-h2">Код для восстановления</h2>
@@ -179,11 +200,19 @@ export function Day({ app, day, now, onWhy, story, code }: { app: AppModel; day:
       )}
 
       <ol className="s-timeline">
-        {nightRow}
+        {collapsible && (
+          <li>
+            <button className="s-past" aria-expanded={showPast} onClick={() => { tap(); setShowPast(v => !v); }}>
+              <Ico name="history" mono /> Прошло · {pastCount} {dela(pastCount)} <Ico name="alt-arrow-down" mono className={showPast ? "up" : ""} />
+            </button>
+          </li>
+        )}
+        {!collapsed && nightRow}
         {day.rows.map((r, i) => {
+          if (collapsed && hidden.has(r)) return null;
           const isFood = r.kind === "food" && r.slot && r.meal;
           const m = r.slot ? eaten?.marks[r.slot] : undefined;
-          const past = r.startMin < day.nowMin - 15 && i !== day.nextIdx;
+          const past = isPast(r, i);
           const detail = isFood
             ? (m === "ate" ? "съел" : m === "own" ? "своё" : r.meal!.leftover ? "остатки вчерашнего ужина"
               : `${Math.round(r.meal!.recipe.kcal * r.meal!.servings)} ккал${r.meal!.recipe.time_min ? ` · ${r.meal!.recipe.time_min} мин` : ""}`)

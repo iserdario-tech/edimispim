@@ -44,6 +44,13 @@ export function useDay(state: StoredState, now: Date) {
   const [mode, setMode] = useState<DayMode>(draft?.mode ?? "normal");
   const [crunchEndHM, setCrunchEndHM] = useState(draft?.crunchEndHM ?? "03:00");
   const [toggles, setToggles] = useState<DayToggles>(draft?.toggles ?? {});
+  // Установленная PWA не закрывается неделями: наступила полночь — вчерашние «работаю допоздна»
+  // и переключатели сюда не тянем, иначе они записались бы черновиком нового дня.
+  const [draftDay, setDraftDay] = useState(today);
+  if (draftDay !== today) {
+    const d = loadDayDraft(today);
+    setDraftDay(today); setMode(d?.mode ?? "normal"); setCrunchEndHM(d?.crunchEndHM ?? "03:00"); setToggles(d?.toggles ?? {});
+  }
   useEffect(() => { saveDayDraft({ date: today, mode, crunchEndHM, toggles }); }, [today, mode, crunchEndHM, toggles]);
 
   const logged = history.find(h => h.date === today);
@@ -96,6 +103,8 @@ export function useDay(state: StoredState, now: Date) {
   const fact = foodDay ? eatenTotals(foodDay.day, eaten) : null;
   const dinner = foodDay?.day.meals.find(m => m.slot === "dinner");
 
+  // зависимость — строка времени, а не view.rows: те меняются каждую минуту, а объяснение — нет
+  const caffeineCutoffHM = view.rows.find(r => r.icon === "☕")?.time;
   const explanation = useMemo(() => {
     const days = toDayRecords(history, state.weights ?? [], state.eaten ?? {}, state.cheatDays ?? []);
     const todayRec = days.find(d => d.date === today) ?? { date: today, sleep: { wokeHM, bedHM, quality } };
@@ -104,9 +113,9 @@ export function useDay(state: StoredState, now: Date) {
       days: days.some(d => d.date === today) ? days : [...days, todayRec],
       targetSleepMin: profile.targetSleepMin,
       screenerFlagged: state.screener?.flagged,
-      caffeineCutoffHM: view.rows.find(r => r.icon === "☕")?.time,
+      caffeineCutoffHM,
     });
-  }, [history, state.weights, state.eaten, state.cheatDays, state.screener, today, wokeHM, bedHM, quality, profile.targetSleepMin, view.rows]);
+  }, [history, state.weights, state.eaten, state.cheatDays, state.screener, today, wokeHM, bedHM, quality, profile.targetSleepMin, caffeineCutoffHM]);
 
   const rough = !!logged && isRoughNight({ quality, targetSleepMin: profile.targetSleepMin, ...(sleptMin !== undefined ? { sleptMin } : {}) });
   const word = dayWord({

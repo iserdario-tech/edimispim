@@ -16,7 +16,7 @@ NAMES = [
     "sad-circle", "confounded-circle", "expressionless-circle", "smile-circle", "emoji-funny-circle",
     "scale", "chart-2", "alarm", "users-group-rounded", "cloud-download", "bell", "palette", "question-circle", "info-circle",
     "check-circle", "check", "pen", "close", "refresh", "arrow-right", "magnifer", "like", "dislike", "upload-square", "add-circle",
-    "chat-round-dots", "share",
+    "chat-round-dots", "share", "history", "alt-arrow-down",
 ]
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "../src/ui2/icons.ts")
