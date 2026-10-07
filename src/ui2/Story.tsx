@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import type { Slide } from "../weekStory.js";
 import { shareText } from "../ui/share.js";
+import { Ico } from "./Ico.js";
 import { tap } from "../ui/haptics.js";
 
 const DOW = ["пн", "вт", "ср", "чт", "пт", "сб", "вс"];
@@ -24,7 +25,7 @@ export function Story({ slides, label, onClose }: { slides: Slide[]; label: stri
       </div>
       <div className="s-story-top">
         <span>{label}</span>
-        <button aria-label="Закрыть" onClick={onClose}>✕</button>
+        <button aria-label="Закрыть" onClick={onClose}><Ico name="close" mono /></button>
       </div>
       <div className="s-story-tap" onClick={e => (e.clientX > window.innerWidth / 3 ? next() : prev())}>
         <div className="s-story-title">{s.title}</div>
@@ -43,7 +44,7 @@ export function Story({ slides, label, onClose }: { slides: Slide[]; label: stri
       </div>
       <div className="s-story-actions">
         <button className="s-btn ghost" onClick={() => void shareSlide(s, label)}>Поделиться</button>
-        <button className="s-btn" onClick={next}>{i < slides.length - 1 ? "Дальше →" : "Готово"}</button>
+        <button className="s-btn" onClick={next}>{i < slides.length - 1 ? <>Дальше <Ico name="arrow-right" mono /></> : "Готово"}</button>
       </div>
     </div>,
     document.body,

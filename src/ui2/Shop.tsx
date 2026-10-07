@@ -7,6 +7,7 @@ import { Fridge } from "../ui/Fridge.js";
 import { shareText, shareNoteRU } from "../ui/share.js";
 import { readLS, writeLS, SHOP_KEY } from "../ui/localStore.js";
 import { tap } from "../ui/haptics.js";
+import { Ico } from "./Ico.js";
 import type { WeekModel } from "./useWeek.js";
 
 const DOW = ["вс", "пн", "вт", "ср", "чт", "пт", "сб"];
@@ -77,7 +78,7 @@ export function Shop({ week, onBack }: { week: WeekModel; onBack: () => void }) 
                 const checked = l.toBuy === 0;
                 return (
                   <div key={l.name + l.unit} className={"s-buy" + (checked ? " done" : "")}>
-                    <button className={"s-check" + (checked ? " on" : "")} aria-pressed={checked} aria-label={`Взял ${l.name}`} onClick={() => toggle(l, !checked)}>{checked ? "✓" : ""}</button>
+                    <button className={"s-check" + (checked ? " on" : "")} aria-pressed={checked} aria-label={`Взял ${l.name}`} onClick={() => toggle(l, !checked)}>{checked ? <Ico name="check" mono /> : null}</button>
                     <a className="s-buy-name" href={itemLink(l.name, shopId)} target="_blank" rel="noopener noreferrer">{l.name}</a>
                     <span className="s-buy-qty">{checked ? "есть" : qty(l)}{!checked && showsLeftover(l) ? <small>останется {amountRU(l.leftover, l.unit)}</small> : null}</span>
                   </div>
