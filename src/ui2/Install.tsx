@@ -8,7 +8,7 @@
 export function Install({ onContinue, onRestore }: { onContinue: () => void; onRestore: () => void }) {
   return (
     <main className="s-screen s-install">
-      <div className="s-app-icon" aria-hidden="true">e&amp;s</div>
+      <div className="s-app-icon" aria-hidden="true">e<span>&amp;</span>s</div>
       <h1 className="s-title s-center">edim &amp; spim</h1>
       <p className="s-sub s-center">Сон и еда — одни сутки</p>
       <section className="s-card">

@@ -1,9 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#1A1F3D"/><stop offset=".55" stop-color="#F26B1D"/><stop offset="1" stop-color="#FFE3C7"/>
-    </linearGradient>
-  </defs>
-  <rect width="512" height="512" rx="115" fill="url(#g)"/>
-  <text x="256" y="300" text-anchor="middle" font-family="ui-rounded, 'SF Pro Rounded', -apple-system, system-ui, sans-serif" font-size="164" font-weight="700" letter-spacing="-3" fill="#fff">e&amp;s</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><defs><radialGradient id="g" cx=".5" cy="0" r="1"><stop offset="0" stop-color="#1D3A5C"/><stop offset=".7" stop-color="#0A1522"/></radialGradient></defs><rect width="512" height="512" rx="115" fill="url(#g)"/><text x="256" y="300" text-anchor="middle" font-family="ui-rounded, 'SF Pro Rounded', -apple-system, system-ui, sans-serif" font-size="164" font-weight="700" letter-spacing="-3" fill="#fff">e<tspan fill="#FF5964">&amp;</tspan>s</text></svg>
