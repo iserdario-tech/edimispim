@@ -1,10 +1,9 @@
 import { useMemo, useState } from "react";
 import { Sheet } from "../ui/Sheet.js";
 import { WeightChart } from "../ui/Charts.js";
-import { targetsFor } from "../ui/storage.js";
-import { targetsForToday } from "../food/index.js";
 import { toDayRecords } from "../ui/dayRecords.js";
 import { expenditure } from "../expenditure.js";
+import { useExp, paceRU } from "./useExp.js";
 import { plateau } from "../plateau.js";
 import { anchor, type AnchorResult } from "../anchor.js";
 import { sleepFoodLink, monthRecap } from "../sleep-food.js";
@@ -65,23 +64,7 @@ export function Me({ app, day, cloud, onCloud, pair, onPair, onSettings, onStory
   const daysWith = first ? Math.round((Date.parse(day.today) - Date.parse(first)) / 86_400_000) + 1 : 0;
   const lastKg = state.weights?.at(-1)?.kg;
 
-  const exp = useMemo(() => {
-    if (!state.food) return null;
-    const base = targetsFor(state.food);
-    const unadjusted = targetsFor({ ...state.food, kcalAdjust: 0 });
-    const f = state.food;
-    const targetOf = (iso: string) => targetsForToday(f.kcalAdjustAt && iso < f.kcalAdjustAt ? unadjusted : base, f.startISO, iso, f.pace).targets.kcalTarget;
-    return {
-      formula: base.tdee, tempo: base.tempoKgPerWeek,
-      r: expenditure({
-        today: day.today, weights: state.weights ?? [], eaten: state.eaten ?? {}, mealCount: f.mealCount, targetOf,
-        currentTarget: targetOf(day.today),
-        ...(f.startISO ? { startISO: f.startISO } : {}),
-        ...(state.cheatDays ? { cheatDays: state.cheatDays } : {}),
-        ...(f.kcalAdjustAt ? { lastAdjustISO: f.kcalAdjustAt } : {}),
-      }),
-    };
-  }, [state.food, state.weights, state.eaten, state.cheatDays, day.today]);
+  const exp = useExp(state, day.today);
   const tdee = exp ? (exp.r.status === "ready" || exp.r.status === "uncertain" ? exp.r.tdee : exp.formula) : null;
 
   const ROWS: [MeSheet | "sleep-settings" | "food-settings" | "tour", string, string, string][] = [
@@ -215,7 +198,7 @@ function WeightSheet({ app, exp, records, onClose }: {
           {r.status === "ready" && (
             <>
               <p className="s-big">≈ {r.tdee} <span className="s-small">ккал в день · ±{r.ci}</span></p>
-              <p className="s-muted">Вес снижался на {r.lossPerWeek} кг в неделю, план — на {exp!.tempo}.{r.step === 0 ? " Норма совпадает с расходом." : ""}</p>
+              <p className="s-muted">Вес {paceRU(r.lossPerWeek)} в неделю. План — минус {exp!.tempo.toLocaleString("ru-RU")}.{r.step === 0 ? " Норма совпадает с расходом." : ""}</p>
               {r.step !== 0 && r.nextChangeInDays > 0 && <p className="s-small">Следующая поправка — через {r.nextChangeInDays} дн.</p>}
               {r.step !== 0 && r.nextChangeInDays === 0 && (
                 <button className="s-btn food" onClick={() => { tap(); app.actions.adjustKcal(r.step); }}>
