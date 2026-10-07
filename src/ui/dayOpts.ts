@@ -5,6 +5,9 @@ import type { Recipe, SafeTargets } from "../food/types.js";
 /** «Сегодня не готовлю»: блюда до десяти минут — собрать, а не готовить. */
 export const NO_COOK_MIN = 10;
 
+/** На сколько дней готовится обед и ужин. Старая галочка «обед из остатков» — это два дня. */
+export const cookDaysOf = (food: FoodSettings): number => food.cookDays ?? (food.leftovers ? 2 : 1);
+
 /**
  * Сколько минут на готовку в эту дату. Одна функция на оба экрана: иначе «Сегодня»
  * и «Еда» снова показали бы разное меню на один и тот же день.
@@ -28,11 +31,14 @@ export function dayOptsFor(
   base: SafeTargets = targetsFor(food),
 ) {
   const { ramp } = targetsForToday(base, food.startISO, iso, food.pace);
-  const limit = cookLimitFor(food, iso, !!noCookDays?.includes(iso));
+  const noCook = !!noCookDays?.includes(iso);
+  const limit = cookLimitFor(food, iso, noCook);
+  const cookDays = cookDaysOf(food);
   return {
     rhythm, mealCount: food.mealCount, familiar: prefersFamiliar(ramp), liked,
     ...(limit !== undefined ? { maxCookMin: limit } : {}),
-    ...(food.leftovers ? { leftovers: true } : {}),
+    ...(cookDays > 1 ? { cookDays } : {}),
+    ...(noCook ? { noCook: true } : {}),
   };
 }
 

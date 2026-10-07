@@ -384,7 +384,7 @@ function todayMenuRU(state: StoredState): string[] {
   const lines = day.meals.map(m => {
     const mark = eaten?.marks[m.slot];
     const status = mark === "ate" ? " [съел]" : mark === "own" ? ` [ел своё, ${SIZE_RU[eaten?.sizes?.[m.slot] ?? "usual"]}]` : "";
-    return `${fmtHM(m.timeMin)} ${SLOT_RU[m.slot] ?? m.slot} — ${m.recipe.name}, ${Math.round(m.recipe.kcal * m.servings)} ккал${m.leftover ? ", остатки вчерашнего ужина" : ""}${status}`;
+    return `${fmtHM(m.timeMin)} ${SLOT_RU[m.slot] ?? m.slot} — ${m.recipe.name}, ${Math.round(m.recipe.kcal * m.servings)} ккал${m.leftover ? ", приготовлено заранее, только разогреть" : ""}${status}`;
   });
   return [
     `Меню на сегодня (цель ${fd.day.totals.kcal} ккал, белок ${fd.safe.proteinGTarget} г; в меню белок ${fd.day.totals.protein} г, жиры ${fd.day.totals.fat} г, углеводы ${fd.day.totals.carbs} г, клетчатка ${fd.day.totals.fiber} г):`,

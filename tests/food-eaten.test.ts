@@ -27,6 +27,14 @@ describe("отметка «съел»: факт против плана", () => 
     expect(t.marked).toBe(2);
   });
 
+  it("записанное с этикетки — точно, без «≈»; словами — прикидка", () => {
+    const exact = addExtra(undefined, { text: "творожок 170 г", kcal: 204, protein: 17, exact: true }, 4);
+    expect(eatenTotals(day, exact).estimated).toBe(false);
+    expect(eatenTotals(day, exact).kcal).toBe(204);
+    const words = addExtra(undefined, { text: "шаурма", kcal: 560, protein: 28 }, 4);
+    expect(eatenTotals(day, words).estimated).toBe(true);
+  });
+
   it("повторное нажатие снимает отметку — это переключатель", () => {
     const on = toggleMark(undefined, "dinner", "ate", 4);
     expect(on.marks.dinner).toBe("ate");

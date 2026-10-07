@@ -19,6 +19,8 @@ export function amountRU(qty: number, unit: string): string {
   if ((unit === "г" || unit === "мл") && qty >= 10) qty = Math.ceil(qty / (qty < 100 ? 5 : 10)) * (qty < 100 ? 5 : 10);
   if (unit === "мл" && qty >= 1000) return `${+(qty / 1000).toFixed(qty % 1000 === 0 ? 0 : 1)} л`;
   if (unit === "г" && qty >= 1000) return `${+(qty / 1000).toFixed(qty % 1000 === 0 ? 0 : 1)} кг`;
+  // «1.8 яйца» не бывает: до двух штук — по половинкам, дальше — целыми
+  if (unit === "шт") qty = qty < 2 ? Math.max(0.5, Math.round(qty * 2) / 2) : Math.round(qty);
   return `${+qty.toFixed(1)} ${unit}`;
 }
 

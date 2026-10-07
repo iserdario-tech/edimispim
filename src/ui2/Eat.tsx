@@ -107,7 +107,7 @@ export function Eat({ app, week, pair, onShop, onSetupFood }: { app: AppModel; w
                 <span className="s-plate"><img src={photoUrl(photoFor(m.recipe))} alt="" loading="lazy" decoding="async" /></span>
                 <span className="s-what">
                   <b>{m.recipe.name}</b>
-                  <span>{fmtHM(m.timeMin)} · {Math.round(m.recipe.kcal * m.servings)} ккал{m.leftover ? " · остатки ужина" : pair && byPartner(d.date, m.slot, m.recipe.id, pair.mine, pair.theirs) ? " · от партнёра" : m.recipe.time_min ? ` · ${m.recipe.time_min} мин` : ""}</span>
+                  <span>{fmtHM(m.timeMin)} · {Math.round(m.recipe.kcal * m.servings)} ккал{m.leftover ? " · уже готово" : pair && byPartner(d.date, m.slot, m.recipe.id, pair.mine, pair.theirs) ? " · от партнёра" : m.recipe.time_min ? ` · ${m.recipe.time_min} мин` : ""}</span>
                 </span>
               </button>
               {done
