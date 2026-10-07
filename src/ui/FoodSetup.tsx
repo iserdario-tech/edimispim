@@ -303,7 +303,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
       )}
 
       <div className="btn-row">
-        <button className="chip on" disabled={problems.length > 0} onClick={() => onDone({
+        <button className="primary" disabled={problems.length > 0} onClick={() => onDone({
           profile: { sex, age, heightCm, weightKg, goalWeightKg, activity },
           constraints: {
             allergens: allergens as never, cookware, budget, cuisines: [],
