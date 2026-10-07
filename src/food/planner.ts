@@ -240,7 +240,13 @@ export function withinCookTime(pool: Recipe[], max?: number): Recipe[] {
  * Теперь семь дней раскладываются по всему списку с равным шагом, и новые блюда видны сразу.
  */
 const pickForDay = (options: Recipe[], offset: number): Recipe | undefined =>
-  options[Math.round((offset * options.length) / 7) % options.length];
+  options[Math.round((offset * options.length) / 7 + Math.floor(offset / 7) * options.length * WEEK_PHASE) % options.length];
+/*
+ * Сдвиг недели. Без него день N+7 давал тот же индекс, что день N (offset·L/7 + L ≡ offset·L/7),
+ * и каждая неделя почти повторяла прошлую: замер — 5–7 из 14 обедов и ужинов совпадали.
+ * Шаг — доля золотого сечения: недели расходятся по списку равномерно и не зацикливаются.
+ */
+const WEEK_PHASE = 0.381966;
 
 /**
  * Блюда, у которых порция примерно равна доле калорий этого приёма.
