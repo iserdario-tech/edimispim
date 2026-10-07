@@ -179,13 +179,15 @@ export function filterRecipes(recipes: Recipe[], c: Constraints = {}): Recipe[] 
 }
 
 function recomputeTotals(day: Day): void {
-  let k = 0, p = 0, f = 0;
+  let k = 0, p = 0, fat = 0, c = 0, f = 0;
   for (const m of day.meals) {
     k += m.recipe.kcal * m.servings;
     p += m.recipe.protein_g * m.servings;
+    fat += (m.recipe.fat_g ?? 0) * m.servings;
+    c += (m.recipe.carbs_g ?? 0) * m.servings;
     f += m.recipe.fiber_g * m.servings;
   }
-  day.totals = { kcal: Math.round(k), protein: Math.round(p), fiber: Math.round(f) };
+  day.totals = { kcal: Math.round(k), protein: Math.round(p), fat: Math.round(fat), carbs: Math.round(c), fiber: Math.round(f) };
 }
 
 export interface DayOptions {
@@ -239,7 +241,7 @@ export function withinCookTime(pool: Recipe[], max?: number): Recipe[] {
  * рецепты просто не появлялись в меню — до них можно было добраться только кнопкой ↻.
  * Теперь семь дней раскладываются по всему списку с равным шагом, и новые блюда видны сразу.
  */
-const pickForDay = (options: Recipe[], offset: number): Recipe | undefined =>
+const pickForDay = <T,>(options: T[], offset: number): T | undefined =>
   options[Math.round((offset * options.length) / 7 + Math.floor(offset / 7) * options.length * WEEK_PHASE) % options.length];
 /*
  * Сдвиг недели. Без него день N+7 давал тот же индекс, что день N (offset·L/7 + L ≡ offset·L/7),
@@ -431,7 +433,7 @@ export function generateDay(targets: Targets, pool: Recipe[], opts: DayOptions):
     });
   }
 
-  const day: Day = { meals, totals: { kcal: 0, protein: 0, fiber: 0 } };
+  const day: Day = { meals, totals: { kcal: 0, protein: 0, fat: 0, carbs: 0, fiber: 0 } };
   recomputeTotals(day);
   /*
    * Вторая замена ради клетчатки отменяется, когда день собран «привычной» едой:
@@ -447,6 +449,7 @@ export function generateDay(targets: Targets, pool: Recipe[], opts: DayOptions):
    */
   swapForFiber(day, targets, pool, mains, offset, opts.roughNight || opts.familiar ? 1 : 4, opts.liked ?? [], !!opts.roughNight, opts.avoid ?? []);
   swapForProtein(day, targets, pool, mains, offset, opts.liked ?? [], !!opts.roughNight, opts.avoid ?? []);
+  balanceFat(day, pool, mains, offset, opts.liked ?? [], !!opts.roughNight, opts.avoid ?? []);
   addProteinTopUp(day, targets);
   fitKcal(day, targets);
   day.meals.sort((a, b) => a.timeMin - b.timeMin);
@@ -593,6 +596,68 @@ function swapForProtein(
   const target = day.meals[chosen.index]!;
   day.meals[chosen.index] = { ...target, recipe: chosen.recipe, servings: chosen.servings };
   recomputeTotals(day);
+}
+
+/**
+ * Жиры — в пределах 20–35 % калорий дня (норма ВОЗ и IOM для взрослых).
+ *
+ * Калории и белок планировщик держал, а жир не видел вовсе: замер за 12 недель дал
+ * в среднем 30 %, но каждый шестой день уходил в 36–45 % — шакшука утром, «Цезарь»
+ * в обед, кокосовые шарики на десерт. При тех же калориях такой день — меньше еды
+ * на тарелке, и голод к вечеру. Обратный перекос (ниже 20 %) тоже вреден.
+ *
+ * Меняем один основной приём на блюдо того же приёма с той же долей калорий, не теряя
+ * белка и клетчатки, — как добор клетчатки, только рычаг другой. Из подходящих берём
+ * по кругу по дням, чтобы замена не ставила одно и то же блюдо всю неделю.
+ */
+const FAT_LO = 0.2, FAT_HI = 0.35, FAT_MID = 0.28;
+const fatShare = (fat: number, kcal: number) => (9 * fat) / Math.max(1, kcal);
+function balanceFat(
+  day: Day, pool: Recipe[], mains: Partial<Record<MealType, number>>,
+  offset = 0, liked: string[] = [], keepEasy = false, avoid: string[] = [],
+): void {
+  for (let pass = 0; pass < 2; pass++) {
+    const s = fatShare(day.totals.fat, day.totals.kcal);
+    if (s >= FAT_LO && s <= FAT_HI) return;
+    const candidates: { index: number; recipe: Recipe; servings: number; dist: number }[] = [];
+    day.meals.forEach((meal, index) => {
+      if (mains[meal.recipe.meal_type as MealType] === undefined) return;   // сладкое не трогаем
+      if (meal.leftover || liked.includes(meal.recipe.id) || meal.recipe.fat_g === undefined) return;
+      const kcalShare = meal.recipe.kcal * meal.servings;
+      for (const c of pool) {
+        if (c.meal_type !== meal.recipe.meal_type || c.fat_g === undefined) continue;
+        if (avoid.includes(c.id) || day.meals.some(m => m.recipe.id === c.id)) continue;
+        const servings = Math.max(0.5, +(kcalShare / c.kcal).toFixed(1));
+        if (servings > FIT_MAX || c.kcal * servings > kcalShare * 1.05) continue;
+        if (keepEasy && effortOf(c) > effortOf(meal.recipe)) continue;
+        // белок и клетчатка — главные рычаги сытости, ради жира их не отдаём
+        if (c.protein_g * servings < meal.recipe.protein_g * meal.servings - 3) continue;
+        if (c.fiber_g * servings < meal.recipe.fiber_g * meal.servings - 3) continue;
+        const next = fatShare(
+          day.totals.fat - meal.recipe.fat_g * meal.servings + c.fat_g * servings,
+          day.totals.kcal - kcalShare + c.kcal * servings,
+        );
+        if (Math.abs(next - FAT_MID) >= Math.abs(s - FAT_MID)) continue;
+        candidates.push({ index, recipe: c, servings, dist: next >= FAT_LO && next <= FAT_HI ? 0 : Math.abs(next - FAT_MID) });
+      }
+    });
+    if (!candidates.length) return;
+    // сначала те, что приводят день в норму; если таких нет — самые близкие к ней
+    candidates.sort((a, b) => a.dist - b.dist);
+    const best = candidates.filter(c => c.dist === 0);
+    let pick = best.length ? best : candidates.slice(0, MIN_CHOICES);
+    // меняем виновника — самое жирное блюдо (или самое постное): так замена реже
+    // натыкается на одни и те же «правильные» блюда, и недели не начинают повторяться
+    const lean = s < FAT_LO;
+    const sharesOf = (i: number) => { const r = day.meals[i]!.recipe; return fatShare(r.fat_g ?? 0, r.kcal); };
+    const culprit = [...new Set(pick.map(c => c.index))].sort((a, b) => lean ? sharesOf(a) - sharesOf(b) : sharesOf(b) - sharesOf(a))[0];
+    pick = pick.filter(c => c.index === culprit);
+    // тот же шаг по неделям, что и у основного выбора: иначе замена тянула бы каждую неделю одно и то же
+    const chosen = pickForDay(pick, offset + pass)!;
+    const target = day.meals[chosen.index]!;
+    day.meals[chosen.index] = { ...target, recipe: chosen.recipe, servings: chosen.servings };
+    recomputeTotals(day);
+  }
 }
 
 /**
