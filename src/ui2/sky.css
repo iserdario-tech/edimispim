@@ -1,19 +1,13 @@
 /*
- * edim & spim 2.0 — визуальная система, схема «Чёрный и система».
+ * edim & spim 2.0 — визуальная система, палитра «Небо и ягода» (выбор Сердара, 2026-10-07).
  *
- * Фон однотонный: чёрный в тёмной теме, системный серый в светлой (как «Здоровье» Apple).
- * Карточки сплошные; стекло — только у того, что плавает над контентом (панель вкладок,
- * «?», «+», шторки): под ними проезжает лента, и размытие видно. На чёрном фоне стекло
- * у карточек выглядело бы обычным серым. Время суток — свечение сверху «Суток» (src/sky.ts).
- * Цвет — по смыслу: еда оранжевая, сон индиго, «готово» зелёное — системные цвета Apple.
- * Пять размеров текста: 34 / 22 / 17 / 15 / 13.
+ * Пять цветов: Baltic Blue #38618C, Cool Sky #35A7FF, Bubblegum Pink #FF5964,
+ * Banana Cream #FFE74C, белый. Светлая тема — белый фон и голубовато-серые карточки,
+ * тёмная — глубокий тёмно-синий. Еда — розово-красная, сон — балтийский синий, «готово» — зелёное.
+ * Стекло — только у того, что плавает над контентом (панель вкладок, «?», «+», шторки).
+ * Время суток — свечение сверху «Суток» (src/sky.ts). Пять размеров текста: 34 / 22 / 17 / 15 / 13.
  */
 .v2 {
-  --bg: #F2F2F7; --ink: #000; --ink2: #6C6C70; --on-ink: #fff; --line: rgba(60, 60, 67, .18);
-  --food: #FF9500; --food-ink: #E67700; --sleep: #5856D6; --sleep-ink: #5856D6; --ok: #34C759;
-  --card: #fff; --fill: #E5E5EA; --fill-soft: rgba(120, 120, 128, .12); --seg-on: #fff;
-  --glass: rgba(255, 255, 255, .72); --shadow: 0 4px 18px rgba(0, 0, 0, .10);
-  --sheet-glass: rgba(242, 242, 247, .92);
   --t1: 34px; --t2: 22px; --t3: 17px; --t4: 15px; --t5: 13px;
   --round: ui-rounded, "SF Pro Rounded", -apple-system, system-ui, sans-serif;
   --text: -apple-system, system-ui, "SF Pro Text", "Inter", sans-serif;
@@ -22,12 +16,44 @@
   color: var(--ink); font-family: var(--text); font-size: var(--t3);
   min-height: 100dvh; position: relative; -webkit-tap-highlight-color: transparent;
 }
-.v2.night {
-  --bg: #000; --ink: #fff; --ink2: #98989F; --on-ink: #000; --line: rgba(84, 84, 88, .6);
-  --food: #FF9F0A; --food-ink: #FF9F0A; --sleep: #5E5CE6; --sleep-ink: #7D7AFF; --ok: #30D158;
-  --card: #1C1C1E; --fill: #2C2C2E; --fill-soft: rgba(118, 118, 128, .24); --seg-on: #636366;
-  --glass: rgba(37, 37, 40, .62); --shadow: 0 4px 18px rgba(0, 0, 0, .5);
-  --sheet-glass: rgba(28, 28, 30, .93);
+/*
+ * Цвета. html:root.v2 — специфичнее правил tokens.css (:root[data-theme], медиазапрос):
+ * старые формы, шторки, коуч и каталог берут те же цвета через свои имена (--surface, --fg,
+ * --accent…), поэтому дизайн единый везде. Тёмная — по классу night, его ставит Shell
+ * по теме телефона или выбору в «Оформлении».
+ */
+html:root.v2 {
+  color-scheme: light;
+  --bg: #FFFFFF; --card: #F1F5FA; --fill: #E3EAF3; --fill-soft: rgba(56, 97, 140, .10); --seg-on: #FFFFFF;
+  --ink: #10233A; --ink2: #5A6B80; --on-ink: #FFFFFF; --line: rgba(56, 97, 140, .18);
+  --food: #FF5964; --food-ink: #D93A47; --food-soft: rgba(255, 89, 100, .14);
+  --sleep: #38618C; --sleep-ink: #38618C; --sleep-soft: rgba(56, 97, 140, .14); --ok: #2FB36A;
+  --glass: rgba(255, 255, 255, .78); --shadow: 0 4px 18px rgba(16, 35, 58, .10);
+  --sheet-glass: rgba(255, 255, 255, .95);
+  /* имена tokens.css */
+  --surface: var(--card); --surface-2: #E9EFF6; --fg: var(--ink);
+  --fg-2: rgba(16, 35, 58, .62); --fg-3: rgba(16, 35, 58, .32); --separator: var(--line); --border: var(--line); --muted: var(--fg-2);
+  --accent: var(--food); --accent-press: #E8414D; --accent-ink: #FFFFFF; --accent-dim: var(--food-ink); --accent-soft: var(--food-soft);
+  --warn: #B25E00; --danger: #C6362F;
+  --glass-bg: var(--glass); --glass-stroke: rgba(255, 255, 255, .65);
+  --shadow-1: 0 1px 2px rgba(16, 35, 58, .06), 0 8px 24px rgba(16, 35, 58, .07);
+  --shadow-2: 0 2px 6px rgba(16, 35, 58, .10), 0 18px 40px rgba(16, 35, 58, .14);
+}
+html:root.v2.night {
+  color-scheme: dark;
+  --bg: #0A1522; --card: #132538; --fill: #1D344D; --fill-soft: rgba(157, 176, 196, .16); --seg-on: #2B4767;
+  --ink: #F3F7FB; --ink2: #9AAEC3; --on-ink: #0A1522; --line: rgba(157, 176, 196, .24);
+  --food: #FF5964; --food-ink: #FF7A83; --food-soft: rgba(255, 89, 100, .18);
+  --sleep: #5C8CC2; --sleep-ink: #86ABD6; --sleep-soft: rgba(92, 140, 194, .20); --ok: #30D158;
+  --glass: rgba(19, 37, 56, .72); --shadow: 0 4px 18px rgba(0, 0, 0, .5);
+  --sheet-glass: rgba(19, 37, 56, .95);
+  --surface: var(--card); --surface-2: #1A2F47; --fg: var(--ink);
+  --fg-2: rgba(243, 247, 251, .62); --fg-3: rgba(243, 247, 251, .32); --separator: var(--line); --border: var(--line); --muted: var(--fg-2);
+  --accent: var(--food); --accent-press: #FF7A83; --accent-ink: #FFFFFF; --accent-dim: var(--food-ink); --accent-soft: var(--food-soft);
+  --warn: #F0A93B; --danger: #FF6961;
+  --glass-bg: var(--glass); --glass-stroke: rgba(255, 255, 255, .14);
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, .5), 0 8px 24px rgba(0, 0, 0, .45);
+  --shadow-2: 0 2px 8px rgba(0, 0, 0, .6), 0 20px 44px rgba(0, 0, 0, .55);
 }
 /* :where — нулевая специфичность: общее правило не перебивает цвет конкретных кнопок */
 .v2 :where(button) { font: inherit; color: inherit; }
@@ -94,7 +120,7 @@ html.v2 body { background: none; }  /* иначе фон body ложится п�
   position: fixed; right: 16px; bottom: calc(92px + var(--safe-b)); z-index: 50;
   width: 56px; height: 56px; border-radius: 28px; border: 0; cursor: pointer;
   background: var(--food); color: #fff; font: 500 30px/1 var(--round);
-  box-shadow: 0 8px 22px rgba(255, 149, 0, .35); transition: transform .2s var(--spring);
+  box-shadow: 0 8px 22px rgba(255, 89, 100, .35); transition: transform .2s var(--spring);
 }
 .s-fab:active { transform: scale(.9); }
 
@@ -195,8 +221,8 @@ html.v2 body { background: none; }  /* иначе фон body ложится п�
 .s-tile b { font: 600 var(--t3) var(--round); color: var(--fg); margin-top: 8px; }
 .s-tile span:last-child { font-size: var(--t5); color: var(--fg-2); }
 .s-tile-ico { font-size: 26px; line-height: 1; }
-.s-tile.food { background: rgba(255, 149, 0, .16); }
-.s-tile.sleep { background: rgba(94, 92, 230, .18); }
+.s-tile.food { background: var(--food-soft); }
+.s-tile.sleep { background: var(--sleep-soft); }
 .s-tile.ok { background: rgba(52, 199, 89, .16); }
 
 /* шторка: текст и пилюли внутри — по теме устройства; сама шторка — стекло,
@@ -286,7 +312,8 @@ html.v2 body { background: none; }  /* иначе фон body ложится п�
 .s-option-text { grid-template-columns: 1fr; }
 .s-credits { margin: 8px 0 0; padding-left: 18px; font-size: var(--t5); display: grid; gap: 2px; }
 .s-inline { display: flex; gap: 8px; margin-bottom: 12px; }
-.s-inline input { flex: 1; min-height: 48px; padding: 0 14px; border-radius: 14px; border: 1px solid var(--separator); font: 500 var(--t3) var(--text); color: var(--fg); background: var(--surface); }
+.s-inline .s-btn { flex: none; }
+.s-inline input { flex: 1; min-width: 0; min-height: 48px; padding: 0 14px; border-radius: 14px; border: 1px solid var(--separator); font: 500 var(--t3) var(--text); color: var(--fg); background: var(--surface); }
 .s-big { font: 700 var(--t2) var(--round); margin: 4px 0; }
 .s-link { border: 0; background: none; padding: 0; color: var(--food-ink); font: inherit; cursor: pointer; }
 .s-bar-wide { grid-template-columns: 150px 1fr 60px; }
@@ -297,7 +324,7 @@ html.v2 body { background: none; }  /* иначе фон body ложится п�
 .s-story-card {
   width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px;
   padding: 14px 18px; border: 0; border-radius: 20px; text-align: left; cursor: pointer; color: #fff;
-  background: linear-gradient(120deg, #3634A3 0%, #5E5CE6 55%, #FF9F0A 125%);
+  background: linear-gradient(120deg, #38618C 0%, #35A7FF 75%, #FFE74C 135%);
   font-size: var(--t2);
 }
 .s-story-card > span:first-child { display: grid; gap: 2px; }
@@ -306,7 +333,7 @@ html.v2 body { background: none; }  /* иначе фон body ложится п�
 .s-story {
   position: fixed; inset: 0; z-index: 300; display: flex; flex-direction: column; color: #fff;
   padding: calc(env(safe-area-inset-top, 0px) + 12px) 20px calc(env(safe-area-inset-bottom, 0px) + 20px);
-  background: linear-gradient(180deg, #000 0%, #1E1D4F 45%, #5E5CE6 85%, #FF9F0A 125%);
+  background: linear-gradient(180deg, #0A1522 0%, #1D3A5C 45%, #38618C 80%, #35A7FF 125%);
   animation: fade-in .25s ease both;
 }
 .s-story-bars { display: grid; grid-auto-flow: column; gap: 6px; }
@@ -336,7 +363,7 @@ html.v2 body { background: none; }  /* иначе фон body ложится п�
 .s-block { display: block; width: 100%; margin-top: 12px; padding: 8px; }
 .s-steps { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 12px; }
 .s-steps li { display: grid; grid-template-columns: 36px 1fr; align-items: center; gap: 12px; font-weight: 500; }
-.s-steps span { width: 36px; height: 36px; border-radius: 18px; display: grid; place-items: center; background: rgba(255, 149, 0, .16); color: var(--food-ink); font-weight: 700; }
+.s-steps span { width: 36px; height: 36px; border-radius: 18px; display: grid; place-items: center; background: var(--food-soft); color: var(--food-ink); font-weight: 700; }
 
 /* ─── тур «Как устроено приложение» — копии настоящих кнопок на фоне истории ─── */
 .s-tour-h { font: 700 30px/1.15 var(--round); letter-spacing: -.01em; }
@@ -344,13 +371,13 @@ html.v2 body { background: none; }  /* иначе фон body ложится п�
 .s-tour-row { display: grid; grid-template-columns: 52px 44px 1fr; align-items: center; gap: 12px; font-size: var(--t4); }
 .s-tour-row b { font: 600 var(--t3) var(--round); font-variant-numeric: tabular-nums; }
 .s-tour-dot { width: 44px; height: 44px; border-radius: 22px; flex: none; display: grid; place-items: center; font: 700 20px var(--round); background: rgba(255, 255, 255, .16); }
-.s-tour-dot.food { box-shadow: 0 0 0 2.5px #FF9F0A; }
-.s-tour-dot.sleep { box-shadow: 0 0 0 2.5px #7D7AFF; }
-.s-tour-dot.i { width: 34px; height: 34px; font-size: 16px; color: #B4B2FF; }
-.s-tour-dot.plus { background: #FF9F0A; color: #fff; font-size: 26px; font-weight: 500; }
+.s-tour-dot.food { box-shadow: 0 0 0 2.5px #FF5964; }
+.s-tour-dot.sleep { box-shadow: 0 0 0 2.5px #86ABD6; }
+.s-tour-dot.i { width: 34px; height: 34px; font-size: 16px; color: #A9C6E6; }
+.s-tour-dot.plus { background: #FF5964; color: #fff; font-size: 26px; font-weight: 500; }
 .s-tour-chip { display: inline-flex; align-items: center; min-height: 34px; padding: 0 14px; border-radius: 17px; background: rgba(255, 255, 255, .16); font: 600 var(--t5) var(--round); }
 .s-tour-chip.ok { background: #30D158; color: #000; }
-.s-tour-chip.food { background: #FF9F0A; color: #000; }
+.s-tour-chip.food { background: #FF5964; color: #fff; }
 .s-tour-chip.light { background: #fff; color: #000; }
 .s-tour-chips, .s-tour-faces { display: flex; flex-wrap: wrap; gap: 8px; }
 .s-tour-swipe, .s-tour-pair { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
@@ -358,7 +385,7 @@ html.v2 body { background: none; }  /* иначе фон body ложится п�
 .s-tour-pair i { font-style: normal; font-size: var(--t5); opacity: .8; }
 .s-tour-small { font-size: var(--t5); opacity: .75; }
 .s-tour-word { font: 700 26px var(--round); }
-.s-tour-next { font: 600 var(--t4) var(--round); color: #FFB340; }
+.s-tour-next { font: 600 var(--t4) var(--round); color: #FF8A92; }
 .s-tour-stats { display: flex; gap: 10px; }
 .s-tour-stats span { display: grid; gap: 2px; padding: 10px 12px; border-radius: 14px; background: rgba(255, 255, 255, .14); font-size: var(--t5); }
 .s-tour-stats b { font: 700 var(--t3) var(--round); }
@@ -375,14 +402,19 @@ html.v2 body { background: none; }  /* иначе фон body ложится п�
 /* пока открыта шторка или настройки, плашку прячем: «Обновить» стёрло бы недописанное */
 html:has(.sheet, .s-settings) .s-update { display: none; }
 
-/* ─── формы, коуч, каталог — в той же гамме ───
-   Акцент темы (tokens.css) был индиго: в формах выбранные кнопки и «Сохранить» светились
-   фиолетовым. html:root.v2 — специфичнее :root:not([data-theme]) из tokens.css. */
-html:root.v2 { --accent: var(--food); --accent-press: #E68600; --accent-ink: #fff; --accent-dim: var(--food-ink); --accent-soft: rgba(255, 149, 0, .14); }
-.v2 a, .v2 .linkbtn { color: var(--food-ink); }
+/* ─── формы, коуч, каталог — в той же гамме (цвета — в общем блоке html:root.v2) ─── */
+/* :where — нулевой вес: ссылка-строка (продукт в покупках) остаётся цвета текста, а не акцента */
+:where(.v2) a, :where(.v2) .linkbtn { color: var(--food-ink); }
+/* длинный список авторов фото — приглушённо: сто розовых ссылок читаются как ошибки */
+.s-credits a { color: var(--ink2); }
+/* рамка фокуса у полей — цвет приложения, а не системный (в Chrome на маке был оранжевый) */
+.v2 :is(input, textarea, select):focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 /* выбранный вариант — как пилюля 2.0: чёрная в светлой теме, белая в тёмной */
 .v2 .chip.on, .v2 .rate-btn.on { background: var(--ink); border-color: transparent; color: var(--on-ink); }
 .v2 input[type="checkbox"], .v2 input[type="radio"] { accent-color: var(--ink); }
+/* сегменты старых форм — как .s-seg: выбранный светлее подложки и в тёмной теме (было темнее — не видно) */
+.v2 .seg { background: var(--fill-soft); }
+.v2 .seg-item.on { background: var(--seg-on); color: var(--ink); }
 
 /* ─── копия в облаке ─── */
 .s-code { font: 700 var(--t2)/1.3 var(--round); letter-spacing: .01em; margin: 4px 0 8px; user-select: all; -webkit-user-select: all; word-break: break-word; }

@@ -13,11 +13,11 @@ describe("проверка данных о себе", () => {
   });
 
   it("пустое поле не проходит", () => {
-    expect(checkProfile({ ...ok, weightKg: 0 })).toContain("вес сейчас — от 35 до 250");
+    expect(checkProfile({ ...ok, weightKg: 0 })).toContain("вес сейчас — от 35 до 250");
   });
 
   it("буква в поле (NaN) не проходит", () => {
-    expect(checkProfile({ ...ok, age: NaN })).toEqual(["возраст — от 18 до 90"]);
+    expect(checkProfile({ ...ok, age: NaN })).toEqual(["возраст — от 18 до 90"]);
   });
 
   it("несколько ошибок перечисляются разом", () => {

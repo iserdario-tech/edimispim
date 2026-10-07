@@ -55,7 +55,7 @@ export function NumInput({ value, onChange, ...rest }: { value: number; onChange
 export function checkProfile(v: Record<keyof typeof BOUNDS, number>): string[] {
   const out = (Object.keys(BOUNDS) as (keyof typeof BOUNDS)[])
     .filter(k => !Number.isFinite(v[k]) || v[k] < BOUNDS[k][0] || v[k] > BOUNDS[k][1])
-    .map(k => `${RU[k]} — от ${BOUNDS[k][0]} до ${BOUNDS[k][1]}`);
+    .map(k => `${RU[k]} — от ${BOUNDS[k][0]} до ${BOUNDS[k][1]}`);
   /*
    * Цель тяжелее текущего веса форма пропускала молча. Приложение ведёт к снижению —
    * считает дефицит, темп и лестницу входа, — и на такой цели все эти цифры теряют
@@ -136,7 +136,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
 
       <section className="card">
         <h3 className="card-h">2 · Сколько двигаешься</h3>
-        <p className="small muted">Насколько подвижный день — про быт, а не про спортзал.</p>
+        <p className="small muted">Насколько подвижный день — про быт, а не про спортзал.</p>
         <div className="chips chips-col">
           <button className={activity === "low" ? "chip on" : "chip"} onClick={() => setActivity("low")}>Сижу почти весь день</button>
           <button className={activity === "medium" ? "chip on" : "chip"} onClick={() => setActivity("medium")}>Хожу понемногу</button>
@@ -144,10 +144,10 @@ export function FoodSetup({ initial, onDone, onCancel }: {
         </div>
         <label className="chk">
           <input type="checkbox" checked={strength} onChange={e => setStrength(e.target.checked)} />
-          Регулярно делаю силовые — 2 раза в неделю и чаще
+          Регулярно делаю силовые — 2 раза в неделю и чаще
         </label>
         <p className="small muted">
-          Белок — 1.6 г на кг каждый день. Калории за тренировки не добавляем: браслеты
+          Белок — 1.6 г на кг каждый день. Калории за тренировки не добавляем: браслеты
           ошибаются на 27–93%, а сколько ты тратишь на самом деле, приложение поймёт по весу.
         </p>
 
@@ -158,7 +158,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
       <section className="card">
         <h3 className="card-h">3 · Сколько раз в день есть</h3>
         <p className="small muted">
-          На вес это почти не влияет — выбирай как удобно жить. Важнее, чтобы приёмы
+          На вес это почти не влияет — выбирай как удобно жить. Важнее, чтобы приёмы
           были примерно в одно время.
         </p>
         <div className="seg" role="group" aria-label="Сколько раз в день есть">
@@ -174,7 +174,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
 
       <section className="card">
         <h3 className="card-h">4 · Что есть на кухне</h3>
-        <p className="small muted">Рецепты подберутся под твою технику — не придётся искать замену на ходу.</p>
+        <p className="small muted">Рецепты подберутся под твою технику — не придётся искать замену на ходу.</p>
         <div className="chips">
           {COOKWARE.map(([key, ru]) => (
             <button key={key} className={cookware.includes(key) ? "chip on" : "chip"}
@@ -201,7 +201,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
         ))}
         <label className="chk">
           <input type="checkbox" checked={leftovers} onChange={e => setLeftovers(e.target.checked)} />
-          Готовлю ужин на два дня — обед назавтра из остатков
+          Готовлю ужин на два дня — обед назавтра из остатков
         </label>
         <p className="small muted">Час готовки в день превращается в час через день, и половина покупок совпадает.</p>
         <div className="day-group">
@@ -214,13 +214,13 @@ export function FoodSetup({ initial, onDone, onCancel }: {
               </button>
             ))}
           </div>
-          <p className="small muted">Калории считаются только на тебя, продукты в списке покупок — на всех.</p>
+          <p className="small muted">Калории считаются только на тебя, продукты в списке покупок — на всех.</p>
         </div>
       </section>
 
       <section className="card">
         <h3 className="card-h">6 · Чего не будет в меню</h3>
-        <p className="small muted">Убираем из меню полностью — и аллергии, и то, что не любишь.</p>
+        <p className="small muted">Убираем из меню полностью — и аллергии, и то, что не любишь.</p>
         <div className="chips">
           {ALLERGENS.map(([key, ru]) => (
             <button key={key} className={allergens.includes(key) ? "chip on" : "chip"}
@@ -236,7 +236,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
           </button>
         </div>
         <p className="small muted">
-          Уберёт блюда с редкими пастами и приправами — гочжан, мисо, харисса, тахини, кимчи.
+          Уберёт блюда с редкими пастами и приправами — гочжан, мисо, харисса, тахини, кимчи.
           В большинстве магазинов их нет.
         </p>
       </section>
@@ -244,8 +244,8 @@ export function FoodSetup({ initial, onDone, onCancel }: {
       <section className="card">
         <h3 className="card-h">7 · Бюджет</h3>
         <p className="small muted">
-          «Небольшой» оставит блюда подешевле — неделя выйдет примерно на тысячу рублей
-          дешевле, калории и белок те же. «Средний» и «не важно» — все блюда без ограничений.
+          «Небольшой» оставит блюда подешевле — неделя выйдет примерно на тысячу рублей
+          дешевле, калории и белок те же. «Средний» и «не важно» — все блюда без ограничений.
         </p>
         <div className="seg" role="group" aria-label="Бюджет">
           {([["small", "Небольшой"], ["medium", "Средний"], ["large", "Не важно"]] as const).map(([v, ru]) => (
@@ -260,7 +260,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
         <p className="small muted">
           Если сразу сильно урезать еду, многие бросают в первую неделю. Поэтому начинаем
           с того, сколько ты ешь сейчас, и понемногу снижаем до цели. Первые дни еда будет
-          привычнее и плотнее — паста, жаркое, запеканки.
+          привычнее и плотнее — паста, жаркое, запеканки.
         </p>
         <div className="seg" role="group" aria-label="Как начать">
           {PACES_RU.map(([v, ru]) => (
@@ -271,23 +271,23 @@ export function FoodSetup({ initial, onDone, onCancel }: {
         <p className="small muted">
           {pace === "none"
             ? "Сразу калории для цели. Подходит, если ты уже так ешь и привык."
-            : `${PACE_SPAN_RU[pace][0]!.toUpperCase() + PACE_SPAN_RU[pace].slice(1)} плавно: от того, сколько ешь сейчас, к цели. Вес вначале пойдёт медленнее — зато шанс дойти до конца заметно выше.`}
+            : `${PACE_SPAN_RU[pace][0]!.toUpperCase() + PACE_SPAN_RU[pace].slice(1)} плавно: от того, сколько ешь сейчас, к цели. Вес вначале пойдёт медленнее — зато шанс дойти до конца заметно выше.`}
         </p>
       </section>
 
       {/*
         Скрининг стыка: апноэ сна и ночное питание. Оба видны только когда сон и еда
-        смотрятся вместе — поодиночке ни pospat, ни oheedet их поймать не могли.
+        смотрятся вместе — поодиночке ни pospat, ни oheedet их поймать не могли.
 
         Вопросов всего тринадцать, но подряд их никто не задаёт: сначала два «ворот».
-        Ответил «нет» — секция закончилась, ответил «да» — доспросим остальное.
+        Ответил «нет» — секция закончилась, ответил «да» — доспросим остальное.
         Apple называет это прогрессивным раскрытием, и здесь оно уместнее всего:
         большинству эта часть формы стоит пяти секунд.
       */}
       <section className="card">
         <h3 className="card-h">9 · Короткая проверка</h3>
         <p className="small muted">
-          Два вопроса про сон и еду вместе. Это не диагноз — приложение ничего не лечит,
+          Два вопроса про сон и еду вместе. Это не диагноз — приложение ничего не лечит,
           ответы остаются на телефоне, а если что-то отмечено, оно посоветует врача
           и не станет сильно урезать калории.
         </p>

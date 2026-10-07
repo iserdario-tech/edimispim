@@ -94,7 +94,7 @@ export function Catalog({ recipes, ratings, onRate }: {
 
           {/* type="search" даёт на iOS крестик очистки и клавиатуру с кнопкой «Найти» */}
           <input className="catalog-search" type="search" inputMode="search"
-            value={query} placeholder="Название или продукт: творог, курица…"
+            value={query} placeholder="Блюдо или продукт"
             aria-label="Поиск по блюдам"
             onChange={e => reset(() => setQuery(e.target.value))} />
 
