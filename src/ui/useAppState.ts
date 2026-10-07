@@ -5,14 +5,14 @@ import { todayFoodDay } from "./todayPlan.js";
 import { eatenTotals, rebalance } from "../food/eaten.js";
 import { expectedBedMin, targetsForToday } from "../food/index.js";
 import { parseHM, fmtHM, sleepDurationMin, planDay } from "../index.js";
-import { loadState, saveState, exportAll, importAll, loadDayDraft, targetsFor, type FoodSettings, type StoredState } from "./storage.js";
+import { loadState, saveState, importAll, loadDayDraft, targetsFor, type FoodSettings, type StoredState } from "./storage.js";
 import { syncPushContext } from "./notifications.js";
 import { migrateAll } from "../migrate.js";
 import { localDateISO, plusDaysISO } from "../today-date.js";
 import { toggleMark, markAllAte, setOwnSize, setOwnText, addExtra, removeExtra, type DayEaten, type MealMark, type OwnSize, type WrittenFood } from "../food/eaten.js";
 import type { Slot } from "../food/types.js";
 import { readLS, writeLS } from "./localStore.js";
-import { BACKUP_KEY } from "./dataSafety.js";
+import { BACKUP_KEY, downloadBackup } from "./dataSafety.js";
 import { remember, type MenuMemory } from "./menuMemory.js";
 import type { RampPace } from "../food/rampin.js";
 
@@ -258,12 +258,8 @@ export function useAppState() {
   };
 
   const backup = () => {
-    const url = URL.createObjectURL(new Blob([exportAll()], { type: "application/json" }));
-    const a = document.createElement("a");
-    a.href = url; a.download = `edim-spim-копия-${localDateISO()}.json`;
-    a.click(); URL.revokeObjectURL(url);
     // отметка для напоминания «копии N дней»: скачал — значит, сохранил
-    const today = localDateISO();
+    const today = downloadBackup();
     writeLS(BACKUP_KEY, today); setBackupAt(today);
   };
   const restore = async (file: File) => {
