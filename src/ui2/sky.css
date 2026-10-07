@@ -161,6 +161,8 @@ html.v2 body { background: none; }  /* иначе фон body ложится п�
   box-shadow: 0 8px 22px rgba(255, 89, 100, .35); transition: transform .2s var(--spring);
 }
 .s-fab:active { transform: scale(.9); }
+/* плюс — абсолютно по центру круга, независимо от строки текста и сетки кнопки (Safari сажал его ниже) */
+.s-fab svg { position: absolute; inset: 0; margin: auto; display: block; }
 
 @media (prefers-reduced-motion: reduce) {
   .s-fab, .s-btn { transition: none; }

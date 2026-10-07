@@ -163,6 +163,8 @@ export function Me({ app, day, cloud, onCloud, pair, onPair, onSettings, onStory
         <Sheet title="О приложении" onClose={() => setSheet(null)}>
           <p>edim & spim строит день от сна: ужин за три часа до отбоя, после плохой ночи — те же калории, но день проще.</p>
           <p className="s-muted">Честная рамка: сон не сжигает калории — он меняет аппетит и самоконтроль. Кофеин маскирует недосып, а не заменяет его. Оценки помечены «≈», личные сопоставления — наблюдения, а не выводы. Это не медицинское приложение.</p>
+          {/* по версии видно, обновилось ли приложение на телефоне: «так и не поправил» часто значит «ещё старая сборка» */}
+          <p className="s-small">Версия: {typeof __BUILD__ === "string" ? __BUILD__ : "разработка"}</p>
           <h3 className="s-why-h">Значки</h3>
           <p className="s-small">Solar — <a href="https://www.figma.com/community/file/1166831539721848736" target="_blank" rel="noopener noreferrer">480 Design</a>, лицензия CC BY 4.0.</p>
           <h3 className="s-why-h">Фотографии блюд</h3>
