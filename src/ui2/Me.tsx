@@ -13,6 +13,8 @@ import { plusDaysISO } from "../today-date.js";
 import { readTheme, applyTheme, type ThemeChoice } from "../ui/theme.js";
 import { PHOTOS } from "../food/photos.js";
 import { tap } from "../ui/haptics.js";
+import { cloudUpload, readCloud, type CloudInfo } from "../ui/cloudSync.js";
+import { CodeRestore } from "./CodeRestore.js";
 import { enableNotifications, readPushPrefs, writePushPrefs, syncPushContext } from "../ui/notifications.js";
 import type { PushPrefs } from "../push.js";
 import type { Profile } from "../index.js";
@@ -44,8 +46,9 @@ const weekLabel = (monday: string) => {
  * (вес и расход, сон и режим, истории недель) открываются шторками: на них заходят
  * раз в неделю, а не каждое утро, поэтому им не место на главном пути.
  */
-export function Me({ app, day, onSettings, onStory, onRestore, onTour }: {
+export function Me({ app, day, cloud, onCloud, onSettings, onStory, onRestore, onTour }: {
   app: AppModel; day: DayModel;
+  cloud: CloudInfo | null; onCloud: (c: CloudInfo | null) => void;
   onSettings: (which: "sleep" | "food") => void;
   onStory: (monday: string) => void;
   onRestore: () => void;
@@ -85,7 +88,7 @@ export function Me({ app, day, onSettings, onStory, onRestore, onTour }: {
     ["stories", "▤", "Итоги недель", "каждый понедельник — новый"],
     ["sleep-settings", "⏰", "Настройки сна", `подъём ${state.profile.anchorWakeHM}`],
     ["food-settings", "🍽", "Настройки еды", state.food ? `${state.food.mealCount} приёма · ${state.food.household && state.food.household > 1 ? `на ${state.food.household}` : "на себя"}` : "не настроено"],
-    ["backup", "⤓", "Копия данных", app.backupAt ? `последняя ${app.backupAt.split("-").reverse().slice(0, 2).join(".")}` : "ещё не делал"],
+    ["backup", "⤓", "Копия данных", cloud?.at ? `в облаке · ${cloud.at.split("-").reverse().slice(0, 2).join(".")}` : app.backupAt ? `файлом · ${app.backupAt.split("-").reverse().slice(0, 2).join(".")}` : "ещё не делал"],
     ["notif", "🔔", "Напоминания", notifOn() ? "заранее: еда, кофе, сон" : "выключены"],
     ["theme", "◐", "Оформление", { auto: "как в системе", light: "светлое", dark: "тёмное" }[readTheme()]],
     ["tour", "?", "Как устроено приложение", "кнопки и экраны за минуту"],
@@ -141,19 +144,31 @@ export function Me({ app, day, onSettings, onStory, onRestore, onTour }: {
       )}
       {sheet === "backup" && (
         <Sheet title="Копия данных" onClose={() => setSheet(null)}>
-          <p className="s-muted">Всё хранится только на этом телефоне. Копия — файл: сохрани его в «Файлы» или отправь себе. Аккаунтов и облака нет.</p>
+          <h3 className="s-why-h">В облаке</h3>
+          {cloud ? <>
+            <p className="s-code">{cloud.code}</p>
+            <p className="s-muted">Копия сама уходит в облако зашифрованной — открыть её можно только этим кодом. {cloud.at ? `Последняя: ${cloud.at.split("-").reverse().join(".")}.` : "Первая ещё не ушла — нет связи."}</p>
+            <div className="s-sheet-actions">
+              <button className="s-btn ghost" onClick={() => { tap(); void navigator.clipboard?.writeText(cloud.code); }}>Скопировать</button>
+              <button className="s-btn ghost" onClick={async () => { tap(); onCloud(await cloudUpload(true) ?? cloud); }}>Отправить</button>
+            </div>
+          </> : <p className="s-muted">Код появится, как только уйдёт первая копия.</p>}
+          <h3 className="s-why-h">На другом телефоне</h3>
+          <p className="s-small">Введи код — данные этого телефона заменятся копией.</p>
+          <CodeRestore confirm onDone={s => { app.update(s); onCloud(readCloud()); setSheet(null); }} />
+          <h3 className="s-why-h">Файлом</h3>
           <div className="s-sheet-actions">
-            <button className="s-btn food" onClick={() => { tap(); a.backup(); }}>Сохранить</button>
+            <button className="s-btn ghost" onClick={() => { tap(); a.backup(); }}>Сохранить</button>
             <button className="s-btn ghost" onClick={onRestore}>Загрузить</button>
           </div>
-          {app.backupAt && <p className="s-small">Последняя копия — {app.backupAt.split("-").reverse().join(".")}</p>}
+          {app.backupAt && <p className="s-small">Последняя копия файлом — {app.backupAt.split("-").reverse().join(".")}</p>}
         </Sheet>
       )}
       {sheet === "theme" && <ThemeSheet onClose={() => setSheet(null)} />}
       {sheet === "notif" && <NotifSheet profile={state.profile} onClose={() => setSheet(null)} />}
       {sheet === "about" && (
         <Sheet title="О приложении" onClose={() => setSheet(null)}>
-          <p>edim & spim строит день от сна: ужин за три часа до отбоя, после плохой ночи — тот же калораж, но день проще.</p>
+          <p>edim & spim строит день от сна: ужин за три часа до отбоя, после плохой ночи — те же калории, но день проще.</p>
           <p className="s-muted">Честная рамка: сон не сжигает калории — он меняет аппетит и самоконтроль. Кофеин маскирует недосып, а не заменяет его. Оценки помечены «≈», личные сопоставления — наблюдения, а не выводы. Это не медицинское приложение.</p>
           <h3 className="s-why-h">Фотографии блюд</h3>
           <p className="s-small">Снимки подобраны по типу блюда с Викисклада, свободные лицензии.</p>

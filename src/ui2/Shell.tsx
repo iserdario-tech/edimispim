@@ -24,6 +24,7 @@ import { readLS, writeLS } from "../ui/localStore.js";
 import { Install } from "./Install.js";
 import { AskSheet } from "./AskSheet.js";
 import { Tour, TOUR_KEY } from "./Tour.js";
+import { readCloud, cloudUpload, markCodeNoted } from "../ui/cloudSync.js";
 import { isIOS, isStandalone } from "../ui/dataSafety.js";
 import { unmarkedToday } from "../streak2.js";
 import { useDay } from "./useDay.js";
@@ -74,6 +75,7 @@ export function Shell() {
     return <div className="v2-root">
       <div className="s-sky" />
       <QuickStart onRestore={() => fileRef.current?.click()}
+        onCloudRestored={(s) => { app.update(s); void syncPushContext(s.profile); }}
         onDone={(profile, screener, quickFood) => {
           const picked = pickUpOldApps();
           const food = picked.food ?? quickFood;
@@ -98,6 +100,15 @@ function Main({ app, tab, setTab, now, glow, restoreInput, onRestore }: {
 }) {
   const day = useDay(app.state as StoredState, now);
   const [why, setWhy] = useState(false);
+  // копия в облаке: при открытии и при сворачивании (сама не чаще раза в 3 часа)
+  const [cloud, setCloud] = useState(readCloud);
+  useEffect(() => {
+    const go = () => void cloudUpload().then(c => c && setCloud(c));
+    const onHide = () => { if (document.visibilityState === "hidden") go(); };
+    go();
+    document.addEventListener("visibilitychange", onHide);
+    return () => document.removeEventListener("visibilitychange", onHide);
+  }, []);
   // пуш «как спалось?» открывает сразу отметку ночи, «#eat» — шторку «+»
   const [plus, setPlus] = useState<false | "any" | "night">(() =>
     location.hash === "#night" || location.hash === "#mark" ? "night" : location.hash === "#eat" ? "any" : false);
@@ -153,10 +164,11 @@ function Main({ app, tab, setTab, now, glow, restoreInput, onRestore }: {
       {/* свечение неба — только на «Сутках», остальные экраны однотонные */}
       <div className="s-sky" style={tab === "day" ? { backgroundImage: glow } : undefined} />
       {tab === "day" && <Day app={app} day={day} now={now} onWhy={() => setWhy(true)}
+        code={cloud?.at && !cloud.noted ? { code: cloud.code, onNoted: () => { markCodeNoted(); setCloud(readCloud()); } } : undefined}
         story={offerStory ? { label: weekLabel(lastMonday), open: () => { setStoryWeek(lastMonday); writeLS("edimispim.storySeen", lastMonday); setSeen(lastMonday); } } : undefined} />}
       {tab === "eat" && !shop && <Eat app={app} week={week} onShop={() => { setShop(true); window.scrollTo({ top: 0 }); }} onSetupFood={() => setSettings("food")} />}
       {tab === "eat" && shop && <Shop week={week} onBack={() => { setShop(false); window.scrollTo({ top: 0 }); }} />}
-      {tab === "me" && <Me app={app} day={day} onSettings={setSettings} onStory={setStoryWeek} onRestore={onRestore} onTour={() => setTour(true)} />}
+      {tab === "me" && <Me app={app} day={day} cloud={cloud} onCloud={setCloud} onSettings={setSettings} onStory={setStoryWeek} onRestore={onRestore} onTour={() => setTour(true)} />}
       {tour && <Tour onClose={closeTour} />}
       {storySlides && storyWeek && <Story slides={storySlides} label={`Неделя ${weekLabel(storyWeek)}`} onClose={() => setStoryWeek(null)} />}
 
