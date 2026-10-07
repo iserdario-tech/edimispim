@@ -3,7 +3,8 @@ import type { Profile, ScreenerAnswers, ScreenerResult } from "../index.js";
 import { runScreener } from "../index.js";
 import type { Sex } from "../food/types.js";
 import { DEFAULT_PACE } from "../food/rampin.js";
-import type { FoodSettings } from "./storage.js";
+import type { FoodSettings, StoredState } from "./storage.js";
+import { CodeRestore } from "../ui2/CodeRestore.js";
 import { buildProfile, isValidTime } from "./onboardingModel.js";
 import { emptyScreener } from "./Onboarding.js";
 import { checkProfile, NumInput } from "./FoodSetup.js";
@@ -22,11 +23,13 @@ import { localDateISO } from "../today-date.js";
  * Проверку здоровья НЕ откладываем: в ней храп с остановками дыхания, подавленность,
  * мысли о вреде себе и ночное питание — при дефиците калорий это нельзя пропустить.
  */
-export function QuickStart({ onDone, onRestore }: {
+export function QuickStart({ onDone, onRestore, onCloudRestored }: {
   onDone: (p: Profile, s: ScreenerResult, food: FoodSettings) => void;
   onRestore?: () => void;
+  onCloudRestored?: (s: StoredState) => void;
 }) {
   const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [byCode, setByCode] = useState(false);
   const [wakeHM, setWakeHM] = useState("07:00");
   const [bedHM, setBedHM] = useState("23:00");
   const [sex, setSex] = useState<Sex>("m");
@@ -88,6 +91,9 @@ export function QuickStart({ onDone, onRestore }: {
               <button className="linkbtn small" onClick={onRestore}>Загрузить копию</button>
             </p>
           )}
+          {onCloudRestored && (byCode
+            ? <CodeRestore onDone={onCloudRestored} />
+            : <p className="small muted">Есть код из четырёх слов? <button className="linkbtn small" onClick={() => setByCode(true)}>Восстановить по коду</button></p>)}
         </>
       )}
 
