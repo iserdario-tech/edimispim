@@ -4,6 +4,7 @@ import {
   buildGroceryList, scaleGrocery, expectedBedMin, planWindow, filterRecipes, applySwaps, targetsForToday,
 } from "../food/index.js";
 import type { Recipe } from "../food/types.js";
+import type { ScheduledDay } from "../food/index.js";
 import recipesJson from "../food/data/recipes.json";
 import { targetsFor, type StoredState } from "../ui/storage.js";
 import { dayOptsFor } from "../ui/dayOpts.js";
@@ -45,16 +46,20 @@ export function useWeek(state: StoredState, onRemember?: (key: string, days: Men
     const pool = filterRecipes(RECIPES, { ...food.constraints, bannedIds: rated.filter(([, v]) => v === -1).map(([id]) => id) });
     const liked = rated.filter(([, v]) => v === 1).map(([id]) => id);
     const fresh: MenuMemory["days"] = {};
-    const days = planWindow(today, 7, pool,
-      iso => targetsForToday(safe, food.startISO, iso, food.pace).targets,
-      iso => dayOptsFor(food, iso, { wakeMin: parseHM(state.profile.anchorWakeHM), bedMin }, liked, state.noCookDays, safe),
-    ).map(s => {
+    // память и ручные замены накладываются внутри календаря — до того, как кастрюля дня
+    // готовки разойдётся по следующим дням: заменил ужин в понедельник — во вторник разогревают его же
+    const finalize = (s: ScheduledDay) => {
+      if (s.iso < today) return;
       // запомненное меню держит блюда; новый день запоминается таким, каким его собрал планировщик
       const kept = rememberedFor(state.menu, food, s.iso, state.noCookDays);
       if (!kept && !state.noCookDays?.includes(s.iso)) fresh[s.iso] = Object.fromEntries(s.day.meals.map(m => [m.slot, m.recipe.id]));
       applySwaps(s.day, { ...kept, ...state.swaps?.[s.iso] }, pool, s.targets, food.mealCount);
-      return { date: s.iso, day: s.day, targets: s.targets };
-    });
+    };
+    const days = planWindow(today, 7, pool,
+      iso => targetsForToday(safe, food.startISO, iso, food.pace).targets,
+      iso => dayOptsFor(food, iso, { wakeMin: parseHM(state.profile.anchorWakeHM), bedMin }, liked, state.noCookDays, safe),
+      finalize,
+    ).map(s => ({ date: s.iso, day: s.day, targets: s.targets, ...(s.potISO ? { potISO: s.potISO } : {}) }));
     const grocery = scaleGrocery(buildGroceryList(days.map(d => d.day)), food.household ?? 1);
     return { days, grocery, pool, safe, fresh };
     // rev — после ручной замены день надо пересобрать с новым блюдом

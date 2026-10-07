@@ -1,4 +1,5 @@
 import type { FoodSettings } from "./storage.js";
+import { cookDaysOf } from "./dayOpts.js";
 
 /**
  * Показанное меню запоминается и само больше не меняется.
@@ -18,7 +19,7 @@ export interface MenuMemory {
 }
 
 export const menuKey = (f: FoodSettings): string =>
-  JSON.stringify([f.constraints, f.mealCount, f.cookMin ?? null, !!f.leftovers]);
+  JSON.stringify([f.constraints, f.mealCount, f.cookMin ?? null, cookDaysOf(f)]);
 
 /** Запомненные блюда даты — если они ещё в силе. */
 export function rememberedFor(

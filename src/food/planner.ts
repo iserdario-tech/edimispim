@@ -232,10 +232,11 @@ export interface DayOptions {
    * бигос на полтора часа в среду — гарантированный срыв плана, а в субботу — нормальный ужин.
    */
   maxCookMin?: number;
-  /** Готовить на два дня: обед берётся из вчерашнего ужина. */
-  leftovers?: boolean;
-  /** Вчерашний ужин — он и станет сегодняшним обедом (ставит планировщик недели). */
-  leftover?: Recipe;
+  /**
+   * Блюда из кастрюли дня готовки: обед и ужин, приготовленные раньше на несколько дней.
+   * Ставятся в тот же приём без готовки (ставит календарный план, см. schedule.ts).
+   */
+  fromPot?: Partial<Record<MealType, Recipe>>;
 }
 
 /**
@@ -351,6 +352,10 @@ export const effortOf = (r: Recipe): number => (r.difficulty ?? 1) * 30 + (r.tim
  * выходил длиннее обычного на те самые пару минут, которые ломают обещание.
  */
 const EASY_KEEP = 3;
+/** На сколько замена ради клетчатки или белка может быть сложнее заменяемого блюда: один шаг сложности. */
+const EFFORT_STEP = 30;
+/** Доля нормы клетчатки, с которой замена уже не имеет права усложнять готовку. */
+const FIBER_NEAR = 0.8;
 const easiest = (options: Recipe[]): Recipe[] =>
   [...options].sort((a, b) => effortOf(a) - effortOf(b)).slice(0, EASY_KEEP);
 
@@ -366,6 +371,28 @@ const denser = (options: Recipe[]): Recipe[] => {
   const sorted = [...options].sort((a, b) => (b.energy_density ?? 0) - (a.energy_density ?? 0));
   // половина набора, но не меньше недельной нормы разнообразия
   return sorted.slice(0, Math.max(MIN_CHOICES, Math.ceil(sorted.length / 2)));
+};
+
+/**
+ * Простая половина набора — по умолчанию, в любой день.
+ *
+ * Простота включалась только после плохой ночи, а в обычный день рядом с десятиминутным
+ * омлетом на равных стоял бигос на полтора часа. Люди готовят то, что проще, и бросают план
+ * на первом долгом блюде. Половина по шкале «сложность плюс минуты», но не меньше недельной
+ * нормы разнообразия на три недели — чтобы меню не схлопнулось и недели не повторяли друг друга
+ * (с порогом в семь и в четырнадцать обеды и ужины совпадали с прошлой неделей на 4.7 из 14 против нормы 4.67:
+ * сдвиг недели ходит по списку, и короткий список он обходит быстрее). Замер 12 недель × 8 конфигураций:
+ * усилие готовки 83 → 77, минуты 40 → 37, белок, калории и разнообразие прежние, клетчатка 29.0 → 28.7.
+ */
+const SIMPLE_KEEP = MIN_CHOICES * 3;
+const simpler = (options: Recipe[]): Recipe[] => {
+  if (options.length <= SIMPLE_KEEP) return options;
+  const sorted = [...options].sort((a, b) => effortOf(a) - effortOf(b));
+  // ponytail: простые блюда в базе в основном мясные, и клетчатка недели с партией S просела
+  // с 28.7 до 27.8 г; удержание трёх самых богатых клетчаткой блюд в простой половине пробовал —
+  // недели начинали повторять друг друга (5.5 из 14 против нормы 4.67). Рычаг — контент:
+  // простые блюда с клетчаткой (бобовые, цельнозерновые), а не правило планировщика
+  return sorted.slice(0, Math.max(SIMPLE_KEEP, Math.ceil(sorted.length / 2)));
 };
 
 /**
@@ -411,20 +438,26 @@ export function generateDay(targets: Targets, pool: Recipe[], opts: DayOptions):
 
   for (const [type, share] of Object.entries(mains) as [MealType, number][]) {
     const slotKcal = mainTarget * share;
-    // остатки вчерашнего ужина: готовить сегодня обед не надо, порция — под долю обеда
+    // из кастрюли дня готовки: готовить не надо, порция — под долю этого приёма.
     // Только если это нормальная порция (до ×2, как и везде в планировщике): остатки
-    // лёгкого салата на обед превращались в «×2.6» — это уже не остатки, а новая готовка.
-    const leftServings = opts.leftover ? +(slotKcal / opts.leftover.kcal).toFixed(1) : 0;
-    if (type === "lunch" && opts.leftover && leftServings >= FIT_MIN && leftServings <= PORTION_MAX) {
-      meals.push({ recipe: opts.leftover, servings: leftServings, timeMin: times.lunch ?? 0, slot: "lunch", leftover: true });
+    // лёгкого салата превращались в «×2.6» — это уже не остатки, а новая готовка.
+    const pot = opts.fromPot?.[type];
+    const potServings = pot ? +(slotKcal / pot.kcal).toFixed(1) : 0;
+    if (pot && potServings >= FIT_MIN && potServings <= PORTION_MAX) {
+      meals.push({ recipe: pot, servings: potServings, timeMin: times[type as Slot] ?? 0, slot: type, leftover: true });
       continue;
     }
     // после плохой ночи рамка по размеру порции шире: важнее найти блюдо побыстрее
     const fit = fittingOptions(byType(type), slotKcal, opts.roughNight);
     const good = proteinRich(fit, type, r => Math.max(0.5, +(slotKcal / r.kcal).toFixed(1)));
-    // после плохой ночи простота важнее привычности: усилия сегодня взять неоткуда
-    const narrowed = opts.roughNight ? easiest(good) : opts.familiar ? denser(good) : good;
-    const recipe = pickForDay(dropUsed(preferLiked(narrowed, opts.liked, offset), opts.avoid), offset);
+    // после плохой ночи простота важнее привычности: усилия сегодня взять неоткуда;
+    // в обычный день — простая половина, в начале входа в режим — простая половина привычной.
+    // Любимые («палец вверх») берутся из всего подходящего набора, а не из простой половины:
+    // человек сам выбрал это блюдо, и простота его выбор не перебивает
+    const mine = opts.liked?.length && offset % 2 === 0 ? good.filter(r => opts.liked!.includes(r.id)) : [];
+    const narrowed = opts.roughNight ? preferLiked(easiest(good), opts.liked, offset)
+      : mine.length ? mine : simpler(opts.familiar ? denser(good) : good);
+    const recipe = pickForDay(dropUsed(narrowed, opts.avoid), offset);
     if (!recipe) continue;
     const servings = Math.max(0.5, +(slotKcal / recipe.kcal).toFixed(1));
     meals.push({ recipe, servings, timeMin: times[type as Slot] ?? 0, slot: type });
@@ -524,6 +557,9 @@ function swapForFiber(
       // в упрощённый день замена не имеет права добавить работы: обещание «сегодня готовки
       // меньше» важнее пары граммов клетчатки (замер: 68 минут против 65 у обычного дня)
       if (keepEasy && effortOf(candidate) > effortOf(meal.recipe)) continue;
+      // день уже почти в норме по клетчатке — тогда замена не делает блюдо заметно сложнее;
+      // далёкий от нормы день добирает клетчатку любой ценой (замер: иначе −1.5 г в среднем)
+      if (day.totals.fiber >= targets.fiberGTarget * FIBER_NEAR && effortOf(candidate) > effortOf(meal.recipe) + EFFORT_STEP) continue;
       const gain = candidate.fiber_g * servings - meal.recipe.fiber_g * meal.servings;
       // белок не должен просесть ради клетчатки — это два разных рычага сытости.
       // На второй замене допуск нулевой: две уступки по 5 г подряд роняли день ниже цели.
@@ -592,7 +628,9 @@ function swapForProtein(
       const servings = Math.max(0.5, +(kcalShare / candidate.kcal).toFixed(1));
       if (servings > FIT_MAX) continue;
       if (candidate.kcal * servings > kcalShare * 1.05) continue;   // замена не раздувает приём
-      if (keepEasy && effortOf(candidate) > effortOf(meal.recipe)) continue;   // и не добавляет готовки
+      if (keepEasy && effortOf(candidate) > effortOf(meal.recipe)) continue;
+      // и в обычный день замена не делает блюдо заметно сложнее: шаг в полчаса — потолок
+      if (effortOf(candidate) > effortOf(meal.recipe) + EFFORT_STEP) continue;   // и не добавляет готовки
       const gain = candidate.protein_g * servings - meal.recipe.protein_g * meal.servings;
       // клетчатку ради белка тоже не роняем: оба рычага нужны
       const fiberDrop = meal.recipe.fiber_g * meal.servings - candidate.fiber_g * servings;
@@ -714,7 +752,8 @@ function addProteinTopUp(day: Day, targets: Targets): void {
 const KCAL_FIT = 1.03;
 export function fitKcal(day: Day, targets: Targets): void {
   const T = targets.kcalTarget;
-  const mains = day.meals.filter(m => !m.leftover && m.slot !== "dessert" && m.slot !== "snack");
+  // из кастрюли черпают больше или меньше так же легко, поэтому приготовленное заранее подгоняется наравне со свежим
+  const mains = day.meals.filter(m => m.slot !== "dessert" && m.slot !== "snack");
   if (!mains.length) return;
   const density = (m: Meal) => m.recipe.protein_g / m.recipe.kcal;
   for (let guard = 0; guard < 40 && day.totals.kcal > T * KCAL_FIT; guard++) {

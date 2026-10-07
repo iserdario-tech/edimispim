@@ -1,4 +1,4 @@
-import { makeCode, normCode, isCode, idOf, encrypt, decrypt } from "../cloud.js";
+import { makeCode, normCode, isCode, idOf, encrypt, decrypt, fingerprint } from "../cloud.js";
 import { exportAll, importAll, type StoredState } from "./storage.js";
 import { readLS, writeLS } from "./localStore.js";
 import { BACKEND_URL } from "./notifications.js";
@@ -10,7 +10,7 @@ import { localDateISO } from "../today-date.js";
  * Код создаётся при первой отправке и живёт в памяти телефона (и в копии файлом).
  */
 const KEY = "edimispim.cloud";
-export interface CloudInfo { code: string; at?: string; ts?: number; noted?: boolean }
+export interface CloudInfo { code: string; at?: string; ts?: number; noted?: boolean; hash?: string }
 
 export const readCloud = (): CloudInfo | null => readLS<CloudInfo | null>(KEY, null);
 const writeCloud = (c: CloudInfo) => writeLS(KEY, c);
@@ -34,14 +34,18 @@ export function cloudUpload(force = false): Promise<CloudInfo | null> {
 async function upload(force: boolean): Promise<CloudInfo | null> {
   const cur = readCloud() ?? { code: makeCode() };
   if (!force && cur.ts && Date.now() - cur.ts < EVERY_MS) return cur;
+  const text = exportAll();
+  const hash = await fingerprint(text);
+  // ничего не поменялось с прошлой копии — не тратим запись: у бесплатного KV их тысяча в сутки на всех
+  if (!force && cur.hash === hash) { const same = { ...cur, ts: Date.now() }; writeCloud(same); return same; }
   try {
     const res = await fetch(BACKEND_URL + "/backup", {
       method: "POST", headers: { "content-type": "application/json" },
-      body: JSON.stringify({ id: await idOf(cur.code), data: await encrypt(cur.code, exportAll()) }),
+      body: JSON.stringify({ id: await idOf(cur.code), data: await encrypt(cur.code, text) }),
     });
     // только «ok» от /backup: старый сервер на неизвестный адрес тоже отвечал 200
     if (!res.ok || (await res.text()) !== "ok") { if (!readCloud()) writeCloud(cur); return null; }
-    const next = { ...cur, at: localDateISO(), ts: Date.now() };
+    const next = { ...cur, at: localDateISO(), ts: Date.now(), hash };
     writeCloud(next);
     return next;
   } catch {
