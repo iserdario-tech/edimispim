@@ -4,6 +4,7 @@ import { WeightChart } from "../ui/Charts.js";
 import { toDayRecords } from "../ui/dayRecords.js";
 import { expenditure } from "../expenditure.js";
 import { useExp, paceRU } from "./useExp.js";
+import { DEFAULT_PACE, PACES_RU, type RampPace } from "../food/rampin.js";
 import { Ico } from "./Ico.js";
 import type { IcoName } from "./icons.js";
 import { targetsFor } from "../ui/storage.js";
@@ -183,7 +184,7 @@ function WeightSheet({ app, exp, records, onClose }: {
   const state = app.state!;
   const [kg, setKg] = useState("");
   const weights = state.weights ?? [];
-  const plat = plateau(records, state.profile.targetSleepMin);
+  const plat = plateau(records, state.profile.targetSleepMin, state.food?.startISO);
   const delta = weights.length >= 2 ? Math.round((weights.at(-1)!.kg - weights[0]!.kg) * 10) / 10 : null;
   const r = exp?.r;
   const f = state.food;
@@ -230,7 +231,40 @@ function WeightSheet({ app, exp, records, onClose }: {
           <p className="s-muted">{plat.messageRU}</p>
         </>
       )}
+      <FreshStart app={app} />
     </Sheet>
+  );
+}
+
+/**
+ * «Начинаю с сегодня»: для того, кто настроил приложение заранее, а пользоваться всерьёз
+ * начинает сейчас. Без этого вход в дефицит считался бы с даты настройки (давно прошёл),
+ * а расчёт трат — по случайным старым записям.
+ */
+function FreshStart({ app }: { app: AppModel }) {
+  const state = app.state!;
+  const [open, setOpen] = useState(false);
+  const [kg, setKg] = useState(String(state.weights?.at(-1)?.kg ?? state.food?.profile.weightKg ?? ""));
+  const [pace, setPace] = useState<RampPace>(DEFAULT_PACE);
+  if (!state.food) return null;
+  if (!open) return <button className="s-btn ghost s-wide" onClick={() => { tap(); setOpen(true); }}>Начинаю с сегодня</button>;
+  const v = +kg.replace(",", ".");
+  return (
+    <>
+      <h3 className="s-why-h">Начать с сегодня</h3>
+      <p className="s-muted">Вход в дефицит начнётся заново, траты будут считаться по записям с этого дня. Старые записи останутся.</p>
+      <p className="s-small">Вес сейчас, кг</p>
+      <div className="s-inline">
+        <input type="text" inputMode="decimal" value={kg} onChange={e => setKg(e.target.value)} aria-label="Вес сейчас, кг" placeholder="кг" />
+      </div>
+      <div className="s-seg" role="group" aria-label="Как войти в дефицит">
+        {PACES_RU.map(([p, ru]) => (
+          <button key={p} className={pace === p ? "on" : ""} aria-pressed={pace === p} onClick={() => setPace(p)}>{ru}</button>
+        ))}
+      </div>
+      <button className="s-btn food s-wide" disabled={!(v >= 30 && v <= 300)}
+        onClick={() => { tap(); app.actions.freshStart(v, pace); setOpen(false); }}>Начать с сегодня</button>
+    </>
   );
 }
 
