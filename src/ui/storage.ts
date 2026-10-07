@@ -5,6 +5,7 @@ import { strengthProtein } from "../food/targets.js";
 import type { RampPace } from "../food/rampin.js";
 import type { DayEaten } from "../food/eaten.js";
 import type { StopBangAnswers, NesAnswers } from "../screening.js";
+import type { MenuMemory } from "./menuMemory.js";
 
 export type StorageLike = { getItem(k: string): string | null; setItem(k: string, v: string): void };
 
@@ -84,6 +85,8 @@ export interface StoredState {
    * привязано к календарю: замена в четверг остаётся заменой в четверг.
    */
   swaps?: Record<string, Record<string, string>>;
+  /** Показанное меню: блюда держатся до своей даты, даже если правила подбора обновились. */
+  menu?: MenuMemory;
   /** Дни «сегодня не готовлю»: меню дня собирается из блюд до десяти минут. */
   noCookDays?: string[];
   /** «Вчера было?» по датам: поздний ужин, кофе после 14:00, алкоголь — для личного эффекта. */

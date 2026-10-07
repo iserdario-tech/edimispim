@@ -7,6 +7,7 @@ import recipesJson from "../food/data/recipes.json";
 import { parseHM } from "../index.js";
 import { targetsFor, type FoodSettings } from "./storage.js";
 import { dayOptsFor } from "./dayOpts.js";
+import { rememberedFor, type MenuMemory } from "./menuMemory.js";
 
 const RECIPES = recipesJson as Recipe[];
 
@@ -25,6 +26,7 @@ export function todayFoodDay(a: {
   night: NightSummary;
   ratings?: Record<string, 1 | -1>;
   swaps?: Record<string, Record<string, string>>;
+  menu?: MenuMemory;
   noCookDays?: string[];
 }) {
   const { food, today } = a;
@@ -52,14 +54,16 @@ export function todayFoodDay(a: {
   const planned = scheduleFor(today, pool, iso => targetsForToday(base, food.startISO, iso, food.pace).targets, optsOf);
   const dayOpts = { ...optsOf(today), offset: planned.offset, avoid: planned.avoid, ...(planned.leftover ? { leftover: planned.leftover } : {}) };
   const day = generateAdaptedDay(safe, pool, dayOpts, a.night);
-  // то, что человек поменял руками на экране «Еда», должно стоять и здесь
-  applySwaps(day, a.swaps?.[today], pool, safe, food.mealCount);
+  // запомненное меню, поверх — то, что человек поменял руками на экране «Еда»;
+  // после плохой ночи запомненное не держим: день перестроен нарочно
+  const kept = { ...rememberedFor(a.menu, food, today, a.noCookDays), ...a.swaps?.[today] };
+  applySwaps(day, day.simplified ? a.swaps?.[today] : kept, pool, safe, food.mealCount);
   // что поменялось из-за ночи — сравнение с днём после обычной ночи
   let changes: string[] = [];
   if (day.simplified) {
     // обычный день — с теми же ручными заменами: иначе замена блюда выдавалась бы за эффект ночи
     const normal = generateAdaptedDay(safe, pool, dayOpts);
-    applySwaps(normal, a.swaps?.[today], pool, safe, food.mealCount);
+    applySwaps(normal, kept, pool, safe, food.mealCount);
     changes = nightChanges(normal, day);
   }
   return { day, safe, diagnosis, ramp, changes };
