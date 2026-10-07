@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import type { FoodSettings } from "./storage.js";
 import type { Activity, Budget, MealCount, Sex } from "../food/types.js";
-import { DEFAULT_PACE, RAMP_DAYS, type RampPace } from "../food/rampin.js";
+import { DEFAULT_PACE, PACES_RU, PACE_SPAN_RU, type RampPace } from "../food/rampin.js";
 import { localDateISO } from "../today-date.js";
 import { JunctionScreening, junctionFrom, junctionResult, type JunctionValue } from "./JunctionScreening.js";
 
@@ -263,7 +263,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
           привычнее и плотнее — паста, жаркое, запеканки.
         </p>
         <div className="seg" role="group" aria-label="Как начать">
-          {([["gentle", "Плавно"], ["normal", "Обычно"], ["none", "Сразу"]] as const).map(([v, ru]) => (
+          {PACES_RU.map(([v, ru]) => (
             <button key={v} className={pace === v ? "seg-item on" : "seg-item"}
               aria-pressed={pace === v} onClick={() => setPace(v)}>{ru}</button>
           ))}
@@ -271,7 +271,7 @@ export function FoodSetup({ initial, onDone, onCancel }: {
         <p className="small muted">
           {pace === "none"
             ? "Сразу калории для цели. Подходит, если ты уже так ешь и привык."
-            : `${RAMP_DAYS[pace]} дней плавно: от того, сколько ешь сейчас, к цели. Вес первые недели пойдёт медленнее — зато шанс дойти до конца заметно выше.`}
+            : `${PACE_SPAN_RU[pace][0]!.toUpperCase() + PACE_SPAN_RU[pace].slice(1)} плавно: от того, сколько ешь сейчас, к цели. Вес вначале пойдёт медленнее — зато шанс дойти до конца заметно выше.`}
         </p>
       </section>
 

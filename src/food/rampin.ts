@@ -17,16 +17,22 @@ import type { SafeTargets } from "./types";
  * больше. Так и надо говорить.
  */
 
-export type RampPace = "gentle" | "normal" | "none";
+export type RampPace = "gentle" | "normal" | "week" | "none";
 
 /** Сколько дней занимает спуск к цели. */
 export const RAMP_DAYS: Record<RampPace, number> = {
   gentle: 21,   // «мягко» — три недели
   normal: 14,   // «обычно» — две
+  week: 7,      // за неделю — как просил Сердар: «надо неделю, чтоб плавно влиться»
   none: 0,      // «сразу» — для тех, кто уже в режиме
 };
 
 export const DEFAULT_PACE: RampPace = "normal";
+
+/** Варианты для экрана настройки — от мягкого к резкому. */
+export const PACES_RU: [RampPace, string][] = [["gentle", "3 недели"], ["normal", "2 недели"], ["week", "Неделя"], ["none", "Сразу"]];
+/** «за три недели» — срок словами: «за 21 дней» читалось с ошибкой. */
+export const PACE_SPAN_RU: Record<RampPace, string> = { gentle: "три недели", normal: "две недели", week: "неделю", none: "" };
 
 export interface RampState {
   /** Какой сегодня день вхождения, начиная с 1. */
