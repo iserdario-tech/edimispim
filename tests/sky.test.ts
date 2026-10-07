@@ -5,13 +5,13 @@ const hm = (h: number, m = 0) => h * 60 + m;
 
 describe("свечение неба по времени суток", () => {
   it("утро — тёплое оранжевое", () => {
-    expect(skyFor(hm(7, 10), false)).toMatchObject({ phase: "morning", night: false, glow: "#FF9F0A" });
+    expect(skyFor(hm(7, 10), false)).toMatchObject({ phase: "morning", night: false, glow: "#FFE74C" });
   });
   it("день — голубое", () => {
-    expect(skyFor(hm(12, 20), false)).toMatchObject({ phase: "day", night: false, glow: "#64D2FF" });
+    expect(skyFor(hm(12, 20), false)).toMatchObject({ phase: "day", night: false, glow: "#35A7FF" });
   });
   it("вечер и ночь — индиго, но светлая тема остаётся светлой", () => {
-    expect(skyFor(hm(21, 40), false)).toMatchObject({ phase: "night", night: false, glow: "#5E5CE6" });
+    expect(skyFor(hm(21, 40), false)).toMatchObject({ phase: "night", night: false, glow: "#38618C" });
     expect(skyFor(hm(3, 0), false).phase).toBe("night");
   });
   it("тёмная гамма — только по теме телефона, фаза — по часам", () => {
@@ -29,7 +29,7 @@ describe("свечение неба по времени суток", () => {
     expect(skyGlow("#FF9F0A", true)).toContain("rgba(255, 159, 10, 0.4)");
   });
   it("верх экрана — фон, подкрашенный свечением: под этот цвет красится полоса под часами", () => {
-    expect(skyTopColor("#5E5CE6", true)).toBe("#1A1A40");   // индиговая ночь на чёрном
-    expect(skyTopColor("#FF9F0A", false)).toBe("#F4E3CE");  // утро на светлом
+    expect(skyTopColor("#38618C", true)).toBe("#172A40");   // синий вечер на тёмно-синем
+    expect(skyTopColor("#FFE74C", false)).toBe("#FFFBE0");  // жёлтое утро на белом
   });
 });

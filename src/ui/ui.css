@@ -446,7 +446,7 @@ input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.08); }
 
 /* ─── Фотографии в меню, каталоге и карточке блюда ─────────────────── */
 .meal-photo {
-  width: 44px; height: 44px; object-fit: cover; border-radius: 10px;
+  width: 44px; height: 44px; object-fit: cover; border-radius: 50%;  /* круг — как тарелка в меню */
   background: var(--surface-2); flex: 0 0 auto;
 }
 /* Строка блюда в меню недели: время + фото + название + замена.

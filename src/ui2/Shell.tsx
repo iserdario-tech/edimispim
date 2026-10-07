@@ -4,7 +4,7 @@ import { QuickStart } from "../ui/QuickStart.js";
 import { syncPushContext } from "../ui/notifications.js";
 import { useNow } from "../ui/useNow.js";
 import { localMinutes } from "../today-date.js";
-import { skyFor, skyGlow, skyTopColor } from "../sky.js";
+import { skyFor, skyGlow, skyTopColor, bgHex } from "../sky.js";
 import { useDarkTheme } from "./useNight.js";
 import { tap } from "../ui/haptics.js";
 import { Day } from "./Day.js";
@@ -58,7 +58,7 @@ export function Shell() {
     r.classList.add("v2");
     r.classList.toggle("night", sky.night);
     // полоса под часами — того же цвета, что верх экрана: на «Сутках» это свечение, на остальных — фон
-    const top = tab === "day" ? skyTopColor(sky.glow, sky.night) : sky.night ? "#000000" : "#F2F2F7";
+    const top = tab === "day" ? skyTopColor(sky.glow, sky.night) : bgHex(sky.night);
     document.querySelectorAll('meta[name="theme-color"]').forEach(m => m.setAttribute("content", top));
   }, [sky.night, sky.glow, tab]);
 

@@ -1,14 +1,18 @@
 /**
  * Небо по времени суток — мягкое свечение сверху на «Сутках».
  *
- * Схема «Чёрный и система»: фон однотонный (чёрный или системный серый), а время суток
- * подсказывает только цвет свечения — оранжевое утро, голубой день, индиговый вечер.
+ * Фон однотонный (белый или тёмно-синий), а время суток подсказывает только цвет свечения —
+ * жёлтое утро (Banana Cream), голубой день (Cool Sky), синий вечер (Baltic Blue).
  * Тёмная гамма включается темой телефона, а не часами: светлая тема вечером остаётся светлой.
  */
 export type SkyPhase = "morning" | "day" | "night";
 
-/** Системные цвета Apple (тёмный вариант — он же читается и на светлом фоне). */
-const GLOW: Record<SkyPhase, string> = { morning: "#FF9F0A", day: "#64D2FF", night: "#5E5CE6" };
+/** Цвета палитры приложения. */
+const GLOW: Record<SkyPhase, string> = { morning: "#FFE74C", day: "#35A7FF", night: "#38618C" };
+
+/** Фон приложения — тот же, что --bg в sky.css. */
+export const BG_LIGHT = [255, 255, 255], BG_DARK = [10, 21, 34];
+export const bgHex = (dark: boolean) => (dark ? "#0A1522" : "#FFFFFF");
 
 const MORNING_FROM = 5 * 60, DAY_FROM = 11 * 60, EVENING_FROM = 18 * 60;
 
@@ -36,6 +40,6 @@ export function skyGlow(hex: string, dark: boolean): string {
  * 0.7 — доля свечения у верхнего края (центр эллипса на 70px выше экрана, радиус 380px).
  */
 export function skyTopColor(hex: string, dark: boolean): string {
-  const bg = dark ? [0, 0, 0] : [242, 242, 247], a = alpha(dark) * 0.7;
+  const bg = dark ? BG_DARK : BG_LIGHT, a = alpha(dark) * 0.7;
   return "#" + rgbOf(hex).map((v, i) => Math.round(bg[i]! + (v - bg[i]!) * a).toString(16).padStart(2, "0")).join("").toUpperCase();
 }

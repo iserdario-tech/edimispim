@@ -35,7 +35,8 @@ const hm = (min: number): string => {
 };
 const dur = (min: number): string => {
   const h = Math.floor(min / 60), m = Math.round(min % 60);
-  return h ? `${h} ч${m ? ` ${String(m).padStart(2, "0")}` : ""}` : `${m} мин`;
+  // неразрывные пробелы: число не отрывается от «ч» и «мин» при переносе строки
+  return h ? `${h}\u00a0ч${m ? `\u00a0${String(m).padStart(2, "0")}` : ""}` : `${m}\u00a0мин`;
 };
 
 export function dayWord(i: DayWordInput): DayWord {
@@ -45,7 +46,7 @@ export function dayWord(i: DayWordInput): DayWord {
   const dinnerPassed = i.dinnerMarked || (i.dinnerMin !== undefined && now >= i.dinnerMin);
   const toBed = i.bedMin - now;
   if (dinnerPassed && toBed < EVENING_BEFORE_BED) {
-    return { word: "Пора закругляться", sub: `спать в ${hm(i.bedMin)} · ${toBed > 0 ? `через ${dur(toBed)}` : "уже пора"}`, phase: "evening" };
+    return { word: "Пора закругляться", sub: `спать в ${hm(i.bedMin)} · ${toBed > 0 ? `через\u00a0${dur(toBed)}` : "уже пора"}`, phase: "evening" };
   }
 
   if (!i.logged && now < MORNING_UNTIL) return { word: "Доброе утро", sub: `встал в ${i.wokeHM}`, phase: "morning" };

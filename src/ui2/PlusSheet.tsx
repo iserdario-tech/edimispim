@@ -63,7 +63,7 @@ export function PlusSheet({ app, day, onClose, initial = null }: { app: AppModel
           <label className="s-field">Вес сейчас, кг
             <input type="text" inputMode="decimal" value={kg} placeholder={lastKg ? String(lastKg.kg) : "80.0"} autoFocus onChange={e => setKg(e.target.value)} />
           </label>
-          <p className="s-small">Утром, до еды. Одна цифра прыгает на полкило из-за воды — смотри на линию в «Я».</p>
+          <p className="s-small">Утром, до еды. Одна цифра прыгает на полкило из‑за воды — смотри на линию в «Я».</p>
           <button className="s-btn food" type="submit" disabled={!kg}>Записать</button>
         </form>
       )}

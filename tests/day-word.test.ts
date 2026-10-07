@@ -14,14 +14,14 @@ describe("слово дня", () => {
   });
   it("после плохой ночи — лёгкий день с длительностью сна", () => {
     expect(dayWord({ ...base, rough: true, sleptMin: 340 }))
-      .toEqual({ word: "Лёгкий день", sub: "ночь 5 ч 40 · план проще, калории те же", phase: "day" });
+      .toEqual({ word: "Лёгкий день", sub: "ночь 5 ч 40 · план проще, калории те же", phase: "day" });
   });
   it("плохая ночь без известного отбоя — без цифры", () => {
     expect(dayWord({ ...base, rough: true }).sub).toBe("ночь была плохой · план проще, калории те же");
   });
   it("после времени ужина, до отбоя меньше 3 часов — пора закругляться", () => {
     expect(dayWord({ ...base, nowMin: hm(21, 40) }))
-      .toEqual({ word: "Пора закругляться", sub: "спать в 23:30 · через 1 ч 50", phase: "evening" });
+      .toEqual({ word: "Пора закругляться", sub: "спать в 23:30 · через 1 ч 50", phase: "evening" });
   });
   it("ужин отмечен раньше времени — тоже вечер, если отбой близко", () => {
     expect(dayWord({ ...base, nowMin: hm(20, 40), dinnerMarked: true, dinnerMin: hm(21) }).phase).toBe("evening");
