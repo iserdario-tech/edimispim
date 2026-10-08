@@ -9,6 +9,7 @@
  * Запуск:
  *   npx vite-node scripts/add-recipes.ts scripts/drafts/<файл>.ts
  *   npx vite-node scripts/add-recipes.ts scripts/drafts/<файл>.ts --dry
+ *   npx vite-node scripts/add-recipes.ts scripts/drafts/<файл>.ts --replace   # пересобрать существующие id из источника
  *
  * Черновик — .ts-файл с `export const DRAFT: Draft[]`. Состав пишется как в источнике
  * (на `servings` порций), скрипт сам делит на одну порцию.
@@ -66,11 +67,13 @@ function checkProducts(drafts: Draft[]): string[] {
   return problems;
 }
 
-function checkMeta(drafts: Draft[], existing: Recipe[]): string[] {
+function checkMeta(drafts: Draft[], existing: Recipe[], replace = false): string[] {
   const problems: string[] = [];
   const taken = new Set(existing.map(r => r.id));
   for (const d of drafts) {
-    if (taken.has(d.id)) problems.push(`id «${d.id}» уже занят`);
+    // --replace: рецепт, написанный для приложения, пересобирается по найденному источнику — состав и ссылка
+    if (taken.has(d.id) && !replace) problems.push(`id «${d.id}» уже занят`);
+    if (!taken.has(d.id) && replace) problems.push(`id «${d.id}» нет в базе — нечего заменять`);
     taken.add(d.id);
     // либо настоящая ссылка, либо честно пусто — «почти похоже на ссылку» не принимаем
     if (d.src !== "" && !/^https?:\/\/\S+$/.test(d.src)) {
@@ -109,6 +112,7 @@ function build(d: Draft): Recipe {
 
 const draftPath = process.argv[2];
 const dry = process.argv.includes("--dry");
+const replace = process.argv.includes("--replace");
 if (!draftPath) {
   console.error("укажи файл черновика: npx vite-node scripts/add-recipes.ts scripts/drafts/<файл>.ts");
   process.exit(1);
@@ -116,7 +120,7 @@ if (!draftPath) {
   const { DRAFT } = (await import(resolve(draftPath)))  // путь, не file-URL: в URL пробелы папки становятся %20, и vite-node его не находит as { DRAFT: Draft[] };
   const existing = JSON.parse(readFileSync(RECIPES_PATH, "utf8")) as Recipe[];
 
-  const problems = [...checkMeta(DRAFT, existing), ...checkProducts(DRAFT)];
+  const problems = [...checkMeta(DRAFT, existing, replace), ...checkProducts(DRAFT)];
   if (problems.length) {
     console.error(`Не добавлено, сначала почини ${problems.length}:`);
     for (const p of problems) console.error("  ·", p);
@@ -125,11 +129,18 @@ if (!draftPath) {
 
   const added = DRAFT.map(build);
   for (const r of added) {
-    console.log(`${r.id}  ${r.kcal} ккал · белок ${r.protein_g} · клетчатка ${r.fiber_g}  ${r.name}`);
+    const was = replace ? existing.find(x => x.id === r.id) : undefined;
+    console.log(`${r.id}  ${r.kcal} ккал · белок ${r.protein_g} · клетчатка ${r.fiber_g}  ${r.name}${was ? `   (было ${was.kcal} ккал · белок ${was.protein_g})` : ""}`);
   }
 
   if (dry) {
     console.log("\n--dry: файл не тронут");
+  } else if (replace) {
+    // оценки, память меню и замены живут по id — он не меняется, меняются состав, макросы и ссылка
+    const byId = new Map(added.map(r => [r.id, r]));
+    const next = existing.map(r => byId.get(r.id) ?? r);
+    writeFileSync(RECIPES_PATH, JSON.stringify(next, null, 2) + "\n", "utf8");
+    console.log(`\nЗаменено ${added.length}. Дальше: npm test`);
   } else {
     writeFileSync(RECIPES_PATH, JSON.stringify([...existing, ...added], null, 2) + "\n", "utf8");
     console.log(`\nДобавлено ${added.length}, всего ${existing.length + added.length}. Дальше: npm test`);
