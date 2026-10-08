@@ -120,7 +120,7 @@ export function useDay(state: StoredState, now: Date) {
   const rough = !!logged && isRoughNight({ quality, targetSleepMin: profile.targetSleepMin, ...(sleptMin !== undefined ? { sleptMin } : {}) });
   const word = dayWord({
     nowMin, logged: !!logged, rough, mode, cheat, bedMin, wokeHM,
-    dinnerMarked: !!eaten?.marks.dinner, ...(dinner ? { dinnerMin: dinner.timeMin } : {}),
+    meals: (balanced?.day.meals ?? []).map(m => ({ slot: m.slot, timeMin: m.timeMin, marked: !!eaten?.marks[m.slot] })),
     ...(sleptMin !== undefined ? { sleptMin } : {}),
   });
 
