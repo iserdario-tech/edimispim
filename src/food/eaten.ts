@@ -99,6 +99,26 @@ export function setOwnText(cur: DayEaten, slot: Slot, food: WrittenFood): DayEat
   return { ...cur, ownText: { ...(cur.ownText ?? {}), [slot]: food } };
 }
 
+/**
+ * Что человек записывал своим за последние дни — чтобы повторить одним нажатием.
+ * Часто ест то же, что вчера: кофе с сырником у метро, творожок на работе. Без повторов, свежее первым.
+ */
+export function recentWritten(eaten: Record<string, DayEaten> | undefined, todayISO: string, days = 3, limit = 6): WrittenFood[] {
+  const out: WrittenFood[] = [];
+  const seen = new Set<string>();
+  const dates = Object.keys(eaten ?? {}).filter(d => d < todayISO).sort().reverse().slice(0, days);
+  for (const d of dates) {
+    const e = eaten![d]!;
+    for (const f of [...(e.extras ?? []), ...Object.values(e.ownText ?? {})]) {
+      const key = f.text.trim().toLowerCase();
+      if (!key || seen.has(key)) continue;
+      seen.add(key); out.push(f);
+      if (out.length >= limit) return out;
+    }
+  }
+  return out;
+}
+
 export function addExtra(cur: DayEaten | undefined, food: WrittenFood, planned: number): DayEaten {
   return { marks: {}, ...cur, planned: cur?.planned ?? planned, extras: [...(cur?.extras ?? []), food] };
 }

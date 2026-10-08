@@ -12,10 +12,12 @@ import type { WrittenFood } from "../food/eaten.js";
  * результат сначала показывается, и только по кнопке записывается: человек видит, из чего
  * сложилась цифра, и может переписать «кусок пиццы» на «два куска».
  */
-export function EatSheet({ title, onClose, onSave }: {
+export function EatSheet({ title, onClose, onSave, recent = [] }: {
   title: string;
   onClose: () => void;
   onSave: (food: WrittenFood) => void;
+  /** Своя еда за прошлые дни — повторить одним нажатием. */
+  recent?: WrittenFood[];
 }) {
   const [mode, setMode] = useState<"words" | "label">("words");
   const [text, setText] = useState("");
@@ -108,6 +110,18 @@ export function EatSheet({ title, onClose, onSave }: {
         Сфотографируй тарелку или напиши как есть: «гречка с котлетой», «два куска пиццы и чай». Коуч прикинет
         калории и белок. Фото и текст уходят только для оценки и нигде не хранятся.
       </p>
+      {recent.length > 0 && !photo && !result && (
+        <div className="eat-recent">
+          <span className="small muted">Как в прошлые дни:</span>
+          <div className="s-chips-row">
+            {recent.map((f, k) => (
+              <button key={k} className="s-pill" onClick={() => { tap(); onSave(f); onClose(); }}>
+                {f.text} · {f.kcal} ккал
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       {photo
         ? <div className="eat-photo-wrap">
             <img className="eat-photo" src={photo} alt="Фото еды" />
