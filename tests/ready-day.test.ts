@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { composeReadyDay, type ReadyItem } from "../src/food/ready";
+import { composeReadyDay, eachRU, type ReadyItem } from "../src/food/ready";
 import type { Targets } from "../src/food/types";
 
 const targets: Targets = { bmr: 1700, tdee: 2300, kcalTarget: 1800, proteinGTarget: 120, fiberGTarget: 30, tempoKgPerWeek: 0.5 };
@@ -49,6 +49,17 @@ describe("день без готовки", () => {
   it("обед и ужин на живом каталоге — из двух частей: белковое и гарнир", () => {
     const mains = [0, 1, 2].flatMap(off => composeReadyDay(targets, 4, off).picks.filter(p => p.slot === "lunch" || p.slot === "dinner"));
     expect(mains.filter(p => p.parts.length === 2).length).toBeGreaterThanOrEqual(mains.length - 1);
+  });
+  it("на двоих: цель общая, упаковки крупнее, подпись «каждому» понятна", () => {
+    const two = { ...targets, kcalTarget: 3400, proteinGTarget: 240 };
+    const d = composeReadyDay(two, 4, 3, undefined, 2);
+    expect(Math.abs(d.totals.kcal - 3400) / 3400).toBeLessThanOrEqual(0.08);
+    expect(d.totals.protein).toBeGreaterThanOrEqual(240 * 0.85);
+    for (const p of d.picks) for (const part of p.parts) expect([0.5, 1, 1.5, 2, 3, 4]).toContain(part.packs);
+    expect(eachRU(1, 2)).toBe("по половине каждому");
+    expect(eachRU(2, 2)).toBe("по одной каждому");
+    expect(eachRU(3, 2)).toBe("по полторы каждому");
+    expect(eachRU(1, 1)).toBe("");
   });
   it("пустой каталог — пустой день, а не ошибка", () => {
     expect(composeReadyDay(targets, 4, 0, []).picks).toEqual([]);

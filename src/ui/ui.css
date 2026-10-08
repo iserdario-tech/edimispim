@@ -573,3 +573,5 @@ input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.08); }
 .ready-list li { display: grid; gap: 2px; padding: var(--sp-2) var(--sp-3); border-radius: var(--r-control); background: var(--surface); }
 .ready-totals { margin: var(--sp-2) 0; font-size: var(--t-subhead); }
 .ready-part { display: grid; gap: 2px; margin-top: 4px; }
+.cart-links { display: grid; gap: var(--sp-1); justify-items: center; margin: var(--sp-2) 0; }
+.cart-links .s-btn { text-align: center; text-decoration: none; }

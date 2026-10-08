@@ -136,11 +136,24 @@ export async function findProduct(product: string): Promise<VVMatch | null> {
 
 export interface CartResult { links: { url: string; count: number }[]; found: number; missing: string[] }
 
+/**
+ * Ссылка на ту же корзину, но для приложения ВкусВилла на телефоне. В манифесте Apple у магазина
+ * (`/.well-known/apple-app-site-association`) приложению отдан путь `/mobile` — такие ссылки iOS
+ * открывает в приложении, если оно стоит. Документации по параметрам нет: это попытка, рядом
+ * всегда обычная ссылка на сайт. Если не сработает — убрать.
+ */
+export const appCartUrl = (webUrl: string): string => {
+  const id = /share_basket=(\d+)/.exec(webUrl)?.[1];
+  return id ? `https://vkusvill.ru/mobile?share_basket=${id}` : webUrl;
+};
+/** У магазина в описании «products 1..20» — режем по двадцать, хотя схема пускает до тридцати. */
+const CHUNK = 20;
+
 /** Ссылка на корзину из уже известных товаров (готовый день): по 30 товаров на ссылку. */
 export async function cartLinks(products: { xml_id: number; q: number }[]): Promise<CartResult["links"]> {
   const links: CartResult["links"] = [];
-  for (let i = 0; i < products.length; i += 30) {
-    const chunk = products.slice(i, i + 30);
+  for (let i = 0; i < products.length; i += CHUNK) {
+    const chunk = products.slice(i, i + CHUNK);
     const data = await paced(() => rpc<{ link: string }>("vkusvill_cart_link_create", { products: chunk }));
     links.push({ url: data.link, count: chunk.length });
   }
@@ -166,8 +179,8 @@ export async function buildCart(lines: BuyLine[], onProgress?: (i: number, n: nu
     products.push({ xml_id: m.xml_id, q: Math.min(40, q) });
   }
   const links: CartResult["links"] = [];
-  for (let i = 0; i < products.length; i += 30) {
-    const chunk = products.slice(i, i + 30);
+  for (let i = 0; i < products.length; i += CHUNK) {
+    const chunk = products.slice(i, i + CHUNK);
     const data = await paced(() => rpc<{ link: string }>("vkusvill_cart_link_create", { products: chunk }));
     links.push({ url: data.link, count: chunk.length });
   }
