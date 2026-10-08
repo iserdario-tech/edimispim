@@ -21,6 +21,9 @@ import { tap } from "../ui/haptics.js";
 import { cloudUpload, readCloud, type CloudInfo } from "../ui/cloudSync.js";
 import { CodeRestore } from "./CodeRestore.js";
 import { createPair, joinPair, leavePair, type PairInfo } from "../ui/pairSync.js";
+import { NumInput } from "../ui/FoodSetup.js";
+import { partnerTargetsFor } from "../ui/storage.js";
+import type { Activity, FoodProfile, Sex } from "../food/types.js";
 import { enableNotifications, readPushPrefs, writePushPrefs, syncPushContext, pushSubscribed, readPushSyncAt } from "../ui/notifications.js";
 import type { PushPrefs } from "../push.js";
 import type { Profile } from "../index.js";
@@ -52,10 +55,12 @@ const weekLabel = (monday: string) => {
  * (вес и расход, сон и режим, истории недель) открываются шторками: на них заходят
  * раз в неделю, а не каждое утро, поэтому им не место на главном пути.
  */
-export function Me({ app, day, cloud, onCloud, pair, onPair, onSettings, onStory, onRestore, onTour }: {
+export function Me({ app, day, cloud, onCloud, pair, onPair, partner, onPartner, onSettings, onStory, onRestore, onTour }: {
   app: AppModel; day: DayModel;
   cloud: CloudInfo | null; onCloud: (c: CloudInfo | null) => void;
   pair: PairInfo | null; onPair: (p: PairInfo | null) => void;
+  /** Партнёр без приложения — его данные для «на двоих». */
+  partner?: FoodProfile; onPartner: (p: FoodProfile | null) => void;
   onSettings: (which: "sleep" | "food") => void;
   onStory: (monday: string) => void;
   onRestore: () => void;
@@ -79,7 +84,7 @@ export function Me({ app, day, cloud, onCloud, pair, onPair, onSettings, onStory
     ["stories", "chart-2", "Итоги недель", "каждый понедельник — новый"],
     ["sleep-settings", "alarm", "Настройки сна", `подъём ${state.profile.anchorWakeHM}`],
     ["food-settings", "chef-hat", "Настройки еды", state.food ? `${state.food.mealCount} приёма · ${state.food.household && state.food.household > 1 ? `на ${state.food.household}` : "на себя"}` : "не настроено"],
-    ["pair", "users-group-rounded", "Готовим вдвоём", pair ? (pair.otherKcal ? `партнёр ≈${pair.otherKcal} ккал/день` : "ждём партнёра") : "общее меню, порции свои"],
+    ["pair", "users-group-rounded", "Готовим вдвоём", pair ? (pair.otherKcal ? `партнёр ≈${pair.otherKcal} ккал/день` : "ждём партнёра") : partner ? `партнёр ≈${partnerTargetsFor(partner).kcalTarget} ккал/день` : "общее меню, порции свои"],
     ["backup", "cloud-download", "Копия данных", cloud?.at ? `в облаке · ${cloud.at.split("-").reverse().slice(0, 2).join(".")}` : app.backupAt ? `файлом · ${app.backupAt.split("-").reverse().slice(0, 2).join(".")}` : "ещё не делал"],
     ["notif", "bell", "Напоминания", notifOn() ? "заранее: еда, кофе, сон" : "выключены"],
     ["theme", "palette", "Оформление", { auto: "как в системе", light: "светлое", dark: "тёмное" }[readTheme()]],
@@ -157,7 +162,7 @@ export function Me({ app, day, cloud, onCloud, pair, onPair, onSettings, onStory
         </Sheet>
       )}
       {sheet === "theme" && <ThemeSheet onClose={() => setSheet(null)} />}
-      {sheet === "pair" && <PairSheet pair={pair} onPair={onPair} onClose={() => setSheet(null)} />}
+      {sheet === "pair" && <PairSheet pair={pair} onPair={onPair} partner={partner} onPartner={onPartner} onClose={() => setSheet(null)} />}
       {sheet === "notif" && <NotifSheet profile={state.profile} onClose={() => setSheet(null)} />}
       {sheet === "about" && (
         <Sheet title="О приложении" onClose={() => setSheet(null)}>
@@ -336,7 +341,10 @@ function SleepSheet({ app, day, records, onClose }: { app: AppModel; day: DayMod
  * «Готовим вдвоём»: меню общее (его задаёт тот, кто создал пару), порции у каждого свои
  * по его калориям, покупки — на обоих, галочки «взял» видны обоим.
  */
-function PairSheet({ pair, onPair, onClose }: { pair: PairInfo | null; onPair: (p: PairInfo | null) => void; onClose: () => void }) {
+function PairSheet({ pair, onPair, partner, onPartner, onClose }: {
+  pair: PairInfo | null; onPair: (p: PairInfo | null) => void;
+  partner?: FoodProfile; onPartner: (p: FoodProfile | null) => void; onClose: () => void;
+}) {
   const [code, setCode] = useState("");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
@@ -392,7 +400,48 @@ function PairSheet({ pair, onPair, onClose }: { pair: PairInfo | null; onPair: (
         {pair.role === "a" && <p className="s-small">Код пары: {pair.code}</p>}
       </>}
       {pair && <button className="s-btn ghost s-wide" onClick={() => { if (window.confirm("Выйти из пары? Меню снова станет только твоим.")) { leavePair(); onPair(null); } }}>Выйти из пары</button>}
+      {!pair?.otherKcal && <PartnerForm partner={partner} onPartner={onPartner} />}
     </Sheet>
+  );
+}
+
+/**
+ * Партнёр без приложения: пол, возраст, рост, вес, активность — цель считается той же формулой, что своя.
+ * Нужна «Дню без готовки» на двоих (обед и ужин общие, свои приёмы — каждому по своей цели) и покупкам на двоих.
+ */
+function PartnerForm({ partner, onPartner }: { partner?: FoodProfile; onPartner: (p: FoodProfile | null) => void }) {
+  const [sex, setSex] = useState<Sex>(partner?.sex ?? "f");
+  const [age, setAge] = useState(partner?.age ?? 30);
+  const [heightCm, setHeightCm] = useState(partner?.heightCm ?? 165);
+  const [weightKg, setWeightKg] = useState(partner?.weightKg ?? 65);
+  const [goalWeightKg, setGoalWeightKg] = useState(partner?.goalWeightKg ?? partner?.weightKg ?? 60);
+  const [activity, setActivity] = useState<Activity>(partner?.activity ?? "low");
+  const [saved, setSaved] = useState("");
+  const t = partnerTargetsFor({ sex, age, heightCm, weightKg, goalWeightKg, activity });
+  return (
+    <>
+      <h3 className="s-why-h">{partner ? "Партнёр без приложения" : "Партнёр без приложения?"}</h3>
+      <p className="s-small">Заполни данные партнёра — «День без готовки» соберётся на двоих с порциями каждому по его цели, а покупки посчитаются на обоих. Цель считается той же формулой, что твоя.</p>
+      <div className="chips">
+        <button className={sex === "f" ? "chip on" : "chip"} onClick={() => setSex("f")}>Женщина</button>
+        <button className={sex === "m" ? "chip on" : "chip"} onClick={() => setSex("m")}>Мужчина</button>
+      </div>
+      <label className="fld small">Возраст<NumInput inputMode="numeric" value={age} onChange={setAge} /></label>
+      <label className="fld small">Рост, см<NumInput inputMode="numeric" value={heightCm} onChange={setHeightCm} /></label>
+      <label className="fld small">Вес сейчас, кг<NumInput value={weightKg} onChange={setWeightKg} /></label>
+      <label className="fld small">Цель по весу, кг<NumInput value={goalWeightKg} onChange={setGoalWeightKg} /></label>
+      <div className="chips chips-col">
+        <button className={activity === "low" ? "chip on" : "chip"} onClick={() => setActivity("low")}>Сидит почти весь день</button>
+        <button className={activity === "medium" ? "chip on" : "chip"} onClick={() => setActivity("medium")}>Ходит понемногу</button>
+        <button className={activity === "high" ? "chip on" : "chip"} onClick={() => setActivity("high")}>Весь день на ногах</button>
+      </div>
+      <p className="s-small">Выходит {t.kcalTarget} ккал и {t.proteinGTarget} г белка в день.</p>
+      <div className="s-sheet-actions">
+        <button className="s-btn food" onClick={() => { tap(); onPartner({ sex, age, heightCm, weightKg, goalWeightKg, activity }); setSaved("Сохранено."); }}>Сохранить</button>
+        {partner && <button className="s-btn ghost" onClick={() => { tap(); onPartner(null); setSaved("Убрано."); }}>Убрать</button>}
+      </div>
+      {saved && <p className="s-small">{saved}</p>}
+    </>
   );
 }
 
