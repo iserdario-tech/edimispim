@@ -82,6 +82,26 @@ def grams(it):
     if m: return float(m.group(1).replace(",", ".")) * (1000 if m.group(2).lower() in ("кг", "л") else 1)
     return None
 
+# Здравый смысл после поиска: запрос «гречка» приносит «Говядину с гречкой» (это обед, не завтрак) и «Курицу с гречкой»
+# (это целое блюдо, а не гарнир). Размечаем по названию: белок + гарнир = полное блюдо (meal), крупа без белка = гарнир,
+# сэндвичи и роллы = завтрак или обед. Паста, плов, рис, лапша — только в обед; картошка, гречка, кускус — и на ужин.
+PROT = re.compile(r"курин|куриц|цыпл|говяд|телят|индейк|свин|рыб|лосос|форел|треск|тунц|горбуш|кет[аой]|с[её]мг|минтай|угр[её]м|креветк|кальмар|котлет|фрикад|бризол|тефтел|[её]жик|бедр|грудк|филе|стейк|шницел|биточ|митбол|печен[ьи]\b|бекон|пастрами|ветчин|мяс", re.I)
+CARB = re.compile(r"паст[аы]|пенне|фарфалле|тортильони|спагетти|тальятелле|тальолини|орзо|ризони|птитим|лапш|плов|\bрис\b|рис[ао]м|гречк|картоф|кускус|булгур|киноа|перлов|макарон|ньокки|лазань|пюре|каша", re.I)
+HEAVY = re.compile(r"паст[аы]|пенне|фарфалле|тортильони|спагетти|тальятелле|тальолини|орзо|ризони|птитим|лапш|плов|\bрис\b|рис[ао]м|макарон|ньокки|лазань", re.I)
+VEG = re.compile(r"овощ|цукини|кабач|брокколи|шпинат|капуст|тыкв|батат|гриб|фасол|нут\b|чечевиц|стручк", re.I)
+SANDWICH = re.compile(r"^(сэндвич|ролл|бутерброд|круассан|чиабатта|бургер|шаурм|хот-дог|лаваш|пита|кимпаб|клаб-сэндвич|мини-чиабатта|тостовый)", re.I)
+SWEET = re.compile(r"кейк|кекс|пирож|торт(?![а-яё])|маффин|брауни|чизкейк|штрудел|эклер|тирамису", re.I)
+def retag(name, slots, kind):
+    if kind in ("dessert", "fruit", "nuts", "bread", "cottage", "yogurt", "soup"): return slots, kind
+    if SWEET.search(name): return ["dessert", "snack"], "dessert"
+    if SANDWICH.search(name): return ["breakfast", "lunch"], "sandwich"
+    if kind == "porridge" and not PROT.search(name) and not re.search(r"кускус|гречка отварная|мультизлаковая с", name, re.I): return slots, kind
+    if kind == "eggs" and not CARB.search(name): return slots, kind
+    if PROT.search(name) and CARB.search(name): return (["lunch"] if HEAVY.search(name) else ["lunch", "dinner"]), "meal"
+    if PROT.search(name) and VEG.search(name) and kind != "salad": return ["lunch", "dinner"], "meal"
+    if not PROT.search(name) and CARB.search(name) and kind in ("salad", "veg", "grain", "porridge"): return (["lunch"] if HEAVY.search(name) else ["lunch", "dinner"]), "grain"
+    return slots, kind
+
 out, seen = [], set()
 for q, slots, kind, pages in QUERIES:
     for page in range(1, pages + 1):
@@ -96,8 +116,9 @@ for q, slots, kind, pages in QUERIES:
             kcal, prot, fat, carbs = n
             if kcal <= 0 or kcal > 700: continue
             seen.add(it["xml_id"])
+            slots_i, kind_i = retag(name, slots, kind)
             out.append({"id": it["id"], "xml_id": it["xml_id"], "name": name, "grams": round(g), "kcal": kcal, "protein": prot, "fat": fat,
-                        "carbs": carbs, "fiber": FIBER[kind], "price": p, "slots": slots, "kind": kind, "url": it.get("url", "")})
+                        "carbs": carbs, "fiber": FIBER[kind_i], "price": p, "slots": slots_i, "kind": kind_i, "url": it.get("url", "")})
             if kind == "fruit": out.pop(); seen.discard(it["xml_id"])   # «фрукты» из поиска — конфеты и желе; свежее берём отдельно ниже
         time.sleep(1.1)
         if not data.get("meta", {}).get("has_more"): break
