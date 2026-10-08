@@ -38,9 +38,10 @@ const per = (p: ReadyPart, k: Nutrient) => (p.item[k] * p.item.grams * p.packs) 
 const kcalOf = (parts: ReadyPart[]) => parts.reduce((s, p) => s + per(p, "kcal"), 0);
 const proteinOf = (parts: ReadyPart[]) => parts.reduce((s, p) => s + per(p, "protein"), 0);
 
-const PROTEIN_KINDS = new Set(["meat", "fish", "eggs"]);
+/** «meal» — полное блюдо с белком (котлета с пюре, плов с курицей): основа приёма, к ней только лёгкий гарнир. */
+const PROTEIN_KINDS = new Set(["meat", "fish", "eggs", "meal"]);
 const SIDE_KINDS = new Set(["grain", "veg", "salad", "soup"]);
-const BREAKFAST_BASE = new Set(["cottage", "eggs", "porridge", "yogurt"]);
+const BREAKFAST_BASE = new Set(["cottage", "eggs", "porridge", "yogurt", "sandwich"]);
 const BREAKFAST_ADD = new Set(["fruit", "bread", "cottage", "yogurt"]);   // каша + творожок, омлет + фрукт
 const MAIN_SLOTS = new Set<Slot>(["lunch", "dinner"]);
 /** Белка в основном приёме «в меру»: больше — лишние калории из мяса вместо овощей и круп. */
@@ -63,6 +64,31 @@ const fatOk = (it: ReadyItem) => it.fat * 9 <= it.kcal * FAT_SHARE_MAX;
 /** «Семейство» блюда — первое слово названия: «Сэндвич с тунцом» и «Сэндвич ролл» в один день — это два сэндвича. */
 export const familyOf = (it: ReadyItem) => it.name.toLowerCase().replace(/["«»]/g, "").split(/\s+/)[0] ?? it.name;
 
+/** Чей белок: курица в обед и курица на ужин — не разнообразие, даже если блюда разные. */
+export const animalOf = (name: string): string => {
+  const n = name.toLowerCase();
+  if (/индейк/.test(n)) return "turkey";
+  if (/курин|куриц|цыпл|грудк/.test(n)) return "chicken";
+  if (/говяд|телят/.test(n)) return "beef";
+  if (/свин/.test(n)) return "pork";
+  if (/печен[ьи]/.test(n)) return "liver";
+  if (/рыб|лосос|форел|треск|тунц|горбуш|с[её]мг|минтай|кальмар|креветк|сельд|скумбр|судак|окун/.test(n)) return "fish";
+  if (/омлет|яйц|яич/.test(n)) return "eggs";
+  return "other";
+};
+
+/** Не больше `per` на ключ и не больше `max` всего, в исходном порядке. */
+function spread<T>(list: T[], key: (x: T) => string, per: number, max: number): T[] {
+  const n = new Map<string, number>(); const out: T[] = [];
+  for (const x of list) {
+    const k = key(x); const c = n.get(k) ?? 0;
+    if (c >= per) continue;
+    n.set(k, c + 1); out.push(x);
+    if (out.length >= max) break;
+  }
+  return out;
+}
+
 /** На скольких человек собирается день: вдвоём упаковок больше, а «в меру» белка — на двоих. */
 let persons = 1;
 
@@ -75,9 +101,12 @@ function parts(items: ReadyItem[], slot: Slot, lo: number, hi: number, used: Set
   for (const it of items) {
     if (!it.slots.includes(slot) || used.has(it.xml_id) || families?.has(familyOf(it))) continue;
     if (kinds && !kinds.has(it.kind)) continue;
+    // курица в обед — на ужин основа не из курицы (салат с курицей гарниром допустим: иначе ужину не из чего собраться)
+    if (MAIN_SLOTS.has(slot) && PROTEIN_KINDS.has(it.kind) && animalOf(it.name) !== "other" && families?.has("animal:" + animalOf(it.name))) continue;
     // жирные блюда — не в обед и ужин; на завтраке омлет с сыром допустим, жиры дня держит оценка варианта
     if (MAIN_SLOTS.has(slot) && !fatOk(it)) continue;
-    for (const packs of it.grams >= HALF_FROM ? steps : steps.filter(x => Number.isInteger(x))) {
+    // хлебцы — всегда можно половину (пачка хранится), но не больше одной: четыре пачки хлебцев — не перекус
+    for (const packs of it.kind === "bread" ? (persons > 1 ? [1] : [0.5, 1]) : it.grams >= HALF_FROM ? steps : steps.filter(x => Number.isInteger(x))) {
       if (it.grams * packs > GRAMS_MAX * persons) break;
       const p = { item: it, packs };
       const k = per(p, "kcal");
@@ -108,14 +137,22 @@ function options(items: ReadyItem[], slot: Slot, target: number, used: Set<numbe
   const pmin = (PROTEIN_MIN[slot] ?? 0) * persons;
   const out: ReadyPart[][] = [];
   const main = MAIN_SLOTS.has(slot);
+  // ужин легче обеда не фильтром здесь, а слотами каталога: паста, плов и рис размечены «только обед»
   const [baseKinds, addKinds] = main ? [PROTEIN_KINDS, SIDE_KINDS] : slot === "breakfast" ? [BREAKFAST_BASE, BREAKFAST_ADD] : [undefined, undefined];
   if (baseKinds && addKinds) {
-    const base = parts(items, slot, target * 0.3, target * 0.8, used, baseKinds, main ? pmin * 0.75 : 0, families)
-      .sort((a, b) => Math.abs(per(a, "kcal") - target * 0.55) - Math.abs(per(b, "kcal") - target * 0.55)).slice(0, 8);
-    const add = parts(items, slot, target * 0.15, target * 0.65, used, addKinds, 0, families)
-      .filter(p => p.item.fat * 9 <= p.item.kcal * SIDE_FAT_MAX).sort((a, b) => b.item.fiber - a.item.fiber).slice(0, 10);
+    // основы — по две-три на тип (творог, яйца, каша, бутерброд) или семейство, иначе восьмёрка ближайших по
+    // калориям оказывалась одними сэндвичами, и завтрак три дня подряд был одним и тем же
+    const base = spread(parts(items, slot, target * 0.3, target * 0.8, used, baseKinds, main ? pmin * 0.75 : 0, families)
+      .sort((a, b) => Math.abs(per(a, "kcal") - target * 0.55) - Math.abs(per(b, "kcal") - target * 0.55)), p => slot === "breakfast" ? p.item.kind : familyOf(p.item), 3, 12);
+    // гарниры — клетчатка важна, но не десять паровых овощей подряд: по три на семейство, шестнадцать всего
+    const add = spread(parts(items, slot, target * 0.15, target * 0.65, used, addKinds, 0, families)
+      .filter(p => p.item.fat * 9 <= p.item.kcal * SIDE_FAT_MAX).sort((a, b) => b.item.fiber - a.item.fiber), p => familyOf(p.item), 3, 16);
     for (const b of base) for (const a of add) {
       if (b.item.xml_id === a.item.xml_id || familyOf(b.item) === familyOf(a.item)) continue;
+      // к полному блюду (плов с курицей, котлета с пюре) — только овощи, салат или суп, а не вторая крупа
+      if (b.item.kind === "meal" && a.item.kind === "grain") continue;
+      // курица с курицей в одном приёме — тоже не разнообразие
+      if (main && animalOf(b.item.name) !== "other" && animalOf(b.item.name) === animalOf(a.item.name)) continue;
       const pair = [b, a];
       if (kcalOf(pair) < target * 0.75 || kcalOf(pair) > target * 1.25 || proteinOf(pair) < pmin) continue;
       out.push(pair);
@@ -128,39 +165,59 @@ function options(items: ReadyItem[], slot: Slot, target: number, used: Set<numbe
 
 /** Из лучших — по одному на семейство первой части: иначе десятка лучших завтраков — десять творогов с хлебцами. */
 const take = (list: ReadyPart[][], offset: number, i: number, slot: Slot): ReadyPart[] | undefined => {
-  const seen = new Set<string>();
-  const top: ReadyPart[][] = [];
+  // семейства — чтобы день на день не приходился один тип (творог, творог, творог); внутри семейства —
+  // до четырёх лучших, иначе «яйца» всегда значили один и тот же омлет
+  const groups = new Map<string, ReadyPart[][]>();
   for (const o of list) {
-    // завтрак чередуется по типу основы (творог, яйца, каша, йогурт), основные — по семейству блюда
+    // завтрак чередуется по типу основы (творог, яйца, каша, йогурт, бутерброд), основные — по семейству блюда
     const fam = slot === "breakfast" ? o[0]!.item.kind : familyOf(o[0]!.item);
-    if (seen.has(fam)) continue;
-    seen.add(fam); top.push(o);
-    if (top.length >= VARIETY) break;
+    if (!groups.has(fam)) { if (groups.size >= VARIETY) continue; groups.set(fam, []); }
+    // внутри семейства — разные гарниры, иначе четыре варианта «филе» шли с одним и тем же боулом
+    const g = groups.get(fam)!;
+    if (g.length < 4 && !g.some(x => x[1] && o[1] && familyOf(x[1].item) === familyOf(o[1].item))) g.push(o);
   }
+  const fams = [...groups.values()];
+  if (!fams.length) return undefined;
   // не «offset % n»: при двух-трёх вариантах соседние дни попадали в один и тот же; хэш раскидывает ровнее
-  return top.length ? top[(Math.imul(offset, 2654435761) + i * 40503 >>> 0) % top.length] : undefined;
+  const h = (Math.imul(offset, 2654435761) + i * 40503) >>> 0;
+  const g = fams[h % fams.length]!;
+  return g[(h >>> 8) % g.length];
 };
 
 /**
  * День из готовой еды. `targets` — цель на всех едоков вместе (на двоих — сумма целей), `people` — сколько их:
  * от этого зависят размеры упаковок и «в меру» белка. Блюда общие, делятся поровну.
  */
-export function composeReadyDay(targets: Targets, count: MealCount, offset = 0, items: ReadyItem[] = READY.items, people = 1): ReadyDay {
+export function composeReadyDay(targets: Targets, count: MealCount, offset = 0, items: ReadyItem[] = READY.items, people = 1, chain = true): ReadyDay {
   persons = people;
   const shares = slotShares(count);
   const used = new Set<number>();
   const families = new Set<string>();   // «филе куриной» дважды в день — не разнообразие
   const picks: ReadyPick[] = [];
-  const mark = (ps: ReadyPart[], on: boolean) => ps.forEach(p => { on ? used.add(p.item.xml_id) : used.delete(p.item.xml_id); on ? families.add(familyOf(p.item)) : families.delete(familyOf(p.item)); });
+  const mark = (ps: ReadyPart[], on: boolean, slot: Slot) => ps.forEach(p => {
+    const tags = [familyOf(p.item), ...(MAIN_SLOTS.has(slot) && PROTEIN_KINDS.has(p.item.kind) && animalOf(p.item.name) !== "other" ? ["animal:" + animalOf(p.item.name)] : [])];
+    if (on) { used.add(p.item.xml_id); tags.forEach(t => families.add(t)); } else { used.delete(p.item.xml_id); tags.forEach(t => families.delete(t)); }
+  });
+  // вчерашние завтрак, обед и ужин сегодня не повторяются. «Вчера» — ровно тот день, который человек видел: цепочка
+  // считается от якоря (каждый седьмой день), дальше каждый день смотрит на предыдущий. Якорный день смотрит на
+  // «вчера» без его собственной оглядки — глубина не больше семи, расчёт миллисекунды, повтор возможен только на
+  // стыке недель. Если без вчерашнего приём не собирается (маленький каталог) — берём как есть: повтор лучше пустого ужина.
+  const avoid = new Set<number>();
+  if (chain) {
+    const anchor = ((offset % 7) + 7) % 7 === 0;
+    for (const p of composeReadyDay(targets, count, offset - 1, items, people, !anchor).picks) if (p.slot !== "snack" && p.slot !== "dessert") p.parts.forEach(x => avoid.add(x.item.xml_id));
+    persons = people;
+  }
+  const pool = () => avoid.size ? new Set([...used, ...avoid]) : used;
   // недобор или перебор прошлых приёмов переносится на следующий: так день сходится без переборки в конце
   let carry = 0;
   ORDER.forEach((slot, i) => {
     const share = shares[slot];
     if (!share) return;
     const want = targets.kcalTarget * share + carry;
-    const chosen = take(options(items, slot, want, used, families), offset, i, slot);
+    const chosen = take(options(items, slot, want, pool(), families), offset, i, slot) ?? (avoid.size ? take(options(items, slot, want, used, families), offset, i, slot) : undefined);
     if (!chosen) return;
-    mark(chosen, true);
+    mark(chosen, true, slot);
     picks.push({ slot, parts: chosen });
     carry = want - kcalOf(chosen);
   });
@@ -169,27 +226,28 @@ export function composeReadyDay(targets: Targets, count: MealCount, offset = 0, 
   const dayProtein = () => picks.reduce((s, p) => s + proteinOf(p.parts), 0);
 
   // подгонка под калории дня: приём, замена которого лучше всего гасит перекос, перебирается
-  for (let guard = 0; guard < 4; guard++) {
+  for (let guard = 0; guard < 6; guard++) {
     const dev = dayKcal() - targets.kcalTarget;
     if (Math.abs(dev) <= targets.kcalTarget * 0.08) break;
     const found: { idx: number; parts: ReadyPart[]; gain: number }[] = [];
     picks.forEach((p, idx) => {
-      mark(p.parts, false);
+      mark(p.parts, false, p.slot);
       const want = kcalOf(p.parts) - dev;
-      for (const alt of options(items, p.slot, Math.max(want, targets.kcalTarget * (shares[p.slot] ?? 0.2) * 0.5), used, families).slice(0, VARIETY)) {
+      for (const alt of options(items, p.slot, Math.max(want, targets.kcalTarget * (shares[p.slot] ?? 0.2) * 0.5), pool(), families).slice(0, VARIETY * 2)) {
         const gain = Math.abs(dev) - Math.abs(dev - kcalOf(p.parts) + kcalOf(alt));
         if (gain > 0) found.push({ idx, parts: alt, gain });
       }
-      mark(p.parts, true);
+      mark(p.parts, true, p.slot);
     });
     if (!found.length) break;
     // чиним тот приём, который дальше всех от своей доли, а не тот, где замена выгоднее всего:
     // иначе подгонка каждый день переставляла завтрак на один и тот же творог с хлебцами
     const devOf = (p: ReadyPick) => Math.abs(kcalOf(p.parts) - targets.kcalTarget * (shares[p.slot] ?? 0.2));
     const culprit = [...picks.keys()].filter(idx => found.some(f => f.idx === idx)).sort((a, b) => devOf(picks[b]!) - devOf(picks[a]!))[0]!;
-    const good = found.filter(f => f.idx === culprit).sort((a, b) => b.gain - a.gain).slice(0, 4);
+    // четыре кандидата — четырёх разных семейств: иначе подгонка каждый день возвращала один и тот же омлет
+    const good = spread(found.filter(f => f.idx === culprit).sort((a, b) => b.gain - a.gain), f => picks[culprit]!.slot === "breakfast" ? f.parts[0]!.item.kind : familyOf(f.parts[0]!.item), 1, 4);
     const b = good[(offset + guard) % good.length]!;
-    mark(picks[b.idx]!.parts, false); mark(b.parts, true);
+    mark(picks[b.idx]!.parts, false, picks[b.idx]!.slot); mark(b.parts, true, picks[b.idx]!.slot);
     picks[b.idx] = { slot: picks[b.idx]!.slot, parts: b.parts };
   }
 
@@ -198,11 +256,13 @@ export function composeReadyDay(targets: Targets, count: MealCount, offset = 0, 
     const mains = picks.map((p, idx) => ({ p, idx })).filter(x => (PROTEIN_MIN[x.p.slot] ?? 0) > 0)
       .sort((a, b) => proteinOf(a.p.parts) - proteinOf(b.p.parts));
     for (const { p, idx } of mains) {
-      mark(p.parts, false);
-      const alt = options(items, p.slot, targets.kcalTarget * (shares[p.slot] ?? 0.25), used, families).slice(0, VARIETY * 2)
-        .sort((a, b) => proteinOf(b) - proteinOf(a))[0];
-      if (!alt || proteinOf(alt) <= proteinOf(p.parts)) { mark(p.parts, true); continue; }
-      mark(alt, true);
+      mark(p.parts, false, p.slot);
+      // из четырёх самых белковых разных семейств — по хэшу дня, иначе добор каждый день ставил один и тот же омлет
+      const best = spread(options(items, p.slot, targets.kcalTarget * (shares[p.slot] ?? 0.25), pool(), families).slice(0, VARIETY * 3)
+        .sort((a, b) => proteinOf(b) - proteinOf(a)), o => p.slot === "breakfast" ? o[0]!.item.kind : familyOf(o[0]!.item), 1, 4);
+      const alt = best.length ? best[((Math.imul(offset, 2654435761) + idx * 7919) >>> 0) % best.length] : undefined;
+      if (!alt || proteinOf(alt) <= proteinOf(p.parts)) { mark(p.parts, true, p.slot); continue; }
+      mark(alt, true, p.slot);
       picks[idx] = { slot: p.slot, parts: alt };
       if (dayProtein() >= targets.proteinGTarget * 0.85) break;
     }
