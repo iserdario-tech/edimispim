@@ -6,6 +6,7 @@ import type { Slot } from "../food/types.js";
 import type { DayModel } from "./useDay.js";
 import { Ico } from "./Ico.js";
 import type { AppModel } from "./Shell.js";
+import { recentWritten } from "../food/eaten.js";
 
 const SLOT_RU: Record<string, string> = { breakfast: "завтрак", lunch: "обед", dinner: "ужин", dessert: "сладкое", snack: "перекус" };
 
@@ -27,7 +28,7 @@ export function PlusSheet({ app, day, onClose, initial = null }: { app: AppModel
   const planned = day.foodDay?.day.meals.length ?? 0;
 
   if (mode === "write") {
-    return <EatSheet title="Что ты съел?" onClose={onClose}
+    return <EatSheet title="Что ты съел?" onClose={onClose} recent={recentWritten(app.state!.eaten, day.today)}
       onSave={food => a.extraAdd(day.today, food, planned)} />;
   }
 

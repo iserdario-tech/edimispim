@@ -6,6 +6,7 @@ import { Sheet } from "../ui/Sheet.js";
 import { MealIngredients } from "../ui/Grocery.js";
 import { SwipeRow } from "../ui/SwipeRow.js";
 import { EatSheet } from "../ui/EatSheet.js";
+import { recentWritten } from "../food/eaten.js";
 import { tap } from "../ui/haptics.js";
 import type { TimelineRow } from "../ui/mealRows.js";
 import type { DayModel } from "./useDay.js";
@@ -341,7 +342,7 @@ export function Day({ app, day, now, onWhy, story, code }: { app: AppModel; day:
         </Sheet>
       )}
       {writing && (
-        <EatSheet title="Что ты съел вместо плана?" onClose={() => setWriting(null)}
+        <EatSheet title="Что ты съел вместо плана?" onClose={() => setWriting(null)} recent={recentWritten(app.state!.eaten, day.today)}
           onSave={food => a.ownWritten(day.today, writing, food)} />
       )}
     </main>
