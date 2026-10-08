@@ -69,7 +69,9 @@ let persons = 1;
 /** Варианты одной части приёма: товар и число упаковок, укладывающиеся в калории [lo, hi]. */
 function parts(items: ReadyItem[], slot: Slot, lo: number, hi: number, used: Set<number>, kinds?: Set<string>, proteinMin = 0, families?: Set<string>): ReadyPart[] {
   const out: ReadyPart[] = [];
-  const steps = persons > 1 ? [0.5, 1, 1.5, 2, 3, 4] : [0.5, 1, 2];
+  // вдвоём упаковка либо пополам, либо каждому своя, либо по две: «1½ упаковки · по три четверти» никто не купит
+  // основное блюдо — не больше упаковки на человека: «по две грудки каждому» никто не ест
+  const steps = persons > 1 ? (MAIN_SLOTS.has(slot) ? [1, 2] : [1, 2, 4]) : [0.5, 1, 2];
   for (const it of items) {
     if (!it.slots.includes(slot) || used.has(it.xml_id) || families?.has(familyOf(it))) continue;
     if (kinds && !kinds.has(it.kind)) continue;
