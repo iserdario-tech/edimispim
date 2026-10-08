@@ -9,7 +9,7 @@ import { readLS, writeLS, SHOP_KEY } from "../ui/localStore.js";
 import { tap } from "../ui/haptics.js";
 import { Ico } from "./Ico.js";
 import type { WeekModel } from "./useWeek.js";
-import { buildCart, appCartUrl, type CartResult } from "../ui/vvCart.js";
+import { buildCart, appProductUrl, type CartResult } from "../ui/vvCart.js";
 
 const DOW = ["вс", "пн", "вт", "ср", "чт", "пт", "сб"];
 const BUNCH: Record<string, string> = { one: "пучок", few: "пучка", many: "пучков" };
@@ -107,19 +107,28 @@ export function Shop({ week, onBack }: { week: WeekModel; onBack: () => void }) 
           <button className="s-btn ghost s-wide" disabled={!!cart && "at" in cart} onClick={async () => {
             tap();
             try { setCart(await buildCart(lines, (at, n) => setCart({ at, n }))); }
-            catch { setCart({ links: [], found: 0, missing: [] }); setNote("Магазин не ответил. Попробуй ещё раз."); }
+            catch { setCart({ links: [], found: 0, missing: [], items: [] }); setNote("Магазин не ответил. Попробуй ещё раз."); }
           }}>{cart && "at" in cart ? `Ищу ${cart.at} из ${cart.n}…` : "Собрать корзину во ВкусВилле"}</button>
           {cart && "links" in cart && (
             <>
               {cart.links.map((l, k) => (
-                <div key={k} className="cart-links">
-                  <a className="s-btn food s-wide" href={appCartUrl(l.url)} target="_blank" rel="noopener noreferrer">
-                    Открыть в приложении ВкусВилла{cart.links.length > 1 ? ` · часть ${k + 1}` : ""} · {l.count} {plural(l.count, GOODS)}
-                  </a>
-                  <a className="linkbtn small" href={l.url} target="_blank" rel="noopener noreferrer">или на сайте vkusvill.ru</a>
-                </div>
+                <a key={k} className="s-btn food s-wide" href={l.url} target="_blank" rel="noopener noreferrer">
+                  Открыть корзину на сайте{cart.links.length > 1 ? ` · часть ${k + 1}` : ""} · {l.count} {plural(l.count, GOODS)}
+                </a>
               ))}
-              {cart.links.length > 0 && <p className="s-small">Если приложение не открылось с корзиной — открой на сайте, корзина там та же.</p>}
+              {cart.items.length > 0 && (
+                <>
+                  <p className="s-small">На сайте нужен вход. В приложении ВкусВилла — по одному: открой товар, нажми «В корзину».</p>
+                  <ul className="cart-items">
+                    {cart.items.map(it => (
+                      <li key={it.xml_id}>
+                        <a href={appProductUrl(it.xml_id)} target="_blank" rel="noopener noreferrer">{it.name}</a>
+                        <span className="s-small"> · {it.weighed ? `${it.q} кг` : `${it.q} шт`}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
               {cart.missing.length > 0 && <p className="s-small">Не нашёл в магазине: {cart.missing.join(", ")} — добавь руками.</p>}
               {cart.found === 0 && cart.missing.length === 0 && <p className="s-small">Всё уже есть дома.</p>}
             </>

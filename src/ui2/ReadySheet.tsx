@@ -3,7 +3,7 @@ import { Sheet } from "../ui/Sheet.js";
 import { tap } from "../ui/haptics.js";
 import { composeReadyDay, partKcal, partProtein, packsRU, eachRU, cartOf, READY } from "../food/ready.js";
 import { dayNumber } from "../food/schedule.js";
-import { cartLinks, appCartUrl, type CartResult } from "../ui/vvCart.js";
+import { cartLinks, appProductUrl, APP_BASKET_URL, type CartResult } from "../ui/vvCart.js";
 import type { MealCount, Targets } from "../food/types.js";
 
 const SLOT_RU: Record<string, string> = { breakfast: "Завтрак", lunch: "Обед", dinner: "Ужин", snack: "Перекус", dessert: "Сладкое" };
@@ -17,6 +17,10 @@ const goods = (n: number) => `${n} ${GOODS[new Intl.PluralRules("ru").select(n)]
  * Набор привязан к дате, «другой набор» листает варианты. Вдвоём — блюда общие и делятся поровну:
  * цель — сумма твоей и партнёра (если пара настроена и его калории известны), упаковки крупнее,
  * у каждой части подпись «по половине каждому». Корзина собирается через наш воркер.
+ *
+ * Купить можно двумя путями. В приложении ВкусВилла: у каждого блюда кнопка «В приложении» открывает карточку
+ * товара (universal link `/mobile?goods/ID`), там «В корзину». Корзину целиком приложение по чужому номеру не
+ * открывает — проверено с телефона (`vvCart.ts`). На сайте: «Собрать корзину» даёт ссылку магазина, нужен вход.
  */
 export function ReadySheet({ targets, mealCount, today, partnerKcal, onClose }: {
   targets: Targets; mealCount: MealCount; today: string;
@@ -64,6 +68,7 @@ export function ReadySheet({ targets, mealCount, today, partnerKcal, onClose }: 
                   {packsRU(part.packs)}{people === 2 ? ` · ${eachRU(part.packs, 2)}` : ""} · {perPerson(partKcal(part))} ккал{people === 2 ? " каждому" : ""} · белок {perPerson(partProtein(part))} г · {part.item.price} ₽ за упаковку
                   {people === 1 && part.packs === 0.5 ? " · половина на завтра" : ""}
                 </span>
+                <a className="linkbtn small" href={appProductUrl(part.item.id)} target="_blank" rel="noopener noreferrer">В приложении ВкусВилла</a>
               </span>
             ))}
           </li>
@@ -84,14 +89,16 @@ export function ReadySheet({ targets, mealCount, today, partnerKcal, onClose }: 
       </div>
       {err && <p className="small note-warn">{err}</p>}
       {Array.isArray(cart) && cart.map((l, k) => (
-        <div key={k} className="cart-links">
-          <a className="s-btn food s-wide" href={appCartUrl(l.url)} target="_blank" rel="noopener noreferrer">
-            Открыть в приложении ВкусВилла{cart.length > 1 ? ` · часть ${k + 1}` : ""} · {goods(l.count)}
-          </a>
-          <a className="linkbtn small" href={l.url} target="_blank" rel="noopener noreferrer">или на сайте vkusvill.ru</a>
-        </div>
+        <a key={k} className="s-btn food s-wide" href={l.url} target="_blank" rel="noopener noreferrer">
+          Открыть корзину на сайте{cart.length > 1 ? ` · часть ${k + 1}` : ""} · {goods(l.count)}
+        </a>
       ))}
-      {Array.isArray(cart) && <p className="small muted">Если приложение не открылось с корзиной — открой на сайте, корзина там та же.</p>}
+      <p className="small muted">
+        В приложении ВкусВилла: открой каждое блюдо кнопкой «В приложении» и нажми там «В корзину» — столько упаковок,
+        сколько указано. Корзину целиком приложение по ссылке не принимает. На сайте корзина открывается одной ссылкой,
+        но нужен вход.
+      </p>
+      <a className="linkbtn small" href={APP_BASKET_URL} target="_blank" rel="noopener noreferrer">Корзина в приложении</a>
     </Sheet>
   );
 }
