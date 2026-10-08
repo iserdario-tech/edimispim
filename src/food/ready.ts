@@ -63,16 +63,20 @@ const fatOk = (it: ReadyItem) => it.fat * 9 <= it.kcal * FAT_SHARE_MAX;
 /** «Семейство» блюда — первое слово названия: «Сэндвич с тунцом» и «Сэндвич ролл» в один день — это два сэндвича. */
 export const familyOf = (it: ReadyItem) => it.name.toLowerCase().replace(/["«»]/g, "").split(/\s+/)[0] ?? it.name;
 
+/** На скольких человек собирается день: вдвоём упаковок больше, а «в меру» белка — на двоих. */
+let persons = 1;
+
 /** Варианты одной части приёма: товар и число упаковок, укладывающиеся в калории [lo, hi]. */
 function parts(items: ReadyItem[], slot: Slot, lo: number, hi: number, used: Set<number>, kinds?: Set<string>, proteinMin = 0, families?: Set<string>): ReadyPart[] {
   const out: ReadyPart[] = [];
+  const steps = persons > 1 ? [0.5, 1, 1.5, 2, 3, 4] : [0.5, 1, 2];
   for (const it of items) {
     if (!it.slots.includes(slot) || used.has(it.xml_id) || families?.has(familyOf(it))) continue;
     if (kinds && !kinds.has(it.kind)) continue;
     // жирные блюда — не в обед и ужин; на завтраке омлет с сыром допустим, жиры дня держит оценка варианта
     if (MAIN_SLOTS.has(slot) && !fatOk(it)) continue;
-    for (const packs of it.grams >= HALF_FROM ? [0.5, 1, 2] : [1, 2]) {
-      if (it.grams * packs > GRAMS_MAX) break;
+    for (const packs of it.grams >= HALF_FROM ? steps : steps.filter(x => Number.isInteger(x))) {
+      if (it.grams * packs > GRAMS_MAX * persons) break;
       const p = { item: it, packs };
       const k = per(p, "kcal");
       if (k < lo) continue;
@@ -93,13 +97,13 @@ const score = (parts: ReadyPart[], target: number, main: boolean): number => {
   const k = kcalOf(parts), pr = proteinOf(parts);
   const fat = parts.reduce((s, p) => s + per(p, "fat"), 0) * 9;
   return Math.abs(k - target) / target
-    + (main ? Math.max(0, pr - PROTEIN_SWEET) / PROTEIN_SWEET * 0.6 : 0)
+    + (main ? Math.max(0, pr - PROTEIN_SWEET * persons) / (PROTEIN_SWEET * persons) * 0.6 : 0)
     + Math.max(0, fat / Math.max(1, k) - 0.3) * 2;
 };
 
 /** Все разумные варианты приёма, лучшие первыми. Основные — пара «белок + гарнир», завтрак — «основа + фрукт», иначе одно блюдо. */
 function options(items: ReadyItem[], slot: Slot, target: number, used: Set<number>, families: Set<string>): ReadyPart[][] {
-  const pmin = PROTEIN_MIN[slot] ?? 0;
+  const pmin = (PROTEIN_MIN[slot] ?? 0) * persons;
   const out: ReadyPart[][] = [];
   const main = MAIN_SLOTS.has(slot);
   const [baseKinds, addKinds] = main ? [PROTEIN_KINDS, SIDE_KINDS] : slot === "breakfast" ? [BREAKFAST_BASE, BREAKFAST_ADD] : [undefined, undefined];
@@ -135,7 +139,12 @@ const take = (list: ReadyPart[][], offset: number, i: number, slot: Slot): Ready
   return top.length ? top[(Math.imul(offset, 2654435761) + i * 40503 >>> 0) % top.length] : undefined;
 };
 
-export function composeReadyDay(targets: Targets, count: MealCount, offset = 0, items: ReadyItem[] = READY.items): ReadyDay {
+/**
+ * День из готовой еды. `targets` — цель на всех едоков вместе (на двоих — сумма целей), `people` — сколько их:
+ * от этого зависят размеры упаковок и «в меру» белка. Блюда общие, делятся поровну.
+ */
+export function composeReadyDay(targets: Targets, count: MealCount, offset = 0, items: ReadyItem[] = READY.items, people = 1): ReadyDay {
+  persons = people;
   const shares = slotShares(count);
   const used = new Set<number>();
   const families = new Set<string>();   // «филе куриной» дважды в день — не разнообразие
@@ -209,7 +218,14 @@ export function composeReadyDay(targets: Targets, count: MealCount, offset = 0, 
 /** Подписи для списка. */
 export const partKcal = (p: ReadyPart) => Math.round(per(p, "kcal"));
 export const partProtein = (p: ReadyPart) => Math.round(per(p, "protein"));
-export const packsRU = (packs: number) => packs === 0.5 ? "½ упаковки" : packs === 1 ? "1 упаковка" : `${packs} упаковки`;
+const PACKS: Record<string, string> = { "0.5": "½ упаковки", "1": "1 упаковка", "1.5": "1½ упаковки", "2": "2 упаковки", "3": "3 упаковки", "4": "4 упаковки" };
+export const packsRU = (packs: number) => PACKS[String(packs)] ?? `${packs} упаковки`;
+/** Сколько каждому, когда едоков двое: «по половине», «по одной», «по полторы». */
+export const eachRU = (packs: number, people: number): string => {
+  if (people < 2) return "";
+  const e = packs / people;
+  return e === 0.25 ? "по четверти каждому" : e === 0.5 ? "по половине каждому" : e === 0.75 ? "по три четверти каждому" : e === 1 ? "по одной каждому" : e === 1.5 ? "по полторы каждому" : e === 2 ? "по две каждому" : `по ${e} каждому`;
+};
 /** Что класть в корзину: упаковки — целиком, весовое — в килограммах (не меньше 100 г). */
 export const cartOf = (day: ReadyDay) => {
   const q = new Map<number, number>();

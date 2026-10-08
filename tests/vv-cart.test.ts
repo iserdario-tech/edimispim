@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { pickCard, gramsInCard } from "../src/ui/vvCart";
+import { pickCard, gramsInCard, appCartUrl } from "../src/ui/vvCart";
 import { minutesIn } from "../src/ui/CookMode";
 import { recentWritten, addExtra, setOwnText, toggleMark } from "../src/food/eaten";
 
@@ -26,6 +26,13 @@ describe("корзина ВкусВилла: подбор карточки", () 
   });
   it("«куриное филе» ищется как филе грудки цыпленка", () => {
     expect(pickCard([item(1, "Филе грудки цыпленка-бройлера", "кг", 656)], "куриное филе")?.xml_id).toBe(1);
+  });
+});
+
+describe("ссылка на корзину для приложения магазина", () => {
+  it("тот же номер корзины на пути /mobile, который у магазина отдан приложению", () => {
+    expect(appCartUrl("https://vkusvill.ru/?share_basket=4031576198")).toBe("https://vkusvill.ru/mobile?share_basket=4031576198");
+    expect(appCartUrl("https://vkusvill.ru/other")).toBe("https://vkusvill.ru/other");
   });
 });
 
