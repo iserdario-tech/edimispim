@@ -15,6 +15,7 @@ import { poolForDate } from "../ui/dayOpts.js";
 import { tap } from "../ui/haptics.js";
 import type { AppModel } from "./Shell.js";
 import type { WeekModel } from "./useWeek.js";
+import { ReadySheet } from "./ReadySheet.js";
 
 const RECIPES = recipesJson as Recipe[];
 const DOW = ["вс", "пн", "вт", "ср", "чт", "пт", "сб"];
@@ -31,6 +32,8 @@ export function Eat({ app, week, pair, onShop, onSetupFood }: { app: AppModel; w
   const a = app.actions;
   const [idx, setIdx] = useState(0);
   const [recipe, setRecipe] = useState<Meal | null>(null);
+  const [ready, setReady] = useState(false);
+  const food = app.state?.food;
   const [swapping, setSwapping] = useState<number | null>(null);
   const [search, setSearch] = useState(false);
   const plan = week.plan;
@@ -122,6 +125,12 @@ export function Eat({ app, week, pair, onShop, onSetupFood }: { app: AppModel; w
         <span><b>Список покупок</b><span>{toBuy.length ? `${toBuy.length} продуктов на неделю · ≈${plan.grocery.estCostRub.toLocaleString("ru-RU")} ₽` : "всё есть дома"}</span></span>
         <Ico name="arrow-right" mono className="ico-go" />
       </button>
+      {/* день без готовки: готовая еда магазина под ту же цель — для дней, когда к плите не подойти */}
+      <button className="s-shop" onClick={() => { tap(); setReady(true); }}>
+        <span><b>День без готовки</b><span>готовая еда ВкусВилла под твою цель · корзина одним нажатием</span></span>
+        <Ico name="arrow-right" mono className="ico-go" />
+      </button>
+      {ready && food && <ReadySheet targets={plan.safe} mealCount={food.mealCount} today={week.today} onClose={() => setReady(false)} />}
 
       {recipe && (
         <Sheet title={recipe.recipe.name} onClose={() => setRecipe(null)}>
