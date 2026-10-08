@@ -130,7 +130,7 @@ export function Eat({ app, week, pair, onShop, onSetupFood }: { app: AppModel; w
         <span><b>День без готовки</b><span>готовая еда ВкусВилла под твою цель · корзина одним нажатием</span></span>
         <Ico name="arrow-right" mono className="ico-go" />
       </button>
-      {ready && food && <ReadySheet targets={plan.safe} mealCount={food.mealCount} today={week.today} onClose={() => setReady(false)} />}
+      {ready && food && <ReadySheet targets={plan.safe} mealCount={food.mealCount} today={week.today} {...(pair?.otherKcal ? { partnerKcal: pair.otherKcal } : {})} onClose={() => setReady(false)} />}
 
       {recipe && (
         <Sheet title={recipe.recipe.name} onClose={() => setRecipe(null)}>

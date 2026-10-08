@@ -9,7 +9,7 @@ import { readLS, writeLS, SHOP_KEY } from "../ui/localStore.js";
 import { tap } from "../ui/haptics.js";
 import { Ico } from "./Ico.js";
 import type { WeekModel } from "./useWeek.js";
-import { buildCart, type CartResult } from "../ui/vvCart.js";
+import { buildCart, appCartUrl, type CartResult } from "../ui/vvCart.js";
 
 const DOW = ["вс", "пн", "вт", "ср", "чт", "пт", "сб"];
 const BUNCH: Record<string, string> = { one: "пучок", few: "пучка", many: "пучков" };
@@ -110,11 +110,19 @@ export function Shop({ week, onBack }: { week: WeekModel; onBack: () => void }) 
             catch { setCart({ links: [], found: 0, missing: [] }); setNote("Магазин не ответил. Попробуй ещё раз."); }
           }}>{cart && "at" in cart ? `Ищу ${cart.at} из ${cart.n}…` : "Собрать корзину во ВкусВилле"}</button>
           {cart && "links" in cart && (
-            <p className="s-small">
-              {cart.links.map((l, k) => <span key={k}>{k > 0 && " · "}<a href={l.url} target="_blank" rel="noopener noreferrer">Открыть корзину{cart.links.length > 1 ? ` ${k + 1}` : ""} · {l.count} {plural(l.count, GOODS)}</a></span>)}
-              {cart.missing.length > 0 && <> · не нашёл: {cart.missing.join(", ")}</>}
-              {cart.found === 0 && cart.missing.length === 0 && <>Всё уже есть дома.</>}
-            </p>
+            <>
+              {cart.links.map((l, k) => (
+                <div key={k} className="cart-links">
+                  <a className="s-btn food s-wide" href={appCartUrl(l.url)} target="_blank" rel="noopener noreferrer">
+                    Открыть в приложении ВкусВилла{cart.links.length > 1 ? ` · часть ${k + 1}` : ""} · {l.count} {plural(l.count, GOODS)}
+                  </a>
+                  <a className="linkbtn small" href={l.url} target="_blank" rel="noopener noreferrer">или на сайте vkusvill.ru</a>
+                </div>
+              ))}
+              {cart.links.length > 0 && <p className="s-small">Если приложение не открылось с корзиной — открой на сайте, корзина там та же.</p>}
+              {cart.missing.length > 0 && <p className="s-small">Не нашёл в магазине: {cart.missing.join(", ")} — добавь руками.</p>}
+              {cart.found === 0 && cart.missing.length === 0 && <p className="s-small">Всё уже есть дома.</p>}
+            </>
           )}
           <p className="s-small s-shops">Тап по продукту ищет его в магазине:</p>
           <div className="s-chips-row">
