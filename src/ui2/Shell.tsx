@@ -29,7 +29,7 @@ import { readPair, syncPair, shareSwap } from "../ui/pairSync.js";
 import { localDateISO } from "../today-date.js";
 import { menuOf, mergeSwaps, pairFactor, withPartnerSwaps } from "../pair.js";
 import { targetsForToday } from "../food/index.js";
-import { targetsFor } from "../ui/storage.js";
+import { targetsFor, partnerTargetsFor } from "../ui/storage.js";
 import { isIOS, isStandalone } from "../ui/dataSafety.js";
 import { unmarkedToday } from "../streak2.js";
 import { useDay } from "./useDay.js";
@@ -112,14 +112,16 @@ function Main({ app, tab, setTab, now, glow, restoreInput, onRestore }: {
   const [pair, setPair] = useState(readPair);
   const real = app.state as StoredState;
   const pairState = useMemo((): StoredState => {
-    if (!pair || !real.food) return real;
+    // калории партнёра: по паре, а без приложения у партнёра — из его данных в «Готовим вдвоём»
+    const partnerKcal = pair?.otherKcal ?? (real.partner ? partnerTargetsFor(real.partner).kcalTarget : undefined);
+    if ((!pair && !partnerKcal) || !real.food) return real;
     const food = real.food;
     const kcal = targetsForToday(targetsFor(food), food.startISO, localDateISO(), food.pace).targets.kcalTarget;
     return {
       ...real,
       // меню пары (у «b»), поверх — свои замены, поверх них — более поздние замены партнёра
-      swaps: withPartnerSwaps(pair.role === "b" ? mergeSwaps(pair.menu, real.swaps) : real.swaps, pair.mine, pair.theirs),
-      food: { ...food, household: pairFactor(kcal, pair.otherKcal) },
+      swaps: pair ? withPartnerSwaps(pair.role === "b" ? mergeSwaps(pair.menu, real.swaps) : real.swaps, pair.mine, pair.theirs) : real.swaps,
+      food: { ...food, household: pairFactor(kcal, partnerKcal) },
     };
   }, [real, pair]);
   const view = useMemo(() => !pair ? { ...app, state: pairState } : {
@@ -223,7 +225,7 @@ function Main({ app, tab, setTab, now, glow, restoreInput, onRestore }: {
         story={offerStory ? { label: weekLabel(lastMonday), open: () => { setStoryWeek(lastMonday); writeLS("edimispim.storySeen", lastMonday); setSeen(lastMonday); } } : undefined} />}
       {tab === "eat" && !shop && <Eat app={view} week={week} pair={pair} onShop={() => { setShop(true); window.scrollTo({ top: 0 }); }} onSetupFood={() => setSettings("food")} />}
       {tab === "eat" && shop && <Shop week={week} onBack={() => { setShop(false); window.scrollTo({ top: 0 }); }} />}
-      {tab === "me" && <Me app={view} day={day} cloud={cloud} onCloud={setCloud} pair={pair} onPair={setPair} onSettings={setSettings} onStory={setStoryWeek} onRestore={onRestore} onTour={() => setTour(true)} />}
+      {tab === "me" && <Me app={view} day={day} cloud={cloud} onCloud={setCloud} pair={pair} onPair={setPair} partner={real.partner} onPartner={app.actions.savePartner} onSettings={setSettings} onStory={setStoryWeek} onRestore={onRestore} onTour={() => setTour(true)} />}
       {tour && <Tour onClose={closeTour} />}
       {storySlides && storyWeek && <Story slides={storySlides} label={`Неделя ${weekLabel(storyWeek)}`} onClose={() => setStoryWeek(null)} />}
 

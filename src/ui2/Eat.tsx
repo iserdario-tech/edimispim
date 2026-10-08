@@ -15,7 +15,8 @@ import { poolForDate } from "../ui/dayOpts.js";
 import { tap } from "../ui/haptics.js";
 import type { AppModel } from "./Shell.js";
 import type { WeekModel } from "./useWeek.js";
-import { ReadySheet } from "./ReadySheet.js";
+import { ReadySheet, type ReadyPartner } from "./ReadySheet.js";
+import { partnerTargetsFor } from "../ui/storage.js";
 
 const RECIPES = recipesJson as Recipe[];
 const DOW = ["вс", "пн", "вт", "ср", "чт", "пт", "сб"];
@@ -37,6 +38,17 @@ export function Eat({ app, week, pair, onShop, onSetupFood }: { app: AppModel; w
   const [swapping, setSwapping] = useState<number | null>(null);
   const [search, setSearch] = useState(false);
   const plan = week.plan;
+  // партнёр для «Дня без готовки» на двоих: его данные из «Готовим вдвоём», иначе калории по паре
+  const partnerProfile = app.state?.partner;
+  const readyPartner = useMemo((): ReadyPartner | undefined => {
+    if (partnerProfile) {
+      const t = partnerTargetsFor(partnerProfile);
+      const she = partnerProfile.sex === "f";
+      return { targets: t, them: she ? "ей" : "ему", note: `${she ? "Её" : "Его"} цель — ${t.kcalTarget} ккал и ${t.proteinGTarget} г белка, из «Я → Готовим вдвоём».` };
+    }
+    if (pair?.otherKcal && plan) return { targets: { ...plan.safe, kcalTarget: pair.otherKcal, proteinGTarget: Math.round(plan.safe.proteinGTarget * pair.otherKcal / plan.safe.kcalTarget) }, them: "партнёру", note: `Цель партнёра — ${pair.otherKcal} ккал, по паре.` };
+    return undefined;
+  }, [partnerProfile, pair?.otherKcal, plan]);
   const toBuy = useMemo(() => plan ? planPurchase(plan.grocery.items, week.pantry).filter(l => !l.staple && l.toBuy > 0) : [], [plan, week.pantry]);
 
   if (!plan || !state.food) {
@@ -130,7 +142,7 @@ export function Eat({ app, week, pair, onShop, onSetupFood }: { app: AppModel; w
         <span><b>День без готовки</b><span>готовая еда ВкусВилла под твою цель · корзина одним нажатием</span></span>
         <Ico name="arrow-right" mono className="ico-go" />
       </button>
-      {ready && food && <ReadySheet targets={plan.safe} mealCount={food.mealCount} today={week.today} {...(pair?.otherKcal ? { partnerKcal: pair.otherKcal } : {})} onClose={() => setReady(false)} />}
+      {ready && food && <ReadySheet targets={plan.safe} mealCount={food.mealCount} today={week.today} {...(readyPartner ? { partner: readyPartner } : {})} onClose={() => setReady(false)} />}
 
       {recipe && (
         <Sheet title={recipe.recipe.name} onClose={() => setRecipe(null)}>
