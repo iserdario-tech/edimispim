@@ -9,9 +9,12 @@ import { readLS, writeLS, SHOP_KEY } from "../ui/localStore.js";
 import { tap } from "../ui/haptics.js";
 import { Ico } from "./Ico.js";
 import type { WeekModel } from "./useWeek.js";
+import { buildCart, type CartResult } from "../ui/vvCart.js";
 
 const DOW = ["вс", "пн", "вт", "ср", "чт", "пт", "сб"];
 const BUNCH: Record<string, string> = { one: "пучок", few: "пучка", many: "пучков" };
+const GOODS: Record<string, string> = { one: "товар", few: "товара", many: "товаров" };
+const plural = (n: number, forms: Record<string, string>) => forms[new Intl.PluralRules("ru").select(n)] ?? forms.many;
 
 /**
  * «В магазине» — отдельный режим, а не карточка внизу «Еды».
@@ -31,6 +34,8 @@ export function Shop({ week, onBack }: { week: WeekModel; onBack: () => void }) 
   const [scope, setScope] = useState<"week" | number>("week");
   const [shopId, setShopId] = useState(() => readLS(SHOP_KEY, DEFAULT_SHOP_ID));
   const [note, setNote] = useState("");
+  // корзина ВкусВилла: «ищу 12 из 40» → ссылка на корзину
+  const [cart, setCart] = useState<{ at: number; n: number } | CartResult | null>(null);
   const items = scope === "week" ? plan.grocery.items : plan.grocery.byDay[scope]?.items ?? [];
   const lines = useMemo(() => planPurchase(items, week.pantry).filter(l => !l.staple), [items, week.pantry]);
   const done = lines.filter(l => l.toBuy === 0).length;
@@ -99,6 +104,18 @@ export function Shop({ week, onBack }: { week: WeekModel; onBack: () => void }) 
             setNote(shareNoteRU(await shareText("Покупки", text)));
           }}>Отправить список в чат</button>
           {note && <p className="s-small">{note}</p>}
+          <button className="s-btn ghost s-wide" disabled={!!cart && "at" in cart} onClick={async () => {
+            tap();
+            try { setCart(await buildCart(lines, (at, n) => setCart({ at, n }))); }
+            catch { setCart({ links: [], found: 0, missing: [] }); setNote("Магазин не ответил. Попробуй ещё раз."); }
+          }}>{cart && "at" in cart ? `Ищу ${cart.at} из ${cart.n}…` : "Собрать корзину во ВкусВилле"}</button>
+          {cart && "links" in cart && (
+            <p className="s-small">
+              {cart.links.map((l, k) => <span key={k}>{k > 0 && " · "}<a href={l.url} target="_blank" rel="noopener noreferrer">Открыть корзину{cart.links.length > 1 ? ` ${k + 1}` : ""} · {l.count} {plural(l.count, GOODS)}</a></span>)}
+              {cart.missing.length > 0 && <> · не нашёл: {cart.missing.join(", ")}</>}
+              {cart.found === 0 && cart.missing.length === 0 && <>Всё уже есть дома.</>}
+            </p>
+          )}
           <p className="s-small s-shops">Тап по продукту ищет его в магазине:</p>
           <div className="s-chips-row">
             {SHOPS.map(s => (

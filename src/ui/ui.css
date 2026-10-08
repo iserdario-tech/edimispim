@@ -556,3 +556,15 @@ input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.08); }
 .eat-camera input { display: none; }
 .eat-photo-wrap { display: flex; flex-direction: column; gap: var(--sp-1); margin-bottom: var(--sp-2); }
 .eat-photo { width: 100%; max-height: 180px; object-fit: cover; border-radius: var(--r-control); }
+/* режим готовки: один шаг на экран, крупно */
+.cook-mode { position: fixed; inset: 0; z-index: 300; background: var(--bg); color: var(--fg);
+  padding: max(env(safe-area-inset-top), 16px) 20px max(env(safe-area-inset-bottom), 20px); display: flex; flex-direction: column; gap: var(--sp-3); }
+.cook-head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); }
+.cook-title { font-weight: 600; font-size: var(--t-subhead); color: var(--fg-2); }
+.cook-count { margin: 0; font-size: var(--t-subhead); color: var(--fg-2); }
+.cook-step { margin: 0; font-size: 24px; line-height: 1.35; flex: 1; overflow: auto; }
+.cook-timer { display: flex; align-items: baseline; gap: var(--sp-3); }
+.cook-timer b { font-size: 40px; font-variant-numeric: tabular-nums; }
+.cook-nav { display: grid; grid-template-columns: 1fr 2fr; gap: var(--sp-2); }
+.eat-recent { margin-bottom: var(--sp-2); }
+.mt-2 { margin-top: var(--sp-2); }

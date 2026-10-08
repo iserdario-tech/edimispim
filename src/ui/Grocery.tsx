@@ -7,6 +7,7 @@ import { photoFor, photoUrl } from "../food/photos.js";
 import { tap } from "./haptics.js";
 import { shareText, shareNoteRU } from "./share.js";
 import { Ico } from "../ui2/Ico.js";
+import { CookMode } from "./CookMode.js";
 
 export const pantryKey = (name: string, unit: string): string => `${name.toLowerCase().trim()}|${unit}`;
 
@@ -86,6 +87,7 @@ export function MealIngredients({ meal, rating, onRate, household = 1 }: {
 
   const steps = meal.recipe.steps ?? [];
   const [shareNote, setShareNote] = useState("");
+  const [cooking, setCooking] = useState(false);
   if (!ings.length && !steps.length) return <div className="meal-ings small muted">Рецепт не указан.</div>;
 
   const photo = photoFor(meal.recipe);
@@ -160,6 +162,10 @@ export function MealIngredients({ meal, rating, onRate, household = 1 }: {
           <ol className="recipe-steps small">
             {steps.map((st, k) => <li key={k}>{st}</li>)}
           </ol>
+          {!ready && (
+            <button className="s-btn ghost s-wide mt-2" onClick={() => { tap(); setCooking(true); }}>Готовить по шагам</button>
+          )}
+          {cooking && <CookMode name={meal.recipe.name} steps={steps} onClose={() => setCooking(false)} />}
         </>
       )}
       <div className="share-row">

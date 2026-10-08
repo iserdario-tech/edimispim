@@ -201,6 +201,32 @@ export default {
       }
     }
 
+    /*
+     * Прокси к открытому MCP ВкусВилла: поиск товаров и ссылка на корзину. Напрямую из браузера
+     * нельзя — их сервер не отвечает на preflight (OPTIONS) заголовком CORS. Сюда приходит
+     * {name, arguments}, отсюда уходит JSON-RPC; обратно — только поле data. У них 60 запросов в минуту.
+     */
+    if (req.method === "POST" && url.pathname === "/vv") {
+      const body = (await req.json().catch(() => ({}))) as { name?: unknown; arguments?: unknown };
+      const name = typeof body.name === "string" && /^vkusvill_[a-z_]+$/.test(body.name) ? body.name : null;
+      if (!name || typeof body.arguments !== "object") return new Response("bad request", { status: 400, headers: CORS });
+      try {
+        const up = await fetch("https://mcp001.vkusvill.ru/mcp", {
+          method: "POST",
+          headers: { "content-type": "application/json", accept: "application/json, text/event-stream", "user-agent": "Mozilla/5.0 (edimispim; mmmikeshinoda@gmail.com)" },
+          body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name, arguments: body.arguments } }),
+        });
+        const j = (await up.json()) as { result?: { content?: { text?: string }[] }; error?: { message?: string } };
+        if (j.error) return new Response(JSON.stringify({ error: j.error.message ?? "mcp error" }), { status: 502, headers: JSON_CORS });
+        const t = JSON.parse(j.result?.content?.[0]?.text ?? "{}") as { ok?: boolean; data?: unknown; error?: { message?: string } };
+        if (t.ok === false) return new Response(JSON.stringify({ error: t.error?.message ?? "vv error" }), { status: 502, headers: JSON_CORS });
+        return new Response(JSON.stringify({ data: t.data ?? null }), { headers: JSON_CORS });
+      } catch (e) {
+        console.error("vv error", String((e as any)?.message ?? e));
+        return new Response(JSON.stringify({ error: "Магазин не ответил." }), { status: 502, headers: JSON_CORS });
+      }
+    }
+
     return new Response("edim & spim push", { headers: CORS });
   },
 

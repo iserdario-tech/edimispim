@@ -132,6 +132,14 @@ def price_for(product):
         if product not in KEEP_STOP and STOP.search(low): continue
         g = grams(name, it.get("unit", ""), product)
         p = (it.get("price") or {}).get("current")
+        # вес не в названии («Рукола, упаковка») — он есть в карточке товара; один лишний запрос на карточку
+        if not g and p and len(per100) < 4:
+            try:
+                d = rpc("tools/call", {"name": "vkusvill_product_details", "arguments": {"id": int(it["id"])}})
+                w = (json.loads(d["result"]["content"][0]["text"]).get("data") or {}).get("weight") or {}
+                time.sleep(1.1)
+                if w.get("value"): g = float(w["value"]) * (1000 if str(w.get("unit", "")).lower() in ("кг", "л") else 1)
+            except Exception: g = None
         if not g or not p: continue
         per100.append(p / g * 100)
     if not per100: return None, len(items), "нет карточек с весом"
