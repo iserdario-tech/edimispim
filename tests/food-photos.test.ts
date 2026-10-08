@@ -39,7 +39,7 @@ describe("фотографии блюд", () => {
     expect(kindOf("Голубцы с мясом и рисом")).toBe("cabbagerolls");
     expect(kindOf("Йогурт-боул с гранолой, мёдом и орехами")).toBe("granola");
     expect(kindOf("Классическая шакшука")).toBe("shakshuka");
-    expect(kindOf("Митболы в томатном соусе")).toBe("meatballs");
+    expect(kindOf("Спагетти с митболами в томатном соусе")).toBe("meatballs");
   });
 
   it("ни один снимок не висит на большой доле блюд", () => {
