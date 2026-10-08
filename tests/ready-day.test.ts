@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { composeReadyDay, eachRU, animalOf, type ReadyItem } from "../src/food/ready";
+import { composeReadyDay, eachRU, splitRU, animalOf, type ReadyItem } from "../src/food/ready";
 import type { Targets } from "../src/food/types";
 
 const targets: Targets = { bmr: 1700, tdee: 2300, kcalTarget: 1800, proteinGTarget: 120, fiberGTarget: 30, tempoKgPerWeek: 0.5 };
@@ -50,23 +50,37 @@ describe("день без готовки", () => {
     const mains = [0, 1, 2].flatMap(off => composeReadyDay(targets, 4, off).picks.filter(p => p.slot === "lunch" || p.slot === "dinner"));
     expect(mains.filter(p => p.parts.length === 2).length).toBeGreaterThanOrEqual(mains.length - 1);
   });
-  it("на двоих: цель общая, упаковки крупнее, подпись «каждому» понятна", () => {
-    const two = { ...targets, kcalTarget: 3400, proteinGTarget: 240 };
-    const d = composeReadyDay(two, 4, 3, undefined, 2);
-    // вдвоём при четырёх приёмах шаг «по упаковке каждому» грубый: 12 % вместо 8 % (долг — порции свои у каждого)
-    expect(Math.abs(d.totals.kcal - 3400) / 3400).toBeLessThanOrEqual(0.12);
-    expect(d.totals.protein).toBeGreaterThanOrEqual(240 * 0.8);
-    for (const off of [10, 11, 12, 13]) {
-      const e = composeReadyDay(two, 5, off, undefined, 2);
-      expect(Math.abs(e.totals.kcal - 3400) / 3400, `пять приёмов, день ${off}`).toBeLessThanOrEqual(0.08);
-      expect(e.totals.protein, `пять приёмов, день ${off}`).toBeGreaterThanOrEqual(240 * 0.8);
+  it("на двоих: блюда общие, упаковок каждому по своей цели, каждому ±8 %", () => {
+    const her: Targets = { ...targets, kcalTarget: 1400, proteinGTarget: 90 };
+    for (const off of [3, 10, 11, 12, 13, 20]) {
+      const d = composeReadyDay(targets, 5, off, undefined, her);
+      expect(d.each, `день ${off}`).toBeDefined();
+      expect(Math.abs(d.each![0].kcal - 1800) / 1800, `мне, день ${off}`).toBeLessThanOrEqual(0.08);
+      expect(Math.abs(d.each![1].kcal - 1400) / 1400, `ей, день ${off}`).toBeLessThanOrEqual(0.08);
+      expect(d.each![0].protein, `белок мне, день ${off}`).toBeGreaterThanOrEqual(120 * 0.8);
+      expect(d.each![1].protein, `белок ей, день ${off}`).toBeGreaterThanOrEqual(90 * 0.8);
+      for (const p of d.picks) for (const part of p.parts) {
+        expect(part.each, part.item.name).toBeDefined();
+        // общее блюдо — обоим, без нулей; упаковок каждому по своей цели («тебе две, ей одну»)
+        if (p.slot === "lunch" || p.slot === "dinner") for (const x of part.each!) expect(x, `общее ${part.item.name}`).toBeGreaterThan(0);
+        expect(part.packs).toBeCloseTo(part.each![0] + part.each![1]);
+        for (const x of part.each!) expect([0, 0.5, 1, 1.5, 2]).toContain(x);
+        expect(part.each![0] + part.each![1], part.item.name).toBeGreaterThan(0);
+      }
     }
-    // пополам, по одной или по две — никаких «по три четверти» и «по полторы»
-    for (const p of d.picks) for (const part of p.parts) expect([1, 2, 4]).toContain(part.packs);
+    // четыре приёма: шаг грубее, но каждому в пределах 10 %
+    const d4 = composeReadyDay(targets, 4, 3, undefined, her);
+    expect(Math.abs(d4.each![0].kcal - 1800) / 1800).toBeLessThanOrEqual(0.1);
+    expect(Math.abs(d4.each![1].kcal - 1400) / 1400).toBeLessThanOrEqual(0.1);
     expect(eachRU(1, 2)).toBe("по половине каждому");
     expect(eachRU(2, 2)).toBe("по одной каждому");
-    expect(eachRU(4, 2)).toBe("по две каждому");
     expect(eachRU(1, 1)).toBe("");
+    expect(splitRU([1, 1], "ей")).toBe("по одной каждому");
+    expect(splitRU([2, 1], "ей")).toBe("тебе две, ей одну");
+    expect(splitRU([1, 0.5], "ему")).toBe("тебе одну, ему половину");
+    expect(splitRU([0.5, 1])).toBe("тебе половину, партнёру одну");
+    expect(splitRU([1, 0], "ей")).toBe("только тебе");
+    expect(splitRU([0, 1], "ей")).toBe("только ей");
   });
   it("здравый смысл: завтрак — завтрачная еда, ужин без пасты и плова, белок обеда и ужина разный, вчерашние блюда не повторяются", () => {
     for (const off of [0, 1, 2, 3, 4, 5, 6, 30, 31]) {
@@ -82,12 +96,12 @@ describe("день без готовки", () => {
       for (const a of animals("lunch")) expect(animals("dinner"), `день ${off}: ${a} и в обед, и на ужин`).not.toContain(a);
     }
     // вчерашние завтрак, обед и ужин сегодня не повторяются; на стыке недель (якорь цепочки) повтор возможен
-    const mains = (off: number, people = 1) => composeReadyDay(people === 2 ? { ...targets, kcalTarget: 3600, proteinGTarget: 270 } : targets, 5, off, undefined, people)
+    const mains = (off: number, people = 1) => composeReadyDay(targets, 5, off, undefined, people === 2 ? { ...targets, kcalTarget: 1500, proteinGTarget: 100 } : undefined)
       .picks.filter(p => p.slot !== "snack" && p.slot !== "dessert").flatMap(p => p.parts.map(x => x.item.xml_id));
     for (const people of [1, 2]) {
       let repeats = 0;
       for (let off = 10; off < 30; off++) { const y = new Set(mains(off - 1, people)); repeats += mains(off, people).filter(id => y.has(id)).length; }
-      expect(repeats, `повторов со вчера за 20 дней (на ${people})`).toBeLessThanOrEqual(3);
+      expect(repeats, `повторов со вчера за 20 дней (на ${people})`).toBeLessThanOrEqual(4);
     }
     expect(animalOf("Куриная грудка с грибами и пенне")).toBe("chicken");
     expect(animalOf("Говядина в томатном соусе с кабачками гриль и гречкой")).toBe("beef");

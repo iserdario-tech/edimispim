@@ -10,6 +10,7 @@ import { syncPushContext } from "./notifications.js";
 import { migrateAll } from "../migrate.js";
 import { localDateISO, plusDaysISO } from "../today-date.js";
 import { toggleMark, markAllAte, setOwnSize, setOwnText, addExtra, removeExtra, type DayEaten, type MealMark, type OwnSize, type WrittenFood } from "../food/eaten.js";
+import type { FoodProfile } from "../food/types.js";
 import type { Slot } from "../food/types.js";
 import { readLS, writeLS } from "./localStore.js";
 import { BACKUP_KEY, downloadBackup } from "./dataSafety.js";
@@ -226,6 +227,17 @@ export function useAppState() {
     });
   };
 
+  /** Партнёр без приложения: его данные для «на двоих»; null — убрать. */
+  const savePartner = (p: FoodProfile | null) => {
+    setState((prev) => {
+      if (!prev) return prev;
+      const { partner: _old, ...rest } = prev;
+      const next: StoredState = p ? { ...rest, partner: p } : rest;
+      persist(next);
+      return next;
+    });
+  };
+
   const addWeight = (kg: number) => {
     setState((prev) => {
       if (!prev) return prev;
@@ -289,7 +301,7 @@ export function useAppState() {
     state, update, saveFailed, backupAt, migrationNote,
     actions: {
       saveLog, markMeal, markAll, ownSize, ownWritten, extraAdd, extraRemove, rateDish, setCheatDay,
-      adjustKcal, markTuned, setNoCook, saveSwap, rememberMenu, addWeight, freshStart, backup, restore, setYesterday,
+      adjustKcal, markTuned, setNoCook, saveSwap, rememberMenu, addWeight, freshStart, backup, restore, setYesterday, savePartner,
     },
   };
 }

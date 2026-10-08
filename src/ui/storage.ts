@@ -55,6 +55,9 @@ export interface FoodSettings {
  * в трёх экранах, и когда к ней добавился скрининг, править пришлось все три.
  * Один вызов — один шанс забыть аргумент.
  */
+/** Цель партнёра без приложения: та же формула и та же защита (пол 1200/1500), скрининга у него нет. */
+export const partnerTargetsFor = (p: FoodProfile): SafeTargets => applySafety(computeTargets(p), p);
+
 export const targetsFor = (food: FoodSettings): SafeTargets => {
   const raw = computeTargets(food.profile);
   // поправка по реальному расходу — ДО защиты: пол 1500/1200 и мягкий дефицит при
@@ -71,6 +74,8 @@ export interface StoredState {
   history: DayLog[];
   screener: ScreenerResult | null;
   food?: FoodSettings;
+  /** Партнёр без приложения: пол, возраст, рост, вес — для «Дня без готовки» на двоих и покупок на двоих. */
+  partner?: FoodProfile;
   weights?: { date: string; kg: number }[];
   /** Что съедено по дням: дата → отметки приёмов. Факт, без которого план не с чем сверять. */
   eaten?: Record<string, DayEaten>;
