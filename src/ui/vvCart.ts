@@ -134,18 +134,18 @@ export async function findProduct(product: string): Promise<VVMatch | null> {
   return match;
 }
 
-export interface CartResult { links: { url: string; count: number }[]; found: number; missing: string[] }
+export interface CartResult { links: { url: string; count: number }[]; found: number; missing: string[]; items: CartItem[] }
+export interface CartItem { xml_id: number; name: string; q: number; weighed: boolean }
 
 /**
- * Ссылка на ту же корзину, но для приложения ВкусВилла на телефоне. В манифесте Apple у магазина
- * (`/.well-known/apple-app-site-association`) приложению отдан путь `/mobile` — такие ссылки iOS
- * открывает в приложении, если оно стоит. Документации по параметрам нет: это попытка, рядом
- * всегда обычная ссылка на сайт. Если не сработает — убрать.
+ * Товар в приложении ВкусВилла. Адрес `vkusvill.ru/mobile?<маршрут>` отдан приложению (universal link),
+ * маршрут `goods/ID` проверен с телефона 2026-10-09: открывает карточку, там «В корзину». Корзину по номеру
+ * приложение открывает только свою (`basket&share=ID` из «Поделиться» в приложении); номера сайта и MCP
+ * (`share_basket=…`) ему чужие — «срок действия ссылки закончился». Создать свой номер без приложения нельзя.
  */
-export const appCartUrl = (webUrl: string): string => {
-  const id = /share_basket=(\d+)/.exec(webUrl)?.[1];
-  return id ? `https://vkusvill.ru/mobile?share_basket=${id}` : webUrl;
-};
+export const appProductUrl = (id: number): string => `https://vkusvill.ru/mobile?goods/${id}`;
+/** Экран корзины приложения — тем же маршрутом. */
+export const APP_BASKET_URL = "https://vkusvill.ru/mobile?basket";
 /** У магазина в описании «products 1..20» — режем по двадцать, хотя схема пускает до тридцати. */
 const CHUNK = 20;
 
@@ -167,6 +167,7 @@ export async function cartLinks(products: { xml_id: number; q: number }[]): Prom
 export async function buildCart(lines: BuyLine[], onProgress?: (i: number, n: number) => void): Promise<CartResult> {
   const todo = lines.filter(l => l.toBuy > 0);
   const products: { xml_id: number; q: number }[] = [];
+  const items: CartItem[] = [];
   const missing: string[] = [];
   for (const [i, l] of todo.entries()) {
     onProgress?.(i + 1, todo.length);
@@ -177,6 +178,7 @@ export async function buildCart(lines: BuyLine[], onProgress?: (i: number, n: nu
     // весовой — в килограммах с шагом 100 г; упаковки — сколько нужно, не меньше одной
     const q = m.weighed ? Math.max(0.1, Math.round(needG / 100) / 10) : Math.max(1, Math.ceil(needG / m.grams));
     products.push({ xml_id: m.xml_id, q: Math.min(40, q) });
+    items.push({ xml_id: m.xml_id, name: m.name, q: Math.min(40, q), weighed: m.weighed });
   }
   const links: CartResult["links"] = [];
   for (let i = 0; i < products.length; i += CHUNK) {
@@ -184,5 +186,5 @@ export async function buildCart(lines: BuyLine[], onProgress?: (i: number, n: nu
     const data = await paced(() => rpc<{ link: string }>("vkusvill_cart_link_create", { products: chunk }));
     links.push({ url: data.link, count: chunk.length });
   }
-  return { links, found: products.length, missing };
+  return { links, found: products.length, missing, items };
 }
