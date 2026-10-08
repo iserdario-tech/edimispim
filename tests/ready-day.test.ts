@@ -55,10 +55,11 @@ describe("день без готовки", () => {
     const d = composeReadyDay(two, 4, 3, undefined, 2);
     expect(Math.abs(d.totals.kcal - 3400) / 3400).toBeLessThanOrEqual(0.08);
     expect(d.totals.protein).toBeGreaterThanOrEqual(240 * 0.85);
-    for (const p of d.picks) for (const part of p.parts) expect([0.5, 1, 1.5, 2, 3, 4]).toContain(part.packs);
+    // пополам, по одной или по две — никаких «по три четверти» и «по полторы»
+    for (const p of d.picks) for (const part of p.parts) expect([1, 2, 4]).toContain(part.packs);
     expect(eachRU(1, 2)).toBe("по половине каждому");
     expect(eachRU(2, 2)).toBe("по одной каждому");
-    expect(eachRU(3, 2)).toBe("по полторы каждому");
+    expect(eachRU(4, 2)).toBe("по две каждому");
     expect(eachRU(1, 1)).toBe("");
   });
   it("пустой каталог — пустой день, а не ошибка", () => {
