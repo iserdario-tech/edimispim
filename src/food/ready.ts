@@ -445,7 +445,7 @@ export const partProteinFor = (p: ReadyPart, i: 0 | 1) => Math.round(forOne(p, "
 export const eachRU = (packs: number, people: number): string => {
   if (people < 2) return "";
   const e = packs / people;
-  return e === 0.25 ? "по четверти каждому" : e === 0.5 ? "по половине каждому" : e === 0.75 ? "по три четверти каждому" : e === 1 ? "по одной каждому" : e === 1.5 ? "по полторы каждому" : e === 2 ? "по две каждому" : `по ${e} каждому`;
+  return e === 0.5 ? "по половине каждому" : e === 1 ? "по одной каждому" : e === 2 ? "по две каждому" : `по ${e} каждому`;
 };
 /** Что класть в корзину: упаковки — целиком, весовое — в килограммах (не меньше 100 г). */
 export const cartOf = (day: ReadyDay) => {

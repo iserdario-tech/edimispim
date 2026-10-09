@@ -139,7 +139,7 @@ export function Eat({ app, week, pair, onShop, onSetupFood }: { app: AppModel; w
       </button>
       {/* день без готовки: готовая еда магазина под ту же цель — для дней, когда к плите не подойти */}
       <button className="s-shop" onClick={() => { tap(); setReady(true); }}>
-        <span><b>День без готовки</b><span>готовая еда ВкусВилла под твою цель · корзина одним нажатием</span></span>
+        <span><b>День без готовки</b><span>готовая еда ВкусВилла под твою цель</span></span>
         <Ico name="arrow-right" mono className="ico-go" />
       </button>
       {ready && food && <ReadySheet targets={plan.safe} mealCount={food.mealCount} today={week.today} {...(readyPartner ? { partner: readyPartner } : {})} onClose={() => setReady(false)} />}

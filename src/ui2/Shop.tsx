@@ -23,7 +23,7 @@ const plural = (n: number, forms: Record<string, string>) => forms[new Intl.Plur
  * не уезжает из-под пальца — вычёркивается на месте. «Дома есть» — та же кладовка,
  * из которой замена блюда предлагает «приготовить из того, что есть».
  */
-export function Shop({ week, onBack }: { week: WeekModel; onBack: () => void }) {
+export function Shop({ week, household = 1, onBack }: { week: WeekModel; /** во сколько раз продуктов больше, чем на мою порцию (вдвоём) */ household?: number; onBack: () => void }) {
   // вдвоём в магазине: галочки партнёра подтягиваются, пока список открыт
   useEffect(() => {
     const id = setInterval(() => { if (document.visibilityState === "visible") void pullPantry(week.setPantryQuiet); }, 10_000);
@@ -76,7 +76,7 @@ export function Shop({ week, onBack }: { week: WeekModel; onBack: () => void }) 
               <button key={i} className={scope === i ? "s-pill on" : "s-pill"} onClick={() => setScope(i)}>{label(i)}</button>
             ))}
           </div>
-          <p className="s-sub">в корзине {done} из {lines.length}</p>
+          <p className="s-sub">в корзине {done} из {lines.length}{household > 1 ? " · количество на двоих — твоя порция и партнёра" : ""}</p>
           <div className="s-progress"><span style={{ width: `${lines.length ? (done / lines.length) * 100 : 0}%` }} /></div>
 
           {groups.map(g => (
