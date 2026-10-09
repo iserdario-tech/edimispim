@@ -224,7 +224,7 @@ function Main({ app, tab, setTab, now, glow, restoreInput, onRestore }: {
         code={cloud?.at && !cloud.noted ? { code: cloud.code, onNoted: () => { markCodeNoted(); setCloud(readCloud()); } } : undefined}
         story={offerStory ? { label: weekLabel(lastMonday), open: () => { setStoryWeek(lastMonday); writeLS("edimispim.storySeen", lastMonday); setSeen(lastMonday); } } : undefined} />}
       {tab === "eat" && !shop && <Eat app={view} week={week} pair={pair} onShop={() => { setShop(true); window.scrollTo({ top: 0 }); }} onSetupFood={() => setSettings("food")} />}
-      {tab === "eat" && shop && <Shop week={week} onBack={() => { setShop(false); window.scrollTo({ top: 0 }); }} />}
+      {tab === "eat" && shop && <Shop week={week} household={pairState.food?.household ?? 1} onBack={() => { setShop(false); window.scrollTo({ top: 0 }); }} />}
       {tab === "me" && <Me app={view} day={day} cloud={cloud} onCloud={setCloud} pair={pair} onPair={setPair} partner={real.partner} onPartner={app.actions.savePartner} onSettings={setSettings} onStory={setStoryWeek} onRestore={onRestore} onTour={() => setTour(true)} />}
       {tour && <Tour onClose={closeTour} />}
       {storySlides && storyWeek && <Story slides={storySlides} label={`Неделя ${weekLabel(storyWeek)}`} onClose={() => setStoryWeek(null)} />}
