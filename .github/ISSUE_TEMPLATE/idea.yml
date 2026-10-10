@@ -1,0 +1,32 @@
+name: Идея
+description: Предложить улучшение
+title: "[идея] "
+labels: ["idea"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Проект развивается волнами, и каждая идея проходит три сита. Помоги ей пройти: опиши ситуацию из жизни, а не фичу.
+        Прежде чем писать, поищи в [LAB.md](https://github.com/iserdario-tech/edimispim/blob/main/LAB.md): возможно, идея уже пробовалась.
+  - type: textarea
+    id: situation
+    attributes:
+      label: Ситуация
+      description: Что происходит в жизни, где приложение не помогает или мешает
+      placeholder: Готовлю на троих, а список покупок считает на одного…
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Что предлагаешь
+    validations:
+      required: true
+  - type: checkboxes
+    id: sieves
+    attributes:
+      label: Три сита
+      options:
+        - label: Переплетённость — это нельзя сделать отдельно в приложении про сон или отдельно про еду
+        - label: Честность — у этого есть основание в данных, и формулировка не обещает большего
+        - label: Цена — влезает в текущие модули без переписывания половины кода

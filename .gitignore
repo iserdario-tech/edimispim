@@ -4,3 +4,4 @@ dist
 dist-dry
 .DS_Store
 .worktrees
+worker/.wrangler
