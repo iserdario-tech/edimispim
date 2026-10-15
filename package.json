@@ -10,6 +10,7 @@
   "bugs": {
     "url": "https://github.com/iserdario-tech/edimispim/issues"
   },
+  "license": "MIT",
   "private": true,
   "type": "module",
   "scripts": {
