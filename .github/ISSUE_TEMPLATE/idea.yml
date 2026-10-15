@@ -13,7 +13,7 @@ body:
     attributes:
       label: Ситуация
       description: Что происходит в жизни, где приложение не помогает или мешает
-      placeholder: Готовлю на троих, а список покупок считает на одного…
+      placeholder: Нас в семье пятеро, а «Готовлю на» в настройках еды заканчивается на четырёх…
     validations:
       required: true
   - type: textarea
