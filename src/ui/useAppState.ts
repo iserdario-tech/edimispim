@@ -8,6 +8,7 @@ import { parseHM, fmtHM, sleepDurationMin, planDay } from "../index.js";
 import { loadState, saveState, importAll, loadDayDraft, targetsFor, type FoodSettings, type StoredState } from "./storage.js";
 import { syncPushContext } from "./notifications.js";
 import { migrateAll } from "../migrate.js";
+import { healthFlags } from "../healthFlags.js";
 import { localDateISO, plusDaysISO } from "../today-date.js";
 import { toggleMark, markAllAte, setOwnSize, setOwnText, addExtra, removeExtra, type DayEaten, type MealMark, type OwnSize, type WrittenFood } from "../food/eaten.js";
 import type { FoodProfile } from "../food/types.js";
@@ -360,7 +361,9 @@ export function coachContext(state: StoredState, now = new Date()): string {
     } else lines.push("Еду за последние 2 недели не отмечал — насколько он держится плана, неизвестно.");
   } else lines.push("Питание пока не настроено.");
   lines.push(...todayMenuRU(state));
-  if (state.screener?.flagged) lines.push(`ВАЖНО, анкета показала признаки, требующие врача: ${state.screener.messagesRU.join(" ")}`);
+  // общая анкета, апноэ и ночное питание — одним списком, тем же, что видит человек
+  const health = healthFlags({ screener: state.screener, ...(f?.screening ? { screening: f.screening } : {}), ...(f?.screen ? { screen: f.screen } : {}), ...(f?.profile ? { profile: f.profile } : {}) });
+  if (health.length) lines.push(`ВАЖНО, по анкете есть повод показаться врачу (это не диагноз): ${health.map(h => `${h.titleRU} — ${h.doctorRU}`).join("; ")}.`);
   return lines.filter(Boolean).join("\n");
 }
 const avg = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;

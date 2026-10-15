@@ -84,7 +84,13 @@ export function Shell() {
         onCloudRestored={(s) => { app.update(s); void syncPushContext(s.profile); }}
         onDone={(profile, screener, quickFood) => {
           const picked = pickUpOldApps();
-          const food = picked.food ?? quickFood;
+          // Из oheedet берём то, чего быстрый старт не спрашивал: ограничения (аллергии, посуда, «не люблю»)
+          // и итоги старых анкет. Пол, возраст, рост, вес, темп входа и ответы про храп и ночную еду
+          // человек ввёл только что — они свежее. Раньше перенос целиком заменял быстрый старт, и
+          // вердикт про апноэ считался по старому весу без свежих ответов.
+          const food = picked.food
+            ? { ...quickFood, constraints: { ...quickFood.constraints, ...picked.food.constraints }, screen: { ...picked.food.screen, ...quickFood.screen } }
+            : quickFood;
           app.update({
             profile, history: picked.history, screener, food,
             ...(picked.weights.length ? { weights: picked.weights } : {}),
@@ -211,7 +217,7 @@ function Main({ app, tab, setTab, now, glow, restoreInput, onRestore }: {
       <div className="v2-root s-settings">
         <button className="s-back s-settings-back" onClick={() => setSettings(null)}>‹ Я</button>
         {settings === "sleep"
-          ? <Onboarding initial={state.profile} onDone={(profile, screener) => { app.update({ ...state, profile, screener }); setSettings(null); void syncPushContext(profile); }} />
+          ? <Onboarding initial={state.profile} initialScreener={state.screener} onDone={(profile, screener) => { app.update({ ...state, profile, screener }); setSettings(null); void syncPushContext(profile); }} />
           : <FoodSetup initial={state.food} onCancel={() => setSettings(null)} onDone={food => { app.update({ ...state, food }); setSettings(null); }} />}
       </div>
     );

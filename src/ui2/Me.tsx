@@ -29,6 +29,7 @@ import type { PushPrefs } from "../push.js";
 import type { Profile } from "../index.js";
 import type { AppModel } from "./Shell.js";
 import type { DayModel } from "./useDay.js";
+import { flagsOf, HealthList } from "./Health.js";
 
 const DNI: Record<string, string> = { one: "день", few: "дня", many: "дней", other: "дня" };
 const RU_PLURAL = new Intl.PluralRules("ru");
@@ -76,11 +77,12 @@ export function Me({ app, day, cloud, onCloud, pair, onPair, partner, onPartner,
   const lastKg = state.weights?.at(-1)?.kg;
 
   const exp = useExp(state, day.today);
+  const health = flagsOf(state);
   const tdee = exp ? (exp.r.status === "ready" || exp.r.status === "uncertain" ? exp.r.tdee : exp.formula) : null;
 
   const ROWS: [MeSheet | "sleep-settings" | "food-settings" | "tour", IcoName, string, string][] = [
     ["weight", "scale", "Вес и калории", lastKg ? `${lastKg} кг · трата ${exp?.r.status === "ready" ? "по твоим данным" : "по формуле"}` : "записать первый вес"],
-    ["sleep", "moon-sleep", "Как ты спишь", "во сколько ложишься, сон и еда"],
+    ["sleep", "moon-sleep", "Как ты спишь", health.length ? "есть повод показаться врачу" : "во сколько ложишься, сон и еда"],
     ["stories", "chart-2", "Итоги недель", "каждый понедельник — новый"],
     ["sleep-settings", "alarm", "Настройки сна", `подъём ${state.profile.anchorWakeHM}`],
     ["food-settings", "chef-hat", "Настройки еды", state.food ? `${state.food.mealCount} приёма · ${state.food.household && state.food.household > 1 ? (Number.isInteger(state.food.household) ? `на ${state.food.household}` : "на двоих") : "на себя"}` : "не настроено"],
@@ -297,8 +299,15 @@ function SleepSheet({ app, day, records, onClose }: { app: AppModel; day: DayMod
   const d = new Date(day.today + "T12:00:00Z"); d.setUTCDate(0);
   const ym = d.toISOString().slice(0, 7);
   const recap = monthRecap(records, ym);
+  const health = flagsOf(state);
   return (
     <Sheet title="Как ты спишь" onClose={onClose}>
+      {health.length > 0 && (
+        <>
+          <h3 className="s-why-h">Стоит обсудить с врачом</h3>
+          <HealthList flags={health} />
+        </>
+      )}
       <h3 className="s-why-h">Ложишься в одно время?</h3>
       <p className="s-muted">{regularRU(anc)}</p>
 

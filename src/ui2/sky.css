@@ -485,3 +485,7 @@ html:has(.sheet, .s-settings) .s-update { display: none; }
 .s-code { font: 700 var(--t2)/1.3 var(--round); letter-spacing: .01em; margin: 4px 0 8px; user-select: all; -webkit-user-select: all; word-break: break-word; }
 .s-restore { display: grid; gap: 8px; margin-top: 8px; }
 .s-restore input { min-height: 48px; padding: 0 14px; border-radius: 14px; border: 1px solid var(--separator); font: 500 var(--t3) var(--text); color: var(--fg); background: var(--surface); }
+
+/* «Это не диагноз» под списком выводов анкеты — отступ от последнего пункта */
+.s-health-note { margin-top: 16px; }
+.s-health-title { font: 600 var(--t4) var(--round); margin: 12px 0 4px; }

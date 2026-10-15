@@ -40,6 +40,8 @@ export function QuickStart({ onDone, onRestore, onCloudRestored }: {
   const [pace, setPace] = useState<RampPace>(DEFAULT_PACE);
   const [scr, setScr] = useState<ScreenerAnswers>(emptyScreener);
   const [junction, setJunction] = useState(() => junctionFrom());
+  // уточнения про апноэ открыли мы сами по «храп с паузами» — снятая галочка их и закрывает
+  const [autoGate, setAutoGate] = useState(false);
   const problems = checkProfile({ age, heightCm, weightKg, goalWeightKg });
   const timesOk = isValidTime(wakeHM) && isValidTime(bedHM);
 
@@ -151,10 +153,21 @@ export function QuickStart({ onDone, onRestore, onCloudRestored }: {
             ["selfHarmThoughts", "Есть мысли причинить себе вред"],
           ] as const).map(([k, ru]) => (
             <label key={k} className="chk">
-              <input type="checkbox" checked={scr[k]} onChange={e => setScr({ ...scr, [k]: e.target.checked })} /> {ru}
+              <input type="checkbox" checked={scr[k]} onChange={e => {
+                setScr({ ...scr, [k]: e.target.checked });
+                // «храп с паузами» — тот же вопрос, что открывает уточнения про апноэ ниже: без этой связки
+                // человек отмечал храп здесь, пропускал похожий пункт ниже, и вердикт про апноэ не считался
+                if (k === "loudSnoringWithPauses" && e.target.checked && !junction.apneaGate) {
+                  setJunction({ ...junction, apneaGate: true, apnea: { ...junction.apnea, observedApnea: true } });
+                  setAutoGate(true);
+                } else if (k === "loudSnoringWithPauses" && !e.target.checked && autoGate) {
+                  setJunction({ ...junction, apneaGate: false, apnea: { ...junction.apnea, observedApnea: false } });
+                  setAutoGate(false);
+                }
+              }} /> {ru}
             </label>
           ))}
-          <JunctionScreening value={junction} onChange={setJunction} />
+          <JunctionScreening value={junction} onChange={v => { setJunction(v); setAutoGate(false); }} />
           <button className="primary" onClick={finish}>Готово — показать мой день</button>
           <button className="linkbtn" onClick={() => setStep(2)}>← назад</button>
         </>

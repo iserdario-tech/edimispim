@@ -23,6 +23,8 @@ import { readLS, writeLS } from "../ui/localStore.js";
 import { enableNotifications, pushSubscribed, pushWanted, PUSH_WANTED_KEY } from "../ui/notifications.js";
 import { Ico, EmojiIco } from "./Ico.js";
 import { useExp, paceRU } from "./useExp.js";
+import { flagsOf, HealthList, HEALTH_SEEN_KEY, type HealthSeen } from "./Health.js";
+import { healthSignature, healthCardLine, healthCardDue } from "../healthFlags.js";
 
 const FACES = [[1, "confounded-circle", "плохо"], [2, "sad-circle", "так себе"], [3, "expressionless-circle", "норм"], [4, "smile-circle", "хорошо"], [5, "emoji-funny-circle", "отлично"]] as const;
 const YESTERDAY: [keyof Yesterday, string][] = [["lateDinner", "Ужин позже 21:00"], ["lateCaffeine", "Кофе после 14:00"], ["alcohol", "Алкоголь"]];
@@ -54,6 +56,21 @@ export function Day({ app, day, now, onWhy, story, code }: { app: AppModel; day:
   // вес идёт не по плану — предлагаем поправку сами, а не ждём, что человек найдёт её в «Я»
   const exp = useExp(state, day.today);
   const [kcalSkip, setKcalSkip] = useState(() => readLS<string | null>(KCAL_SKIP, null));
+  // Ответы анкеты говорят «покажись врачу» — карточка до «Понятно». Вернётся, когда в списке появится
+  // новый вид; срочное — ещё и через неделю. Список опустел — забываем, что видели: если пункт
+  // появится снова, человек должен о нём узнать.
+  const health = flagsOf(state);
+  const healthSig = healthSignature(health);
+  const urgent = health.some(f => f.urgent);
+  const [healthSeen, setHealthSeen] = useState<HealthSeen | null>(() => {
+    const v = readLS<HealthSeen | null>(HEALTH_SEEN_KEY, null);
+    return v && typeof v.sig === "string" && typeof v.at === "string" ? v : null;
+  });
+  useEffect(() => {
+    if (!healthSig && healthSeen) { writeLS(HEALTH_SEEN_KEY, null); setHealthSeen(null); }
+  }, [healthSig, healthSeen]);
+  const showHealth = healthCardDue(health, healthSeen, day.today);
+  const [healthOpen, setHealthOpen] = useState(false);
   const kcal = exp?.r.status === "ready" && exp.r.step !== 0 && exp.r.nextChangeInDays === 0
     && (!kcalSkip || daysSince(kcalSkip, day.today) >= 7) ? exp.r : null;
   const [recipe, setRecipe] = useState<NonNullable<TimelineRow["meal"]> | null>(null);
@@ -138,6 +155,26 @@ export function Day({ app, day, now, onWhy, story, code }: { app: AppModel; day:
           <span><b>Твоя неделя</b><span>{story.label} · сон, еда, вес</span></span>
           <Ico name="arrow-right" mono className="ico-go" />
         </button>
+      )}
+
+      {showHealth && (
+        <section className="s-card">
+          <h2 className="s-h2">{urgent ? "Важно: поговори со специалистом" : "Стоит показаться врачу"}</h2>
+          {/* срочное — без «Подробнее»: к кому идти, видно сразу */}
+          {urgent && <p className="s-muted">{health.find(f => f.urgent)!.doctorRU}.</p>}
+          <p className="s-muted">{healthCardLine(health)}</p>
+          <div className="s-yn-btns">
+            <button className="s-btn food" onClick={() => { tap(); setHealthOpen(true); }}>Подробнее</button>
+            <button className="s-btn ghost" onClick={() => {
+              tap(); const seen = { sig: healthSig, at: day.today }; writeLS(HEALTH_SEEN_KEY, seen); setHealthSeen(seen);
+            }}>Понятно</button>
+          </div>
+        </section>
+      )}
+      {healthOpen && (
+        <Sheet title={urgent ? "Важно" : "Стоит обсудить с врачом"} onClose={() => setHealthOpen(false)}>
+          <HealthList flags={health} />
+        </Sheet>
       )}
 
       {!day.logged && day.word.phase !== "evening" && (

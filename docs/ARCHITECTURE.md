@@ -47,10 +47,10 @@ flowchart TB
 | `src/*.ts` | Движок сна и общие вычисления. Публичный API в `src/index.ts`. |
 | `src/food/` | Планировщик меню, покупки, цены, готовая еда. Данные в `src/food/data/`. |
 | `src/ui/` | Состояние приложения (`useAppState`, `storage`), расчёт дня для экранов (`todayPlan`, `dayOpts`, `viewModel`, `mealRows`), общие шторки и формы, синхронизация (`cloudSync`, `pairSync`, `notifications`), тема, хаптика, безопасность данных. |
-| `src/ui2/` | Экраны 2.0 «Небо»: `Shell` (три вкладки, «Спросить», «+»), `Day`, `Eat`, `Shop`, `Me`, `Story`, шторки `WhySheet`, `PlusSheet`, `AskSheet`, `ReadySheet`, `Install`, `Tour`, `Crash`. Стили в `sky.css`, значки в `icons.ts`. |
+| `src/ui2/` | Экраны 2.0 «Небо»: `Shell` (три вкладки, «Спросить», «+»), `Day`, `Eat`, `Shop`, `Me`, `Story`, шторки `WhySheet`, `PlusSheet`, `AskSheet`, `ReadySheet`, `Install`, `Tour`, `Crash`, список «Стоит обсудить с врачом» в `Health`. Стили в `sky.css`, значки в `icons.ts`. |
 | `worker/` | Cloudflare Worker: пуши, коуч, оценка еды, копия, пара, прокси к магазину. |
 | `scripts/` | Служебные скрипты: рецепты, цены, фото, готовая еда, аудит планировщика, значки. Черновики рецептов в `scripts/drafts/`. |
-| `tests/` | vitest, 74 файла. |
+| `tests/` | vitest, 75 файлов. |
 | `docs/` | Спеки и планы (`docs/superpowers/`), скриншоты для README (`docs/screens/`), этот документ, FAQ. |
 | `public/` | Иконки, 150 фото блюд (`public/food/`), `push-sw.js`. |
 | `LAB.md` | Журнал волн: что, зачем, замеры, грабли, отклонённые идеи. |
@@ -70,6 +70,7 @@ flowchart TB
 | `expenditure.ts` | Реальный расход по линии тренда веса и отметкам еды; предложение поправки. |
 | `plateau.ts`, `sleep-food.ts`, `insight.ts`, `weekStory.ts` | Плато, «сон и еда у тебя», итог недели, история недели слайдами. |
 | `screener.ts`, `screening.ts` | Скрининги: апноэ, СБН, бессонница, настроение; STOP-Bang и ночное питание. |
+| `healthFlags.ts` | Один список «что обсудить с врачом» из всех анкет (общая проверка, STOP-Bang, ночное питание, SCOFF из oheedet): заголовок, что это может значить, к кому идти. Апноэ — только при «да» про храп; чувствительные пункты на главном экране не называются. Его показывают карточка на «Сутках», раздел в «Я → Как ты спишь» (`ui2/Health.tsx`) и коуч. |
 | `push.ts` | Какие пуши и когда (с запасом времени), общий код для приложения и воркера. |
 | `cloud.ts`, `cloudWords.ts` | Код из четырёх слов, адрес (SHA-256), шифрование (PBKDF2 300k → AES-GCM). |
 | `pair.ts` | «Готовим вдвоём» без сети: общее меню, слияние замен, коэффициент покупок. |
@@ -140,7 +141,7 @@ interface StoredState {
 }
 ```
 
-Остальные ключи: `edimispim.day.v1` (черновик режима на сегодня), `edimispim.pantry`, `edimispim.shop`, `edimispim.coach.v1`, `edimispim.cloud` (код и отпечаток копии), `edimispim.pair` (код и роль пары, меню партнёра, замены), `edimispim.device` (случайный id устройства для дневного лимита коуча), `edimispim.pushPrefs`, `edimispim.pushWanted`, `edimispim.pushSyncAt` (когда сервер подтвердил подписку), `edimispim.vv` (совпадения корзины), `edimispim.theme`, `edimispim.tourSeen`, `edimispim.storySeen` (какая история недели уже открыта), `edimispim.installSkip` (нажато «Продолжить в Safari»), `edimispim.kcalSkip` (дата, когда поправку калорий отложили «Позже»), `edimispim.backupAt`, `edimispim.state.v1.unreadable` (нечитаемое состояние откладывается, а не стирается).
+Остальные ключи: `edimispim.day.v1` (черновик режима на сегодня), `edimispim.pantry`, `edimispim.shop`, `edimispim.coach.v1`, `edimispim.cloud` (код и отпечаток копии), `edimispim.pair` (код и роль пары, меню партнёра, замены), `edimispim.device` (случайный id устройства для дневного лимита коуча), `edimispim.pushPrefs`, `edimispim.pushWanted`, `edimispim.pushSyncAt` (когда сервер подтвердил подписку), `edimispim.vv` (совпадения корзины), `edimispim.theme`, `edimispim.tourSeen`, `edimispim.storySeen` (какая история недели уже открыта), `edimispim.installSkip` (нажато «Продолжить в Safari»), `edimispim.kcalSkip` (дата, когда поправку калорий отложили «Позже»), `edimispim.healthSeen` (какой список «Стоит показаться врачу» уже закрыли «Понятно» и когда), `edimispim.backupAt`, `edimispim.state.v1.unreadable` (нечитаемое состояние откладывается, а не стирается).
 
 Правила совместимости: новые поля только необязательные; `loadState` проверяет форму и отсеивает битые записи по одной; копия файлом и в облаке — один и тот же `exportAll`: состояние `edimispim.state.v1` плюс шесть ключей `EXTRA_KEYS` (`edimispim.pantry`, `edimispim.shop`, `edimispim.coach.v1`, `edimispim.cloud`, `edimispim.pushPrefs`, `edimispim.pushWanted`), остальные ключи в копию не попадают и остаются на устройстве; старые копии (v1, только состояние) открываются.
 
@@ -167,7 +168,7 @@ interface StoredState {
 
 ## Тесты
 
-`npm test` — vitest, 74 файла, 564 теста, около 10 секунд. Что проверяется помимо обычных юнитов:
+`npm test` — vitest, 75 файлов, 587 тестов, около 10 секунд. Что проверяется помимо обычных юнитов:
 
 - `life-sim.test.ts`: 8–12 недель выдуманного человека с настоящим расходом ± вода; проверяется, когда и куда приходят поправки нормы.
 - `food-real-life`, `food-week-variety`, `food-rebalance`, `food-strength`, `food-sweets`: планировщик на разных профилях и настройках, повторы недели, Б/Ж/У в норме.

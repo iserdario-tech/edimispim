@@ -2,6 +2,8 @@ import type { FoodProfile, SafeTargets, Screen, Sex, Targets } from "./types";
 
 const FLOOR: Record<Sex, number> = { m: 1500, f: 1200 };
 const RED_CONDITIONS = ["thyroid", "pcos", "psych_meds"];
+/** SCOFF: с двух «да» из пяти дефицит смягчается — тот же порог показывает пункт в «Стоит обсудить с врачом». */
+export const SCOFF_REFER = 2;
 
 export function applySafety(
   targets: Targets,
@@ -12,9 +14,9 @@ export function applySafety(
   const scoff = screen.scoffScore ?? 0;
   const conditions = screen.conditions ?? [];
   const referDoctor =
-    scoff >= 2 || conditions.some(c => RED_CONDITIONS.includes(c)) || !!screen.nesFlagged;
+    scoff >= SCOFF_REFER || conditions.some(c => RED_CONDITIONS.includes(c)) || !!screen.nesFlagged;
 
-  if (scoff >= 2) flags.push("screen_eating_disorder");
+  if (scoff >= SCOFF_REFER) flags.push("screen_eating_disorder");
   for (const c of conditions) if (RED_CONDITIONS.includes(c)) flags.push("condition_" + c);
   // синдром ночного питания (X21): при ожирении 6–16%, виден только на стыке сна и еды.
   // Реакция та же, что на другие красные флаги: не жёсткий дефицит + к специалисту.

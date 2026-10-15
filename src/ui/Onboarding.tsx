@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Profile, ScreenerResult, ScreenerAnswers, Chronotype } from "../index.js";
 import { runScreener } from "../index.js";
+import { answersFromResult } from "../screener.js";
 import { buildProfile, formFromProfile, isValidTime, type OnboardingForm } from "./onboardingModel.js";
 import { isStandalone } from "./dataSafety.js";
 
@@ -9,8 +10,10 @@ export const emptyScreener: ScreenerAnswers = {
   legUrgeToMoveEvening: false, insomnia3xWeek3Months: false, lowMood2Weeks: false, selfHarmThoughts: false,
 };
 
-export function Onboarding({ initial, onDone, onRestore }: {
+export function Onboarding({ initial, initialScreener, onDone, onRestore }: {
   initial?: Profile;
+  /** Сохранённый результат анкеты: без него форма открывалась пустой, и «Сохранить» стирало все флаги. */
+  initialScreener?: ScreenerResult | null;
   onDone: (p: Profile, s: ScreenerResult) => void;
   /** Загрузить копию прямо здесь — иначе совету «перенеси копией» негде сбыться. */
   onRestore?: () => void;
@@ -19,7 +22,7 @@ export function Onboarding({ initial, onDone, onRestore }: {
     wakeHM: "07:00", bedHM: "23:00", chronotype: "intermediate",
     caffeineMg: 95, caffeineRegular: true, napPossible: true,
   });
-  const [scr, setScr] = useState<ScreenerAnswers>(emptyScreener);
+  const [scr, setScr] = useState<ScreenerAnswers>(() => initialScreener ? answersFromResult(initialScreener) : emptyScreener);
   const set = (patch: Partial<OnboardingForm>) => setForm({ ...form, ...patch });
   const setS = (patch: Partial<ScreenerAnswers>) => setScr({ ...scr, ...patch });
 

@@ -20,7 +20,7 @@
 
 <p align="center">
   <a href="https://github.com/iserdario-tech/edimispim/actions/workflows/deploy.yml"><img src="https://github.com/iserdario-tech/edimispim/actions/workflows/deploy.yml/badge.svg" alt="deploy"></a>
-  <img src="https://img.shields.io/badge/тестов-564-2BB673" alt="564 теста">
+  <img src="https://img.shields.io/badge/тестов-587-2BB673" alt="587 тестов">
   <img src="https://img.shields.io/badge/рецептов-398-F26B1D" alt="398 рецептов">
   <img src="https://img.shields.io/badge/TypeScript-React_19-3178C6" alt="TypeScript · React 19">
   <img src="https://img.shields.io/badge/PWA-офлайн-5B4BE0" alt="PWA">
@@ -74,7 +74,7 @@ edim & spim вырос из двух отдельных приложений: **
 - **Слово дня** вместо баллов: «Доброе утро», «Дальше обед», «Лёгкий день», «Пора закругляться». Описывает план, а не оценивает человека.
 - **«Что было вчера?» и личный эффект**: после пяти «да» и пяти «нет» приложение показывает, как поздний ужин, кофе или алкоголь сказываются именно на тебе. Как наблюдение, без процентов.
 - **Ровность режима**: время подъёма, разъезд будни/выходные, «ложишься ли в одно время».
-- **Скрининг**: «Короткая проверка здоровья» (апноэ, синдром беспокойных ног, хроническая бессонница, настроение) — любая отметка меняет подсказку дня на совет показаться врачу. Ответы STOP-Bang и про ночное питание сохраняются, но отдельного вердикта по ним пока нет; паттерн ночного питания молча смягчает дефицит.
+- **Скрининг**: «Короткая проверка здоровья» (храп с паузами, сонливость днём, синдром беспокойных ног, хроническая бессонница, настроение, мысли навредить себе), апноэ по STOP-Bang и ночное питание. Если по ответам есть повод показаться врачу, на «Сутках» появляется карточка, а в «Я → Как ты спишь» остаётся раздел «Стоит обсудить с врачом»: что заметили, что это может значить и к кому идти. Это не диагноз. Паттерн ночного питания ещё и смягчает дефицит.
 
 ### 🍳 Еда
 
@@ -172,7 +172,7 @@ git clone https://github.com/iserdario-tech/edimispim.git
 cd edimispim
 npm ci --legacy-peer-deps
 npm run dev          # http://localhost:5173
-npm test             # 564 теста, ~10 секунд
+npm test             # 587 тестов, ~10 секунд
 npm run typecheck
 npm run build        # dist/ с service worker
 ```
@@ -185,7 +185,7 @@ npm run build        # dist/ с service worker
 
 Проект живёт **волнами**. Каждая волна: тема → десять идей без фильтра → отбор по трём ситам (переплетённость сна и еды, научная честность, цена) → реализация одной-двух лучших с тестами → проверка на телефоне → коммит. Отклонённые идеи остаются в журнале с причиной, чтобы не возвращаться к ним через десять волн.
 
-Журнал волн с замерами, граблями и причинами решений: [LAB.md](LAB.md). В нём 47 записей, с первой волны по 52-ю; волн 25–29 в журнале нет. Несколько вех:
+Журнал волн с замерами, граблями и причинами решений: [LAB.md](LAB.md). В нём 48 записей, с первой волны по 53-ю; волн 25–29 в журнале нет. Несколько вех:
 
 | Волна | Что изменилось |
 |---|---|
@@ -220,6 +220,6 @@ npm run build        # dist/ с service worker
 <details>
 <summary><b>English summary</b></summary>
 
-**edim & spim** («we eat & we sleep») is a free, account-less PWA for iPhone and Android that treats sleep and food as one 24-hour loop. In the morning it asks how you slept and builds the day: morning light, caffeine cut-off (9 h / 13 h before bed, per the 2023 Sleep Med Rev meta-analysis), a 20-minute nap window, wind-down, bedtime, plus a four-meal menu under your calorie and protein targets. After a rough night the menu gets simpler, not bigger. It estimates your real energy expenditure from weight trend and logged meals, explains plateaus honestly, supports cooking for two, a no-cook day from a grocery chain's ready meals, push reminders ahead of time, an AI coach with a sourced knowledge base, and an end-to-end encrypted cloud backup keyed by a four-word code. Engine and planner are pure TypeScript with 564 tests; UI is React 19; backend is a Cloudflare Worker on the free tier. All UI text is Russian.
+**edim & spim** («we eat & we sleep») is a free, account-less PWA for iPhone and Android that treats sleep and food as one 24-hour loop. In the morning it asks how you slept and builds the day: morning light, caffeine cut-off (9 h / 13 h before bed, per the 2023 Sleep Med Rev meta-analysis), a 20-minute nap window, wind-down, bedtime, plus a four-meal menu under your calorie and protein targets. After a rough night the menu gets simpler, not bigger. It estimates your real energy expenditure from weight trend and logged meals, explains plateaus honestly, supports cooking for two, a no-cook day from a grocery chain's ready meals, push reminders ahead of time, an AI coach with a sourced knowledge base, and an end-to-end encrypted cloud backup keyed by a four-word code. Engine and planner are pure TypeScript with 587 tests; UI is React 19; backend is a Cloudflare Worker on the free tier. All UI text is Russian.
 
 </details>
