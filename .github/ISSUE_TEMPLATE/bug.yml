@@ -1,0 +1,53 @@
+name: Что-то сломалось
+description: Приложение ведёт себя не так, как должно
+title: "[баг] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Спасибо, что сообщаешь. Чем точнее дата и экран, тем быстрее найдётся причина: меню и план считаются от даты.
+  - type: input
+    id: where
+    attributes:
+      label: Где
+      description: Экран или шторка («Сутки», «Еда → Список покупок», «Почему день такой», коуч…)
+      placeholder: Еда → День без готовки
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: Что произошло
+      description: Что ожидал увидеть и что увидел на самом деле
+    validations:
+      required: true
+  - type: input
+    id: date
+    attributes:
+      label: Дата и время
+      description: Когда это было по часам телефона. Для меню важна дата, для «Суток» — время.
+      placeholder: 10 октября, 21:40
+  - type: dropdown
+    id: device
+    attributes:
+      label: Устройство
+      options:
+        - iPhone, с экрана «Домой»
+        - iPhone, в Safari
+        - Android, установлено
+        - Android, в браузере
+        - Компьютер
+    validations:
+      required: true
+  - type: input
+    id: build
+    attributes:
+      label: Версия сборки
+      description: «Я → О приложении», строка с датой и коммитом
+      placeholder: 9 окт, 12:30 · 599abbd
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Скриншот или текст ошибки
+      description: Можно перетащить картинку сюда. Если был экран «Что-то сломалось», скопируй текст ошибки.
